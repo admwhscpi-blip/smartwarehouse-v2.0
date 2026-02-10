@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE V2.0 - MATERIAL AUDIT HISTORY</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;900&family=Rajdhani:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <style>
+        :root {
+            --gold: #fbbf24;
+            --border: rgba(255, 255, 255, 0.08);
+            --bg-dark: #020617;
+            --emerald: #10b981;
+            --cyan: #00f3ff;
+            --red: #ef4444;
+            --card-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--cyan);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 30px;
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 1.1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textFlow 3s linear infinite;
+        }
+
+        .logo .brand-v2 {
+            background: #fff;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 900;
+        }
+
+        @keyframes textFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .year-selector {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--cyan);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            outline: none;
+            transition: all 0.3s;
+            width: 140px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300f3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        .year-selector:hover {
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        .btn-fetch {
+            background: var(--cyan);
+            color: #000;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Orbitron';
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-fetch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        main {
+            padding: 25px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-title h1 {
+            font-family: 'Rajdhani';
+            font-size: 2.5rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            line-height: 1;
+        }
+
+        .header-title p {
+            color: #64748b;
+            margin: 8px 0 0 0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-value {
+            font-family: 'Orbitron';
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        /* TABLES */
+        .table-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            padding: 18px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .table-header h2 {
+            font-family: 'Rajdhani';
+            font-size: 1.3rem;
+            margin: 0;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .table-header h2::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--cyan);
+            border-radius: 2px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            color: #64748b;
+            font-weight: 700;
+            padding: 15px 25px;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 14px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        .pill-over {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 900;
+        }
+
+        .pill-susut {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--emerald);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 900;
+        }
+
+        /* LOADING */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 243, 255, 0.05);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 120px 20px;
+            color: #475569;
+            font-style: italic;
+            font-size: 1rem;
+        }
+
+        .num-font {
+            font-family: 'Inter';
+            font-weight: 500;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="font-family: 'Orbitron'; letter-spacing: 4px; font-size: 0.8rem; color: var(--cyan);">PROCESSING
+            AUDIT DATA</div>
+    </div>
+
+    <nav>
+        <a href="homepage-v1.html" class="logo">
+            <span class="brand-smart">SMART WAREHOUSE</span>
+            <span class="brand-v2">V2.0</span>
+        </a>
+        <div class="nav-controls">
+            <select id="yearInput" class="year-selector">
+                <!-- Data Tahun akan diisi via JS -->
+            </select>
+            <button class="btn-fetch" onclick="fetchData()">GENERATE ANALYSIS</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="header-section">
+            <div class="header-title">
+                <h1 id="displayYear">MATERIAL AUDIT - 2025</h1>
+                <p>Advanced Inventory Analysis & Stock Variance Overview</p>
+            </div>
+            <div id="lastUpdate" style="font-size: 0.65rem; color: #475569; font-weight: 700; font-family: 'Orbitron';">
+            </div>
+        </div>
+
+        <div id="contentWrapper" style="display: none;">
+            <!-- STATS CARDS -->
+            <div class="stats-grid">
+                <div class="card">
+                    <div class="card-label">TOTAL TRANSACTIONS <span>📊</span></div>
+                    <div class="card-value num-font" id="totalTrx">0</div>
+                    <div class="card-sub" id="trxRatio">Variance: 0% / 0%</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">TOTAL VALUE OVER <span
+                            style="color: var(--red); font-size: 1.2rem;">●</span></div>
+                    <div class="card-value num-font" id="overTotal" style="color: var(--red);">Rp0</div>
+                    <div class="card-sub" id="overQty">0 QTY COLLECTED</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">TOTAL VALUE SUSUT <span
+                            style="color: var(--emerald); font-size: 1.2rem;">●</span></div>
+                    <div class="card-value num-font" id="susutTotal" style="color: var(--emerald);">Rp0</div>
+                    <div class="card-sub" id="susutQty">0 QTY COLLECTED</div>
+                </div>
+            </div>
+
+            <!-- COMPARISON SECTION -->
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2 style="color: var(--red);">OVER BY LOCATION</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="tableOver">
+                            <thead>
+                                <tr>
+                                    <th>LOCATION</th>
+                                    <th class="text-right">TRX</th>
+                                    <th class="text-right">QTY</th>
+                                    <th class="text-right">VALUE (IDR)</th>
+                                    <th class="text-right">AVG %</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2 style="color: var(--emerald);">SUSUT BY LOCATION</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="tableSusut">
+                            <thead>
+                                <tr>
+                                    <th>LOCATION</th>
+                                    <th class="text-right">TRX</th>
+                                    <th class="text-right">QTY</th>
+                                    <th class="text-right">VALUE (IDR)</th>
+                                    <th class="text-right">AVG %</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header" style="background: rgba(0, 243, 255, 0.03);">
+                    <h2>RAW AUDIT LOGS</h2>
+                    <span
+                        style="font-size: 0.65rem; color: var(--cyan); font-weight: 800; font-family: 'Orbitron';">SORT:
+                        Chronological Rev. ↑</span>
+                </div>
+                <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+                    <table id="tableRaw">
+                        <thead>
+                            <tr>
+                                <th># REF</th>
+                                <th>LOCATION</th>
+                                <th>VARIANCE TYPE</th>
+                                <th class="text-right">QTY</th>
+                                <th class="text-right">VALUE (IDR)</th>
+                                <th class="text-right">VARIANCE %</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="emptyState" class="no-data">
+            <div style="font-size: 5rem; margin-bottom: 25px; opacity: 0.1;">🗃️</div>
+            READY TO SYNC. SELECT YEAR AND GENERATE AUDIT REPORT.
+        </div>
+    </main>
+
+    <script>
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwb3YYEQRw02VPDAD_LCfjm0hdAHnp3qSwOyoPhiw23Kyx8Xwv4_ppsHsdq14OsXfxN/exec";
+
+        async function fetchData() {
+            const year = document.getElementById('yearInput').value;
+            if (!year) return alert("Please select year!");
+            document.getElementById('loader').style.display = 'flex';
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?tahun=${year}`);
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                renderData(data);
+            } catch (err) {
+                console.error(err);
+                alert("Audit Engine Failure: " + err.message);
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function renderData(data) {
+            try {
+                if (!data.over || !data.susut) throw new Error("Format data tidak lengkap");
+                document.getElementById('displayYear').innerText = `MATERIAL AUDIT - ${data.tahun || '?'}`;
+                document.getElementById('lastUpdate').innerText = `SYNC STATUS: OK | ${new Date(data.timestamp || new Date()).toLocaleString()}`;
+
+                const overHitung = data.over.hitung || 0;
+                const susutHitung = data.susut.hitung || 0;
+                const totalTrx = overHitung + susutHitung;
+                document.getElementById('totalTrx').innerText = totalTrx.toLocaleString();
+
+                const overRatio = totalTrx > 0 ? ((overHitung / totalTrx) * 100).toFixed(1) : 0;
+                const susutRatio = totalTrx > 0 ? ((susutHitung / totalTrx) * 100).toFixed(1) : 0;
+                document.getElementById('trxRatio').innerText = `${overRatio}% Over / ${susutRatio}% Susut Distribution`;
+
+                document.getElementById('overTotal').innerText = `Rp${Math.round(data.over.harga || 0).toLocaleString('id-ID')}`;
+                document.getElementById('overQty').innerText = `${Math.round(data.over.qty || 0).toLocaleString('id-ID')} QTY DATA COLLECTED`;
+                document.getElementById('susutTotal').innerText = `Rp${Math.round(data.susut.harga || 0).toLocaleString('id-ID')}`;
+                document.getElementById('susutQty').innerText = `${Math.round(data.susut.qty || 0).toLocaleString('id-ID')} QTY DATA COLLECTED`;
+
+                updateTable('tableOver', data.over.perLokasi || {});
+                updateTable('tableSusut', data.susut.perLokasi || {});
+                if (data.rawRecords && Array.isArray(data.rawRecords)) updateRawTable(data.rawRecords);
+                document.getElementById('contentWrapper').style.display = 'block';
+                document.getElementById('emptyState').style.display = 'none';
+            } catch (err) {
+                console.error("Render error:", err);
+                alert("Gagal menampilkan data: " + err.message);
+            }
+        }
+
+        function updateTable(tableId, locData) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = '';
+            Object.keys(locData).sort().forEach(loc => {
+                const d = locData[loc];
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b style="color: #fff;">${loc}</b></td>
+                        <td class="text-right num-font">${d.hitung}</td>
+                        <td class="text-right num-font">${Math.round(d.qty).toLocaleString('id-ID')}</td>
+                        <td class="text-right num-font" style="color: var(--cyan)">Rp${Math.round(d.harga).toLocaleString('id-ID')}</td>
+                        <td class="text-right num-font">${d.avgPersen.toFixed(2)}%</td>
+                    </tr>`;
+            });
+        }
+
+        function updateRawTable(records) {
+            const tbody = document.querySelector('#tableRaw tbody');
+            tbody.innerHTML = '';
+            [...records].sort((a, b) => b.baris - a.baris).forEach(rec => {
+                const pClass = rec.status === 'OVER' ? 'pill-over' : 'pill-susut';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span style="background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:4px; font-size:0.7rem; font-family:Orbitron;">LOG-${rec.baris}</span></td>
+                        <td><b style="color: #fff">${rec.lokasi}</b></td>
+                        <td><span class="${pClass}">${rec.status}</span></td>
+                        <td class="text-right num-font">${Math.round(rec.qty).toLocaleString('id-ID')}</td>
+                        <td class="text-right num-font">Rp${Math.round(rec.nilai).toLocaleString('id-ID')}</td>
+                        <td class="text-right num-font" style="color: ${rec.selisih < 0 ? 'var(--red)' : 'var(--emerald)'}; font-weight: 700;">${rec.selisih.toFixed(2)}%</td>
+                    </tr>`;
+            });
+        }
+
+        function populateYears() {
+            const select = document.getElementById('yearInput');
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear + 1; y >= 2020; y--) {
+                const opt = document.createElement('option');
+                opt.value = opt.textContent = y;
+                if (y === currentYear) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        window.onload = populateYears;
+    </script>
+</body>
+
+</html>

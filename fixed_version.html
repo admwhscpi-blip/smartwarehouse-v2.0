@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Orion - Industrial Solutions (Fixed)</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* RESET & CORE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #050505;
+            color: #fff;
+            overflow-x: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* NAVBAR (Minimal for context) */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 60px;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron';
+            font-weight: 700;
+            width: 200px;
+        }
+
+        /* HERO SECTION */
+        .hero-section {
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #000000 100%);
+            /* Deep Dark Purple Mesh */
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- PANGLIMA SEQUENCE (FIXED & CLEAN) --- */
+        #panglima-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 400px;
+            /* Area for animation */
+            pointer-events: none;
+            z-index: 50;
+            /* Debug border removed as per request */
+        }
+
+        /* 1. OBSERVERS (Fixed Center) */
+        .observer-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            z-index: 40;
+        }
+
+        .obs-img {
+            width: 220px;
+            height: auto;
+            /* NO MIX-BLEND-MODE needed if PNG is transparent */
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+
+            /* HEAD TURN LOGIC: Syncs with 14s Walk Cycle */
+            /* 0-7s: Look Left (ScaleX 1). 7-14s: Look Right (ScaleX -1) */
+            animation: headFlip 14s step-end infinite;
+        }
+
+        /* DIALOGUE (Floating Above) */
+        .dialogue-box {
+            position: absolute;
+            top: 0;
+            /* Float high above image */
+            width: 400px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-line {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            opacity: 1;
+            /* Permanent */
+        }
+
+        .u-yellow {
+            color: #FACC15;
+        }
+
+        .u-white {
+            color: #FFFFFF;
+        }
+
+
+        /* 2. PANGLIMA (Patrol Walk) */
+        .panglima-container {
+            position: absolute;
+            bottom: 10px;
+            left: -200px;
+            /* Start Off-screen */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            /* PATROL LOGIC: 14s Total Loop */
+            /* 0% (Left) -> 50% (Right) -> 100% (Left) */
+            animation: patrolMove 14s linear infinite;
+            z-index: 50;
+            /* In front of observers */
+        }
+
+        .panglima-sprite {
+            width: 140px;
+            height: 140px;
+            background-image: url('assets/panglima_clean.png');
+            /* PRE-CLEANED PNG */
+            background-size: 400% 100%;
+            /* 4 Frames */
+            background-repeat: no-repeat;
+
+            /* WALKING ANIMATION */
+            animation:
+                spriteCycle 0.8s steps(4) infinite,
+                naturalBob 0.6s ease-in-out infinite alternate;
+            /* Natural Bobbing */
+
+            filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.5));
+        }
+
+        .panglima-label {
+            position: absolute;
+            top: -40px;
+            /* Above Head */
+            width: 300px;
+            text-align: center;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: #FACC15;
+            text-shadow: 0 0 10px #DC2626;
+            animation: jitterText 0.3s infinite;
+        }
+
+        /* KEYFRAMES */
+
+        /* 1. HEAD FLIP: Matches Patrol Move */
+        /* Patrol takes 7s to go L->R, 7s to go R->L */
+        @keyframes headFlip {
+            0% {
+                transform: scaleX(1);
+            }
+
+            /* Look Left (Incoming from Left) */
+            49% {
+                transform: scaleX(1);
+            }
+
+            50% {
+                transform: scaleX(-1);
+            }
+
+            /* Look Right (Passing to Right) */
+            99% {
+                transform: scaleX(-1);
+            }
+
+            100% {
+                transform: scaleX(1);
+            }
+
+            /* Reset */
+        }
+
+        /* 2. PATROL MOVE: L -> R -> L */
+        @keyframes patrolMove {
+            0% {
+                transform: translateX(-150px) scaleX(1);
+                /* Start Left, Face Right */
+            }
+
+            49% {
+                transform: translateX(110vw) scaleX(1);
+                /* Reach Right End */
+            }
+
+            50% {
+                transform: translateX(110vw) scaleX(-1);
+                /* OPTIONAL: Flip to walk back? User said "Auto-Flip 2 orang", didn't specify if Panglima walks backward or turns around. Usually Patrol means turn around. */
+                /* Let's make him turn around to walk back */
+            }
+
+            99% {
+                transform: translateX(-150px) scaleX(-1);
+                /* Reach Left End */
+            }
+
+            100% {
+                transform: translateX(-150px) scaleX(1);
+                /* Reset Face Right */
+            }
+        }
+
+        /* 3. SPRITE CYCLE */
+        @keyframes spriteCycle {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 100% 0;
+            }
+        }
+
+        /* 4. NATURAL BOBDING (Walking effect) */
+        @keyframes naturalBob {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* 5. TEXT JITTER */
+        @keyframes jitterText {
+            0% {
+                transform: skewX(0deg);
+            }
+
+            25% {
+                transform: skewX(-2deg);
+            }
+
+            75% {
+                transform: skewX(2deg);
+            }
+
+            100% {
+                transform: skewX(0deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+    </nav>
+
+    <section class="hero-section">
+        <!-- Main Content (Placeholder for context) -->
+        <h1 style="text-align: center; font-size: 3rem; margin-bottom: 200px; z-index: 1;">
+            INDUSTRIAL<br><span style="color: #60A5FA;">EXCELLENCE</span>
+        </h1>
+
+        <!-- === PANGLIMA ANIMATION LAYER === -->
+        <div id="panglima-layer">
+
+            <!-- OBSERVERS -->
+            <div class="observer-container">
+                <!-- Dialogue Floating ABOVE -->
+                <div class="dialogue-box">
+                    <div class="chat-line u-yellow">"JANGAN DEKAT2 ORANG INI BOY"</div>
+                    <div class="chat-line u-white">"LOH KENAPA?"</div>
+                    <div class="chat-line u-yellow">"JABATANNYA CUKUP SEREM"</div>
+                    <div class="chat-line u-white">"APAANTUCCH"</div>
+                    <div class="chat-line u-yellow">"PANGLIMA FANS KING MU!"</div>
+                </div>
+                <!-- Image -->
+                <img src="assets/observers_clean.png" class="obs-img" alt="Factory Observers">
+            </div>
+
+            <!-- PANGLIMA WALKER -->
+            <div class="panglima-container">
+                <div class="panglima-label">GLORY GLORY MAN UNITED</div>
+                <div class="panglima-sprite"></div>
+            </div>
+
+        </div>
+
+    </section>
+
+</body>
+
+</html>

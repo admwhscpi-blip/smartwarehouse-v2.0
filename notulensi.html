@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART NOTULENSI - AI ASSISTED</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* PAGE SPECIFIC OVERRIDES */
+        body {
+            padding-top: 80px;
+        }
+
+        .main-container {
+            padding: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(90deg, #00f3ff, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        /* WORKSPACE GRID */
+        .workspace {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            height: calc(100vh - 200px);
+        }
+
+        /* EDITOR PANE */
+        .editor-pane {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .editor-pane::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .editor-pane::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 5px;
+        }
+
+        .pane-title {
+            font-family: 'Rajdhani', sans-serif;
+            color: var(--neon-blue, #00f3ff);
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* FORM CONTROLS */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        input,
+        select,
+        textarea {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #00f3ff;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Make calendar icon visible in dark mode */
+        input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Consolas', monospace;
+            /* Monospace for raw notes */
+            line-height: 1.5;
+        }
+
+        /* PREVIEW PANE */
+        .preview-pane {
+            background: #1e293b;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            overflow-y: auto;
+            /* display: flex; REMOVED to fix scroll/height issues */
+            /* justify-content: center; */
+            text-align: center;
+            /* Center the A4 page inline-block */
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* A4 PAPER SIMULATION */
+        .a4-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            color: #000;
+            font-family: 'Calibri', 'Segoe UI', 'Trebuchet MS', sans-serif;
+            position: relative;
+            display: inline-block;
+            /* Allows text-align center to work */
+            text-align: left;
+            margin: 0 auto;
+            /* Allow content to grow for scrolling */
+            overflow: visible;
+            height: auto;
+            box-sizing: border-box;
+        }
+
+        /* DOCUMENT STYLES (Print Friendly) */
+        @media print {
+
+            /* Basic page setup */
+            @page {
+                size: A4 portrait;
+                margin: 0;
+                /* Let table handle margins */
+            }
+
+            /* Hide all UI */
+            body * {
+                visibility: hidden;
+            }
+
+            .a4-page,
+            .a4-page * {
+                visibility: visible;
+            }
+
+            /* Reset containers */
+            html,
+            body {
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 0;
+                overflow: visible;
+                background: white;
+            }
+
+            .main-container,
+            .workspace,
+            .preview-pane {
+                display: block;
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 0;
+                overflow: visible;
+                background: white;
+                border: none;
+            }
+
+            /* A4 page for print */
+            .a4-page {
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                transform: none;
+                overflow: visible;
+                display: block;
+                page-break-after: auto;
+            }
+
+            /* TABLE STRUCTURE - This is the key to repeating headers/footers */
+            .print-table {
+                display: table;
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+
+            .print-thead {
+                display: table-header-group;
+                /* Browser will repeat this on every page */
+            }
+
+            .print-tfoot {
+                display: table-footer-group;
+                /* Browser will repeat this on every page */
+            }
+
+            .print-tbody {
+                display: table-row-group;
+            }
+
+            .print-tr {
+                display: table-row;
+            }
+
+            .print-td {
+                display: table-cell;
+                padding: 20mm;
+                /* Content padding */
+            }
+
+            /* Header cell - top padding for first page, less for repeats */
+            .print-thead .print-td {
+                padding: 15mm 20mm 10mm 20mm;
+            }
+
+            /* Footer cell */
+            .print-tfoot .print-td {
+                padding: 10mm 20mm 15mm 20mm;
+            }
+
+            /* Body cell */
+            .print-tbody .print-td {
+                padding: 0 20mm;
+            }
+
+            /* Prevent breaks inside important elements */
+            .document-header,
+            .document-footer,
+            .signature-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+
+        /* SCREEN DISPLAY - BLOCK TO AVOID LAYOUT ISSUES */
+        .print-table,
+        .print-thead,
+        .print-tfoot,
+        .print-tbody,
+        .print-tr,
+        .print-td {
+            display: block;
+            width: 100%;
+        }
+
+        .document-header {
+            border-bottom: 3px double #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+
+        .company-name {
+            font-family: Arial, sans-serif;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1a237e;
+            text-transform: uppercase;
+        }
+
+        .document-title {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 16pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 30px 0;
+        }
+
+        .meta-table td {
+            padding: 4px 10px 4px 0;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        .content-body {
+            font-size: 10.5pt;
+            line-height: 1.5;
+            text-align: justify;
+        }
+
+        table.action-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 10pt;
+        }
+
+        table.action-table th,
+        table.action-table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            page-break-inside: avoid;
+        }
+
+        .sig-box {
+            text-align: center;
+            width: 200px;
+        }
+
+        .sig-space {
+            height: 80px;
+        }
+
+        .document-footer {
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+            font-size: 8pt;
+            color: #666;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        /* Fixed padding for print content to avoid overlaps */
+        /* Fixed padding for print content to avoid overlaps */
+        .page-header-space {
+            height: 120px;
+        }
+
+        .page-footer-space {
+            height: 50px;
+        }
+
+        /* MULTI-PAGE PREVIEW */
+        .preview-content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        /* Adjustments for html2pdf rendering */
+        #pdf-export-container {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 210mm;
+            background: white;
+        }
+
+        /* MULTI-PAGE PREVIEW */
+        .preview-content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        /* Adjustments for html2pdf rendering */
+        #pdf-export-container {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 210mm;
+            background: white;
+        }
+
+
+
+        /* BUTTONS */
+        .btn-action {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-print {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL DIHAPUS -->
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-container">
+        <div class="page-header">
+            <div class="page-title">INTELLIGENT NOTULENSI SYSTEM</div>
+            <div class="header-right" style="display: flex; gap: 10px; position: relative;">
+                <button onclick="resetForm()" class="btn-action btn-reset">
+                    <span>↻</span> RESET
+                </button>
+                <button onclick="openPreviewMode()" class="btn-action" style="background: #3b82f6;">
+                    <span>👁️</span> PRATINJAU
+                </button>
+                <button onclick="saveLog()" class="btn-action" style="background: #f59e0b;">
+                    <span>💾</span> SIMPAN LOG
+                </button>
+
+                <div style="position: relative;">
+                    <button onclick="toggleExport()" class="btn-action" style="background: #10b981;">
+                        <span>📤</span> EKSPOR <span style="font-size: 0.8rem;">▼</span>
+                    </button>
+                    <!-- EXPORT MENU -->
+                    <div id="export-menu"
+                        style="display: none; position: absolute; top: 110%; right: 0; background: #1e293b; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; min-width: 150px; overflow: hidden;">
+                        <div onclick="exportToPDF()"
+                            style="padding: 12px 15px; cursor: pointer; color: white; border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.2s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                            onmouseout="this.style.background='transparent'">
+                            📄 Ekspor PDF
+                        </div>
+                        <div onclick="exportToWord()"
+                            style="padding: 12px 15px; cursor: pointer; color: white; transition: 0.2s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                            onmouseout="this.style.background='transparent'">
+                            📝 Ekspor WORD
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <!-- INPUT PANEL -->
+            <div class="editor-pane">
+                <div class="pane-title">📝 INPUT PARAMETERS</div>
+
+                <div class="form-group">
+                    <label>JUDUL MEETING</label>
+                    <input type="text" id="m-title" value="">
+                </div>
+
+                <div class="form-group" style="flex-direction: row; gap: 15px;">
+                    <div style="flex:1;">
+                        <label>TANGGAL</label>
+                        <input type="date" id="m-date">
+                    </div>
+                    <div style="flex:1;">
+                        <label>WAKTU</label>
+                        <input type="text" id="m-time" value="09:00 - 11:00 WIB">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>TEMPAT</label>
+                    <input type="text" id="m-place" value="Meeting Room Lt. 2 (Smart Warehouse)">
+                </div>
+
+                <div class="form-group">
+                    <label>PESERTA (Pisahkan Koma)</label>
+                    <textarea id="m-attendees"
+                        style="min-height: 60px;">Budi S (Ka. Gudang), Rini (Admin), Joko (Teknik), Sarah (Purchasing)</textarea>
+                </div>
+
+                <div class="pane-title" style="margin-top: 10px;">🤖 ADMIN SMART v2.0 INPUT</div>
+                <div class="form-group">
+                    <label>KETIK POIN SINGKAT (AI AKAN MERAPIKAN)</label>
+                    <textarea id="m-raw" style="min-height: 300px; color: #86efac;">1. stok rm jagung aman, intake lancar.
+2. cpo tank 3 ada rembes sedikit, perlu cek seal besok.
+3. forklift no 5 servisan nya kelamaan, tanya bengkel.
+4. rencana fumigasi silo 1 minggu depan.</textarea>
+                    <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">*Gunakan baris baru untuk setiap
+                        poin. Kata kunci 'perlu', 'cek', 'besok' otomatis jadi Action Plan.</div>
+                </div>
+
+                <div class="form-group" style="flex-direction: row; gap: 15px;">
+                    <div style="flex:1;">
+                        <label>PIMPINAN</label>
+                        <input type="text" id="m-leader" value="Hendra Gunawan">
+                    </div>
+                    <div style="flex:1;">
+                        <label>NOTULIS</label>
+                        <input type="text" id="m-scribe" value="Admin Warehouse">
+                    </div>
+                </div>
+
+                <!-- IMAGE MANAGER -->
+                <div class="pane-title" style="margin-top: 10px;">🖼️ IMAGE ATTACHMENTS</div>
+                <div class="form-group"
+                    style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.2);">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="file" id="img-upload" accept="image/*"
+                            style="width: 100%; font-size: 0.8rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 5px;">
+                        <input type="text" id="img-name" placeholder="Ketik Nama Gambar (mis: AYAKBIN)"
+                            style="width: 100%; font-size: 0.8rem;">
+                        <button onclick="handleImageUpload()"
+                            style="background: #00f3ff; color: #000; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-family: 'Orbitron'; font-size: 0.7rem;">UPLOAD
+                            & ADD TAG</button>
+                    </div>
+                    <div id="image-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Attached images will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREVIEW PANEL -->
+            <div class="preview-pane">
+                <div id="preview-container" class="preview-content-container">
+                    <!-- A4 Pages will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL (AI REVIEW CENTER) -->
+    <div id="preview-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+
+        <!-- CLOSE BTN -->
+        <div style="position: absolute; top: 20px; right: 30px; cursor: pointer; color: white; font-size: 2rem; font-weight: bold; z-index: 10001;"
+            onclick="closePreviewMode()">&times;</div>
+
+        <!-- LOADING STATE -->
+        <div id="ai-loading" style="display: none; flex-direction: column; align-items: center; text-align: center;">
+            <div class="spinner"
+                style="width: 50px; height: 50px; border: 5px solid rgba(0, 243, 255, 0.3); border-top: 5px solid #00f3ff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;">
+            </div>
+            <div style="font-family: 'Orbitron', sans-serif; color: #00f3ff; font-size: 1.5rem; letter-spacing: 2px;">
+                ANALYZING CONTENT...</div>
+            <div style="font-family: 'Inter', sans-serif; color: #94a3b8; margin-top: 10px;">Generating stylistic
+                variations...</div>
+        </div>
+
+        <!-- SELECTION INTERFACE -->
+        <div id="ai-selection"
+            style="display: none; width: 90%; height: 90%; max-width: 1600px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+
+            <!-- OPTION 1: ORIGINAL -->
+            <div class="ai-card" onclick="selectVersion('original')"
+                style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: 0.3s;">
+                <div
+                    style="padding: 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); font-family: 'Orbitron'; color: #94a3b8; display: flex; justify-content: space-between; align-items: center;">
+                    <span>1. DATA INPUT</span>
+                    <span
+                        style="font-size: 0.8rem; background: #64748b; color: white; padding: 2px 8px; border-radius: 4px;">ORIGINAL</span>
+                </div>
+                <div id="preview-original"
+                    style="padding: 20px; font-family: 'Arial', sans-serif; flex: 1; overflow-y: auto; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; background: white; color: black;">
+                    <!-- Content -->
+                </div>
+                <div
+                    style="padding: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #94a3b8; font-size: 0.8rem;">
+                    Click to Use Original
+                </div>
+            </div>
+
+            <!-- OPTION 2: FORMAL (BAKU) -->
+            <div class="ai-card" onclick="selectVersion('formal')"
+                style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: 0.3s; position: relative;">
+                <div
+                    style="padding: 15px; background: rgba(0, 243, 255, 0.1); border-bottom: 1px solid rgba(0, 243, 255, 0.3); font-family: 'Orbitron'; color: #00f3ff; display: flex; justify-content: space-between; align-items: center;">
+                    <span>2. FORMAL</span>
+                    <span
+                        style="font-size: 0.8rem; background: #0ea5e9; color: white; padding: 2px 8px; border-radius: 4px;">RECOMMENDED</span>
+                </div>
+                <div id="preview-formal"
+                    style="padding: 20px; font-family: 'Arial', sans-serif; flex: 1; overflow-y: auto; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; background: white; color: black;">
+                    <!-- Content -->
+                </div>
+                <div
+                    style="padding: 15px; text-align: center; border-top: 1px solid rgba(0, 243, 255, 0.2); background: rgba(0, 243, 255, 0.05); color: #00f3ff; font-size: 0.8rem;">
+                    Click to Use Formal Version
+                </div>
+            </div>
+
+            <!-- OPTION 3: INDUSTRIAL (CANGGIH) -->
+            <div class="ai-card" onclick="selectVersion('industrial')"
+                style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: 0.3s;">
+                <div
+                    style="padding: 15px; background: rgba(245, 158, 11, 0.1); border-bottom: 1px solid rgba(245, 158, 11, 0.3); font-family: 'Orbitron'; color: #f59e0b; display: flex; justify-content: space-between; align-items: center;">
+                    <span>3. INDUSTRIAL</span>
+                    <span
+                        style="font-size: 0.8rem; background: #d97706; color: white; padding: 2px 8px; border-radius: 4px;">ADVANCED</span>
+                </div>
+                <div id="preview-industrial"
+                    style="padding: 20px; font-family: 'Arial', sans-serif; flex: 1; overflow-y: auto; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; background: white; color: black;">
+                    <!-- Content -->
+                </div>
+                <div
+                    style="padding: 15px; text-align: center; border-top: 1px solid rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.05); color: #f59e0b; font-size: 0.8rem;">
+                    Click to Use Industrial Version
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .ai-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        @media print {
+            @page {
+                margin: 0;
+            }
+
+            body {
+                background: white !important;
+                padding-top: 0 !important;
+            }
+
+            .main-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+            }
+
+            .a4-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                border: none !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                transform: none !important;
+                overflow: hidden !important;
+            }
+
+            /* Hide EVERYTHING except the A4 page */
+            nav,
+            .sidebar,
+            .editor-pane,
+            .page-header,
+            .export-btn,
+            #preview-modal,
+            .pane-title {
+                display: none !important;
+            }
+
+            .workspace {
+                display: block !important;
+                height: auto !important;
+            }
+
+            .preview-pane {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+        }
+    </style>
+
+
+    <!-- LOGIC SCRIPT (EMBEDDED) -->
+    <script>
+        // --- GLOBAL STATE ---
+        let attachedImages = [];
+
+        // HARDCODED LOGO BASE64 (PT Charoen Pokphand Indonesia)
+        // Fixed: This is the ONLY way to prevent 'Tainted Canvas' on file:// protocol.
+        const LOGO_BASE64_FIXED = "data:image/png;base64,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";
+
+        async function exportToPDF() {
+            if (typeof html2pdf === 'undefined') {
+                alert('Tunggu sebentar, library PDF sedang dimuat...');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="toggleExport()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span> MENYIAPKAN...';
+            btn.disabled = true;
+
+            // 1. ADD LOADING OVERLAY
+            const overlay = document.createElement('div');
+            overlay.id = 'pdf-loading-overlay';
+            overlay.style = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                z-index: 10000; color: #00f3ff; font-family: 'Rajdhani', sans-serif;
+            `;
+            overlay.innerHTML = `
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 20px; letter-spacing: 2px;">📄 GENERATING DOCUMENT</div>
+                <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                    <div style="width: 50%; height: 100%; background: #3b82f6; animation: loading 1.5s infinite linear;"></div>
+                </div>
+                <div style="margin-top: 15px; color: #94a3b8; font-size: 0.9rem;">Mohon jangan tutup halaman ini...</div>
+                <style>@keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }</style>
+            `;
+            document.body.appendChild(overlay);
+
+            // 2. TARGET PREVIEW CONTAINER DIRECTLY
+            const element = document.getElementById('preview-container');
+            const pages = element.querySelectorAll('.a4-page');
+
+            // Simpan gaya asli
+            const originalStyles = [];
+            pages.forEach(p => {
+                originalStyles.push({
+                    transform: p.style.transform,
+                    boxShadow: p.style.boxShadow,
+                    margin: p.style.margin,
+                    display: p.style.display
+                });
+
+                // NORMALIZE UNTUK RENDER (1:1 A4)
+                p.style.transform = 'none';
+                p.style.boxShadow = 'none';
+                p.style.margin = '0';
+                p.style.display = 'block';
+            });
+
+            try {
+                // Get filename
+                const titleVal = document.getElementById('m-title').value.trim();
+                const cleanTitle = titleVal.replace(/[^a-z0-9]/gi, '_').substring(0, 50);
+                const fileName = cleanTitle ? `Notulensi_${cleanTitle}.pdf` : `Notulensi_${Date.now()}.pdf`;
+
+                const opt = {
+                    margin: 0,
+                    filename: fileName,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
+                };
+
+                // GENERATE PDF LANGSUNG DARI DOM ASLI
+                await html2pdf().set(opt).from(element).save();
+
+                toggleExport();
+            } catch (error) {
+                console.error('PDF Generation Error:', error);
+                alert('Gagal generate PDF: ' + error.message);
+            } finally {
+                // 3. RESTORE ORIGINAL STYLES
+                pages.forEach((p, i) => {
+                    const os = originalStyles[i];
+                    p.style.transform = os.transform;
+                    p.style.boxShadow = os.boxShadow;
+                    p.style.margin = os.margin;
+                    p.style.display = os.display;
+                });
+
+                // REMOVE OVERLAY
+                if (document.getElementById('pdf-loading-overlay')) {
+                    document.body.removeChild(overlay);
+                }
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+
+        function exportToWord() {
+            // Simple HTML to Word Export
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                "<head><meta charset='utf-8'><title>Export HTML to Word Document with JavaScript</title></head><body>";
+
+            const footer = "</body></html>";
+            const sourceHTML = header + document.querySelector('.a4-page').outerHTML + footer;
+
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+
+            // File Name
+            const titleVal = document.getElementById('m-title').value.trim();
+            const docNumEl = document.getElementById('p-doc-no') || document.getElementById('doc-number-display');
+            const docNo = docNumEl ? docNumEl.textContent.replace(/\//g, '-') : 'DOC';
+            const cleanTitle = titleVal.replace(/[^a-z0-9]/gi, '_').substring(0, 50);
+            const fileName = cleanTitle ? `Notulensi_${cleanTitle}.doc` : `Notulensi_${docNo}.doc`;
+
+            fileDownload.download = fileName;
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+            toggleExport();
+        }
+
+        function saveLog() {
+            const title = document.getElementById('m-title').value || 'Notulensi';
+            const date = document.getElementById('m-date').value;
+            alert(`✅ Log "${title}" (${date}) tersimpan di database lokal!`);
+        }
+
+        // --- HELPER TO RENDER FULL DOC ---
+
+        function formatTanggalIndo(dateStr) {
+            if (!dateStr || dateStr === '-') return '-';
+            try {
+                const date = new Date(dateStr);
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                return new Intl.DateTimeFormat('id-ID', options).format(date);
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function renderFullDocTemplate(contentHtmlArr) {
+            const docNum = 'WHS/2026/001'; // Default or sequential
+            const rawDate = document.getElementById('m-date').value;
+            const formattedDate = formatTanggalIndo(rawDate);
+            const time = document.getElementById('m-time').value || '-';
+            const place = document.getElementById('m-place').value || '-';
+            const title = document.getElementById('m-title').value || '-';
+            const attendeesInput = document.getElementById('m-attendees').value || '-';
+            const attendees = attendeesInput.replace(/\n/g, '<br>').replace(/,/g, ', ');
+            const leader = document.getElementById('m-leader').value || '-';
+            const scribe = document.getElementById('m-scribe').value || '-';
+
+            const totalPages = contentHtmlArr.length;
+
+            return contentHtmlArr.map((contentHtml, idx) => `
+            <div class="a4-page" style="width: 210mm; min-height: 297mm; background: white; margin-bottom: 20px;">
+                 <table class="print-table" style="width: 100%; height: 100%; border-collapse: collapse;">
+                    <thead class="print-thead">
+                        <tr class="print-tr">
+                            <td class="print-td" style="padding: 15mm 20mm 10mm 20mm;">
+                                <div class="document-header" style="border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 15px;">
+                                    <div style="display: flex; align-items: center; gap: 20px; justify-content: space-between;">
+                                        <div style="display: flex; align-items: center; gap: 20px;">
+                                            <img src="${LOGO_BASE64_FIXED}" alt="Company Logo" style="height: 60px; width: auto;">
+                                            <div>
+                                                <div class="company-name" style="font-size: 13pt; letter-spacing: 0.5px;">PT Charoen Pokphand Indonesia</div>
+                                                <div style="font-size: 8pt; font-family: Arial; color: #333;">Feedmill Cirebon - Warehouse Division</div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right; font-size: 9pt; font-family: Arial; white-space: nowrap;">
+                                            <span style="font-weight: bold;">No Doc: <span>${docNum}</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${idx === 0 ? `
+                                <div class="document-title" style="margin: 15px 0; font-size: 14pt;">NOTULENSI MEETING</div>
+                                <table class="meta-table" style="width: 100%; font-size: 9pt;">
+                                    <tr><td width="120">Hari / Tanggal</td><td width="20">:</td><td>${formattedDate}</td></tr>
+                                    <tr><td>Waktu</td><td>:</td><td>${time}</td></tr>
+                                    <tr><td>Tempat</td><td>:</td><td>${place}</td></tr>
+                                    <tr><td>Agenda</td><td>:</td><td style="font-weight: bold;">${title}</td></tr>
+                                    <tr><td style="vertical-align: top;">Peserta</td><td style="vertical-align: top;">:</td><td>${attendees}</td></tr>
+                                </table>
+                                <hr style="border-top: 1px solid black; margin: 10px 0;">
+                                ` : ''}
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody class="print-tbody">
+                        <tr class="print-tr">
+                            <td class="print-td" style="padding: 0 20mm; vertical-align: top;">
+                                <div class="content-body" style="position: relative; min-height: 400px; padding-bottom: 20px;">
+                                    <div style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 2.5rem; font-weight: 900; color: rgba(0,0,0,0.03); pointer-events: none; z-index: 0; white-space: nowrap; font-family: 'Arial Black', sans-serif; border: 3px solid rgba(0,0,0,0.03); padding: 5px 30px; border-radius: 15px;">SMART WAREHOUSE v2.0</div>
+                                    <div style="position: relative; z-index: 1;">${contentHtml}</div>
+                                    
+                                    ${idx === totalPages - 1 ? `
+                                    <div class="signature-section" style="margin-top: 40px; font-size: 10pt;">
+                                        <div class="sig-box">
+                                            <div>Diketahui Oleh,</div>
+                                            <div class="sig-space" style="height: 60px;"></div>
+                                            <div style="text-decoration: underline; font-weight: bold;">${leader}</div>
+                                            <div style="font-size: 9pt;">Pimpinan Rapat</div>
+                                        </div>
+                                        <div class="sig-box">
+                                            <div>Dibuat Oleh,</div>
+                                            <div class="sig-space" style="height: 60px;"></div>
+                                            <div style="text-decoration: underline; font-weight: bold;">${scribe}</div>
+                                            <div style="font-size: 9pt;">Notulis</div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="print-tfoot">
+                        <tr class="print-tr">
+                            <td class="print-td" style="padding: 10mm 20mm 15mm 20mm;">
+                                <div class="document-footer" style="border-top: 1px solid #ccc; padding-top: 5px; font-size: 7pt; color: #666; font-family: Arial, sans-serif; display: flex; justify-content: space-between;">
+                                    <div>SMART WAREHOUSE v2.0 - WAREHOUSE DIVISION</div>
+                                    <div>Halaman ${idx + 1} / ${totalPages}</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`).join('');
+        }
+
+        // OPEN AI REVIEW CENTER
+        function openPreviewMode() {
+            const modal = document.getElementById('preview-modal');
+            const loading = document.getElementById('ai-loading');
+            const selection = document.getElementById('ai-selection');
+
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+
+            // SHOW LOADING
+            loading.style.display = 'flex';
+            selection.style.display = 'none';
+
+            // FAKE PROCESSING DELAY (1.5s)
+            setTimeout(() => {
+                loading.style.display = 'none';
+                selection.style.display = 'grid';
+
+                // GENERATE ALL 3 VERSIONS (NOW WITH FULL DOC TEMPLATE)
+                const raw = document.getElementById('m-raw').value;
+
+                const pagesOriginal = generateContent(raw, 'original');
+                const pagesFormal = generateContent(raw, 'formal');
+                const pagesIndustrial = generateContent(raw, 'industrial');
+
+                document.getElementById('preview-original').innerHTML = renderFullDocTemplate(pagesOriginal);
+                document.getElementById('preview-formal').innerHTML = renderFullDocTemplate(pagesFormal);
+                document.getElementById('preview-industrial').innerHTML = renderFullDocTemplate(pagesIndustrial);
+
+                // Add scaling to thumbnails
+                document.querySelectorAll('.ai-card .a4-page').forEach(p => {
+                    p.style.transform = 'scale(0.35)';
+                    p.style.transformOrigin = 'top left';
+                    // Adjust parent container to fit scaled content
+                    p.parentElement.style.height = '600px';
+                    p.parentElement.style.overflow = 'hidden';
+                });
+
+            }, 1000);
+        }
+
+        function closePreviewMode() {
+            document.getElementById('preview-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // APPLY SELECTED VERSION
+        window.selectVersion = function (type) {
+            currentMode = type;
+            const raw = document.getElementById('m-raw').value;
+            const pagesArr = generateContent(raw, currentMode);
+            document.getElementById('preview-container').innerHTML = renderFullDocTemplate(pagesArr);
+            closePreviewMode();
+        };
+
+        // --- CORE GENERATION ENGINE ---
+        function generateContent(rawText, mode) {
+            const lines = rawText.split('\n');
+            let pagesContent = [];
+            let currentContentHtml = '';
+
+            // Limit per page (characters) - Approx for A4
+            // First page is shorter because of meta-table
+            const CHARS_PER_PAGE_FIRST = 1500;
+            const CHARS_PER_PAGE_REST = 2500;
+
+            let charCount = 0;
+
+            // DICTIONARIES (omitted for brevity in logic, but they exist)
+            const dictFormal = {
+                'yg': 'yang', 'blm': 'belum', 'ga': 'tidak', 'tdk': 'tidak', 'sy': 'saya',
+                'klo': 'kalau', 'dlm': 'dalam', 'utk': 'untuk', 'bsk': 'besok', 'krn': 'karena',
+                'dgn': 'dengan', 'dr': 'dari', 'bisa': 'dapat', 'gmn': 'bagaimana', 'tmn': 'teman'
+            };
+
+            const dictIndustrial = {
+                'aman': '<b>Operational Integrity: Stable (Green Metric)</b>',
+                'lancar': 'menunjukkan <i>Optimal Throughput</i> tanpa hambatan signifikansi',
+                'rusak': 'mengalami <b>Critical Failure</b> (memerlukan <i>Corrective Maintenance</i>)',
+                'rembes': 'terdeteksi anomali kebocoran fluida (Fluid Leakage Indication)',
+                'cek': 'dilakukan <i>Comprehensive Inspection & Verification</i>',
+                'stok': 'Inventory Level',
+                'blm': 'status: <i>Pending</i> (Awaiting Execution)',
+                'sisa': 'Residual Quantity',
+                'kurang': 'Deficit / Shortage Detected',
+                'tambah': 'Requesting Additional Supply (Replenishment)',
+                'stop': '<b>Immediate Halt / Shutdown</b>',
+                'tanya': 'Mengajukan <i>Technical Inquiry</i>',
+                'siap': '<i>Ready for Deployment</i>',
+                'selesai': '<b>Task Completed (100%)</b>',
+                'masalah': '<i>Operational Bottleneck / Issue</i>',
+                'solusi': '<i>Strategic Resolution</i>',
+                'penting': '<b>High Priority / Critical Path</b>',
+                'koordinasi': '<i>Cross-Functional Alignment</i>',
+                'besok': 'dijadwalkan pada <i>T+1 (Immediate Action)</i>',
+                'rencana': 'disusun <i>Strategic Plan</i> untuk',
+                'perlu': 'diwajibkan urgensi (High Priority) untuk',
+                'beli': 'proses <i>Procurement / Purchasing</i>',
+                'ganti': 'dilakukan penggantian komponen (Component Replacement)'
+            };
+
+            lines.forEach((line, index) => {
+                const cleanLine = line.trim();
+
+                // Track characters
+                const limit = (pagesContent.length === 0) ? CHARS_PER_PAGE_FIRST : CHARS_PER_PAGE_REST;
+                if (charCount > limit) {
+                    pagesContent.push(currentContentHtml);
+                    currentContentHtml = '';
+                    charCount = 0;
+                }
+
+                if (!cleanLine) {
+                    currentContentHtml += `<div style="height:8px;"></div>`;
+                    return;
+                }
+
+                // AI Processing
+                const match = cleanLine.match(/^(\d+(?:\.\d+)*\.?)\s+(.*)/);
+                let prefix = '';
+                let contentRaw = cleanLine;
+                let depth = 0;
+
+                if (match) {
+                    prefix = match[1];
+                    contentRaw = match[2];
+                    const parts = prefix.split('.').filter(p => p.length > 0);
+                    depth = Math.max(0, parts.length - 1);
+                }
+
+                let displayTxt = contentRaw;
+                if (mode !== 'original') {
+                    let words = contentRaw.split(' ');
+                    const activeDict = mode === 'industrial' ? { ...dictFormal, ...dictIndustrial } : dictFormal;
+                    const fixedWords = words.map((word) => {
+                        const coreWord = word.replace(/[.,()]/g, '').toLowerCase();
+                        if (activeDict[coreWord]) return activeDict[coreWord];
+                        return word;
+                    });
+                    displayTxt = fixedWords.join(' ');
+                }
+
+                // Handle Image tags
+                const imgRegex = /\[IMG(\d+)\]/g;
+                if (displayTxt.match(imgRegex)) {
+                    displayTxt = displayTxt.replace(imgRegex, (match, p1) => {
+                        const idx = parseInt(p1) - 1;
+                        if (attachedImages[idx]) {
+                            const img = attachedImages[idx];
+                            charCount += 500; // Add weight for image
+                            return `
+                                <div style="text-align: center; margin: 15px 0; border: 1px solid #eee; padding: 5px; border-radius: 4px; page-break-inside: avoid;">
+                                    <img src="${img.data}" style="max-width: 50%; max-height: 150px;">
+                                    <div style="margin-top: 5px; font-size: 8pt; color: #666;">( Gambar ${p1}: ${img.name.toUpperCase()} )</div>
+                                </div>
+                            `;
+                        }
+                        return match;
+                    });
+                }
+
+                if (displayTxt && !displayTxt.startsWith('<')) {
+                    displayTxt = displayTxt.charAt(0).toUpperCase() + displayTxt.slice(1);
+                    if (!/[.!?>]$/.test(displayTxt.trim())) displayTxt += '.';
+                }
+
+                // Render
+                const marginLeft = depth * 25;
+                if (!prefix) {
+                    currentContentHtml += `<div style="padding-left: ${marginLeft + 25}px; line-height: 1.5; margin-bottom: 4px;">${displayTxt}</div>`;
+                } else {
+                    currentContentHtml += `
+                        <div style="display: flex; flex-direction: row; gap: 8px; margin-bottom: 4px; padding-left: ${marginLeft}px;">
+                            <div style="min-width: 25px; font-weight: ${depth === 0 ? 'bold' : 'normal'};">${prefix}</div>
+                            <div style="flex: 1; text-align: justify;">${displayTxt}</div>
+                        </div>
+                    `;
+                }
+
+                charCount += cleanLine.length;
+            });
+
+            // Push last page
+            if (currentContentHtml || pagesContent.length === 0) {
+                pagesContent.push(currentContentHtml);
+            }
+
+            return pagesContent;
+        }
+
+        // Live Preview just uses 'formal' by default now? OR maybe 'original' to be safe?
+        // User asked for "Preview" click to trigger options.
+        // So live preview can just show "Original" or "Formal" as default.
+        // Let's make live preview show 'formal' as it's the middle ground.
+        function processAI() {
+            // AUTO-RUN 'Formal' mode for live typing (Least intrusive)
+            const raw = document.getElementById('m-raw').value;
+            const pagesArr = generateContent(raw, 'formal');
+            document.getElementById('preview-container').innerHTML = renderFullDocTemplate(pagesArr);
+        }
+
+        function resetForm() {
+            if (confirm('Reset Data?')) {
+                document.getElementById('m-raw').value = '';
+                document.getElementById('m-title').value = '';
+                syncPreview();
+            }
+        }
+    </script>
+    <script>
+        // --- LIVE PREVIEW & SMART SCROLL LOGIC ---
+        const rawInput = document.getElementById('m-raw');
+        let currentMode = 'formal'; // Default mode
+
+        // Helper: Levenshtein Distance for Fuzzy Match
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) == a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1, // substitution
+                            Math.min(
+                                matrix[i][j - 1] + 1, // insertion
+                                matrix[i - 1][j] + 1 // deletion
+                            )
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        // Initialize listener
+        rawInput.addEventListener('input', () => {
+            syncPreview();
+        });
+
+        // Update mode from selection
+        window.selectVersion = function (type) {
+            currentMode = type;
+            const raw = document.getElementById('m-raw').value;
+            const pagesArr = generateContent(raw, currentMode);
+            document.getElementById('preview-container').innerHTML = renderFullDocTemplate(pagesArr);
+            closePreviewMode();
+        };
+
+        function syncPreview() {
+            const text = rawInput.value;
+            try {
+                const pagesArr = generateContent(text, currentMode);
+                document.getElementById('preview-container').innerHTML = renderFullDocTemplate(pagesArr);
+
+                // Show Character Count / Limit Info
+                const totalChars = text.length;
+                let infoBox = document.getElementById('char-limit-info');
+                if (!infoBox) {
+                    infoBox = document.createElement('div');
+                    infoBox.id = 'char-limit-info';
+                    infoBox.style.fontSize = '0.7rem';
+                    infoBox.style.color = '#94a3b8';
+                    infoBox.style.marginTop = '5px';
+                    rawInput.parentElement.appendChild(infoBox);
+                }
+                const firstLimit = 1500;
+                const restLimit = 2500;
+                infoBox.innerHTML = `Characters: ${totalChars} | Pages: ${pagesArr.length}`;
+            } catch (e) {
+                console.error("Preview Generation Error:", e);
+            }
+        }
+
+        // --- IMAGE ATTACHMENT LOGIC ---
+        // attachedImages moved to top global scope
+
+        function handleImageUpload() {
+            const fileInput = document.getElementById('img-upload');
+            const nameInput = document.getElementById('img-name');
+            const file = fileInput.files[0];
+            const name = nameInput.value.trim() || 'FOTO';
+
+            if (!file) {
+                alert("Pilih gambar terlebih dahulu!");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const dataUrl = e.target.result;
+                const newImg = {
+                    id: attachedImages.length + 1,
+                    name: name,
+                    data: dataUrl
+                };
+                attachedImages.push(newImg);
+                updateImageList();
+
+                // Clear inputs
+                fileInput.value = '';
+                nameInput.value = '';
+
+                // Suggest insertion
+                const tag = `[IMG${newImg.id}]`;
+                const rawInput = document.getElementById('m-raw');
+                const start = rawInput.selectionStart;
+                const end = rawInput.selectionEnd;
+                const text = rawInput.value;
+                rawInput.value = text.substring(0, start) + "\n" + tag + "\n" + text.substring(end);
+
+                syncPreview();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateImageList() {
+            const list = document.getElementById('image-list');
+            list.innerHTML = attachedImages.map(img => `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; font-size: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="${img.data}" style="width: 30px; height: 30px; object-fit: cover; border-radius: 2px;">
+                        <span>${img.name} <b>[IMG${img.id}]</b></span>
+                    </div>
+                    <button onclick="removeImage(${img.id})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer;">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function removeImage(id) {
+            attachedImages = attachedImages.filter(img => img.id !== id);
+            // Re-index
+            attachedImages.forEach((img, i) => img.id = i + 1);
+            updateImageList();
+            syncPreview();
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set Default Dates
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+
+            document.getElementById('m-date').value = `${year}-${month}-${day}`;
+            document.getElementById('m-time').value = `${hours}:${mins} WIB`;
+
+            // Initial Sync
+            syncPreview();
+
+            // Enable click to open calendar
+            document.getElementById('m-date').addEventListener('click', function () {
+                try {
+                    this.showPicker();
+                } catch (e) {
+                    console.warn("showPicker not supported");
+                }
+            });
+
+            // Link other meta fields
+            ['m-title', 'm-date', 'm-time', 'm-place', 'm-attendees', 'm-leader', 'm-scribe'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => {
+                    syncPreview();
+                });
+            });
+        });
+
+    </script>
+    <div id="pdf-export-container"></div>
+</body>
+
+</html>

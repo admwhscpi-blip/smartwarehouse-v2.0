@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHSMART - Secured Access Portal</title>
+
+    <!-- LANDING V3 STYLES (Base) -->
+    <link rel="stylesheet" href="css/style_v3.css">
+
+    <!-- ACCESS SYSTEM STYLES (New) -->
+    <link rel="stylesheet" href="assets/css/access-system.css">
+
+    <style>
+        /* Extra Tweaks for Secured Page */
+        body {
+            background-color: #050510;
+        }
+
+        .hero-badge-secure {
+            background: rgba(255, 42, 42, 0.1);
+            border: 1px solid rgba(255, 42, 42, 0.3);
+            color: #ff2a2a;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        /* Card Container Isolation for Blur Effect */
+        .card-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            /* Match card radius */
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- BACKGROUND -->
+    <div class="mesh-background"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- NAVIGATION -->
+    <div class="nav-container">
+        <div class="nav-pill">
+            <div class="nav-brand">
+                <div class="brand-logo">📦</div>
+                <div class="brand-title">WHSMART <span
+                        style="font-size:0.5rem; opacity:0.5; margin-left:5px;">SECURE</span></div>
+            </div>
+
+            <div class="nav-menu">
+                <a href="homepage-secured.html" class="nav-btn active">Home</a>
+
+                <!-- PROTECTED MENUS -->
+                <!-- Note: href links to the Dashboard. Logic will disable them via JS initially. -->
+                <a href="index.html?module=rm" class="nav-btn protected-menu">RM Stock</a>
+                <a href="index.html?module=cpo" class="nav-btn protected-menu">CPO Tanks</a>
+                <a href="layout.html" class="nav-btn protected-menu">Layout Map</a>
+
+                <a href="#" class="nav-btn">About</a>
+            </div>
+
+            <!-- ACCESS BUTTON HEADER -->
+            <button id="header-access-btn" class="access-status-btn">
+                🔒 Masukkan Kode Akses
+            </button>
+        </div>
+    </div>
+
+    <!-- HERO SECTION -->
+    <div id="v3-landing">
+        <div class="hero-wrapper">
+            <div class="hero-badge-secure">⚠️ RESTRICTED ACCESS AREA</div>
+            <div class="hero-heading">
+                Divisional Warehouse<br>
+                <span>Protection System</span>
+            </div>
+            <div class="hero-sub">
+                Core operational data is encrypted. Use your Digital Key (PIN) to access live inventory and tank farm
+                controls.
+            </div>
+
+            <!-- Status Indicator -->
+            <div
+                style="background:rgba(255,255,255,0.05); padding:8px; border-radius:50px; display:inline-flex; width:450px; border:1px solid rgba(255,255,255,0.1); margin-top:20px;">
+                <span style="padding:10px 20px; color:#aaa; font-size:0.9rem;">Security Level: 🔒 HIGH (Level 3)</span>
+            </div>
+        </div>
+
+        <!-- PROTECTED CARDS (Dashboard Entry Points) -->
+        <div class="deck-grid">
+
+            <!-- CARD 1: RM STOCK (LOCKED) -->
+            <div class="card-wrapper">
+                <div class="ind-card protected-content"
+                    onclick="if(!AccessControl.isLocked) window.location.href='index.html?module=rm'">
+                    <div class="card-top">
+                        <div>
+                            <div class="metric-label">Total Stock Item</div>
+                            <div class="metric-val">24,500 <span style="font-size:1rem; color:#6366f1">Tons</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:#4ade80;">↗ Intake Active</div>
+                </div>
+            </div>
+
+            <!-- CARD 2: CPO (LOCKED) -->
+            <div class="card-wrapper">
+                <div class="ind-card protected-content"
+                    onclick="if(!AccessControl.isLocked) window.location.href='index.html?module=cpo'">
+                    <div class="card-top">
+                        <div>
+                            <div class="metric-label">Incoming Goods</div>
+                            <div class="metric-val">3 Trucks <span style="font-size:1rem; color:#3b82f6">Live</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:20px; font-size:0.8rem; color:#3b82f6;">• Gate 3 Unloading</div>
+                </div>
+            </div>
+
+            <!-- CARD 3: LAYOUT (LOCKED) -->
+            <div class="card-wrapper">
+                <div class="ind-card protected-content"
+                    onclick="if(!AccessControl.isLocked) window.location.href='layout.html'">
+                    <div class="card-top">
+                        <div>
+                            <div class="metric-label">Available Pallets</div>
+                            <div class="metric-val">1,250 <span style="font-size:1rem; color:#06b6d4">Units</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:#06b6d4;">↗ Gudang F Optimized</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ACCESS MODAL POPUP -->
+    <div id="access-modal" class="access-modal-overlay">
+        <div class="access-card">
+            <div class="security-icon">🛡️</div>
+            <h2 class="access-title">Security Check</h2>
+            <div class="access-sub">Enter your 6-digit division code to proceed.</div>
+
+            <div class="pin-input-container">
+                <input type="password" id="pin-input" class="pin-field" maxlength="6" placeholder="******"
+                    autocomplete="off">
+            </div>
+
+            <div id="access-msg" style="color:red; font-size:0.8rem; margin-bottom:15px; height:15px;"></div>
+
+            <div class="access-btn-group">
+                <button class="btn-cancel" onclick="AccessControl.closeModal()">CANCEL</button>
+                <button class="btn-access" onclick="AccessControl.validateCode()">VERIFY</button>
+            </div>
+
+            <div style="margin-top:20px; font-size:0.7rem; color:#444;">ID: WHS-SEC-X92</div>
+        </div>
+    </div>
+
+
+    <!-- ACCESS CONTROL SCRIPT -->
+    <script src="assets/js/access-control.js"></script>
+
+</body>
+
+</html>

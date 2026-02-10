@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE V2.0 - RM-AGING Dashboard</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- ICONS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- LIBRARIES -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --accent-cyan: #00f3ff;
+            --accent-purple: #9333ea;
+            --accent-yellow: #fbbf24;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 50% 50%, #111827 0%, #050505 100%);
+            min-height: 100vh;
+        }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        /* LOADING OVERLAY */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--glass-border);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            filter: drop-shadow(var(--neon-shadow));
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* NAVBAR */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: cyber-glow 4s infinite alternate;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        /* DASHBOARD LAYOUT */
+        .dashboard-container {
+            padding: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            margin-bottom: 40px;
+            border-left: 5px solid var(--accent-cyan);
+            padding-left: 20px;
+        }
+
+        .header-section h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        /* CARDS */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 243, 255, 0.4);
+        }
+
+        /* GLOBAL AGING TABLE */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .table-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .scroll-area {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            padding: 10px 20px;
+        }
+
+        td {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px 20px;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        tr:hover td {
+            background: rgba(0, 243, 255, 0.08);
+        }
+
+        td:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+
+        td:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+
+        .badge-age {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .age-old {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .age-mid {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid #fbbf24;
+        }
+
+        .age-new {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+
+        /* SEARCH SECTION */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 15px 15px 15px 50px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--neon-shadow);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-cyan);
+        }
+
+        .material-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .material-item {
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .material-item:hover {
+            background: rgba(0, 243, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .material-item.active {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            font-weight: 700;
+        }
+
+        /* WAREHOUSE MAP */
+        .map-section {
+            margin-top: 40px;
+        }
+
+        .warehouse-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .wh-node {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.4));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .wh-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 243, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--accent-cyan);
+        }
+
+        .wh-info {
+            flex: 1;
+        }
+
+        .wh-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .progress-container {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .progress-old {
+            height: 100%;
+            background: #ef4444;
+        }
+
+        .progress-young {
+            height: 100%;
+            background: #22c55e;
+        }
+
+        .wh-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* DETAIL MODAL-LIKE OVERLAY */
+        #detail-view {
+            position: fixed;
+            right: -100%;
+            top: 0;
+            width: 40%;
+            height: 100vh;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(30px);
+            border-left: 1px solid var(--accent-cyan);
+            z-index: 2000;
+            padding: 50px;
+            box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+            transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #detail-view.active {
+            right: 0;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-dim);
+        }
+
+        .detail-header {
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .priority-item {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--accent-cyan);
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .prio-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            min-width: 40px;
+        }
+
+        /* TEXT UTILS */
+        .text-glow {
+            text-shadow: var(--neon-shadow);
+        }
+
+        .text-cyan {
+            color: var(--accent-cyan);
+        }
+
+        @keyframes cyber-glow {
+            0% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3), 0 0 20px rgba(34, 211, 238, 0.1);
+                filter: brightness(1);
+            }
+
+            50% {
+                text-shadow: 0 0 15px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.3);
+                filter: brightness(1.2);
+            }
+
+            100% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3), 0 0 20px rgba(34, 211, 238, 0.1);
+                filter: brightness(1);
+            }
+        }
+
+        @keyframes blue-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.6), 0 0 25px rgba(59, 130, 246, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 25px rgba(0, 243, 255, 0.9), 0 0 45px rgba(59, 130, 246, 0.7);
+            }
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; font-family: 'Orbitron'; letter-spacing: 2px;">SYNCING AGING DATA...</p>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link" style="text-decoration: none;">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+    </nav>
+
+    <div class="dashboard-container">
+
+        <div class="header-section">
+            <p class="text-dim">RM STORAGE / MONITORING</p>
+            <h1>DATA RM-AGING</h1>
+        </div>
+
+        <div class="grid-main">
+            <!-- LEFT: GLOBAL TABLE -->
+            <div class="glass-card">
+                <div class="table-header">
+                    <h2><i class="fas fa-history"></i> URUTAN MATERIAL TERTUA</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <span class="badge-age age-old" style="font-size: 0.6rem;">OLD (>90D)</span>
+                        <span class="badge-age age-mid" style="font-size: 0.6rem;">MID (30-90D)</span>
+                        <span class="badge-age age-new" style="font-size: 0.6rem;">YOUNG (<30D)< /span>
+                    </div>
+                </div>
+
+                <div class="scroll-area">
+                    <table id="table-aging-global">
+                        <thead>
+                            <tr>
+                                <th>Lot</th>
+                                <th>Material</th>
+                                <th>Umur (Hari)</th>
+                                <th>Gudang</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-aging">
+                            <!-- Data injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT: SEARCH & MATERIAL LIST -->
+            <div class="glass-card">
+                <div class="table-header">
+                    <h2><i class="fas fa-search"></i> CARI MATERIAL</h2>
+                </div>
+
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="input-search" placeholder="Ketik nama material...">
+                </div>
+
+                <div class="material-list" id="material-list-cont">
+                    <!-- List injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- WAREHOUSE MAP SECTION -->
+        <div class="map-section">
+            <div class="header-section" style="border-left-color: var(--accent-purple); margin-bottom: 20px;">
+                <h2 style="font-family: 'Orbitron'; font-size: 1.5rem;">MINIATUR PETA GUDANG & ANALYSTIC</h2>
+            </div>
+
+            <div class="warehouse-grid" id="container-map">
+                <!-- Map nodes injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- DETAIL VIEW OVERLAY -->
+    <div id="detail-view">
+        <div class="close-btn" onclick="toggleDetail(false)"><i class="fas fa-times"></i></div>
+
+        <div class="detail-header">
+            <p id="detail-material-name" class="text-cyan" style="font-family: 'Orbitron'; font-size: 1.5rem;"></p>
+            <p class="text-dim">Urutan Prioritas Berdasarkan Umur</p>
+        </div>
+
+        <div id="priority-list">
+            <!-- Priority items injected here -->
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzJaE-6mT8JUv8PbAFR55w07lZC1zX6Iab0w3dXPx9fx0-mwAtWWpF5Qa4ii4KT_pKZqw/exec';
+
+        let allData = [];
+        let filteredMaterials = [];
+
+        // LOADING LOGIC
+        window.addEventListener('load', async () => {
+            // Simulate loading or fetch data
+            await fetchData();
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                gsap.from('.glass-card', { y: 30, opacity: 0, duration: 1, stagger: 0.2, ease: "power4.out" });
+            }, 800);
+        });
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL + "?action=getAgingData");
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    allData = result.data;
+                    console.log("Data loaded successfully:", allData.length, "rows");
+                } else {
+                    console.error("API Error:", result.message);
+                    alert("Gagal mengambil data: " + result.message);
+                }
+
+                renderGlobalTable();
+                renderMaterialList();
+                renderMap();
+
+            } catch (e) {
+                console.error("Fetch failed:", e);
+                alert("Koneksi gagal! Pastikan Apps Script sudah di-deploy dengan benar.");
+            }
+        }
+
+        function getAgeBadge(age) {
+            if (age > 90) return '<span class="badge-age age-old">OLD</span>';
+            if (age >= 30) return '<span class="badge-age age-mid">MID</span>';
+            return '<span class="badge-age age-new">YOUNG</span>';
+        }
+
+        function renderGlobalTable() {
+            const tbody = document.getElementById('tbody-aging');
+            tbody.innerHTML = '';
+
+            // Sort by age oldest first
+            const sorted = [...allData].sort((a, b) => b.umur - a.umur);
+
+            sorted.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-cyan font-weight-bold">${item.lot}</td>
+                    <td>${item.material}</td>
+                    <td class="font-weight-bold">${item.umur}</td>
+                    <td>${item.gudang}</td>
+                    <td>${getAgeBadge(item.umur)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderMaterialList(filter = '') {
+            const listCont = document.getElementById('material-list-cont');
+            listCont.innerHTML = '';
+
+            // Unique materials
+            const uniqueMats = [...new Set(allData.map(d => d.material))]
+                .filter(m => m.toLowerCase().includes(filter.toLowerCase()));
+
+            uniqueMats.forEach(mat => {
+                const div = document.createElement('div');
+                div.className = 'material-item';
+                div.innerHTML = `
+                    <span>${mat}</span>
+                    <i class="fas fa-chevron-right" style="font-size: 0.7rem; opacity: 0.5;"></i>
+                `;
+                div.onclick = () => showDetail(mat);
+                listCont.appendChild(div);
+            });
+        }
+
+        function showDetail(mat) {
+            document.getElementById('detail-material-name').textContent = mat;
+            const prioList = document.getElementById('priority-list');
+            prioList.innerHTML = '';
+
+            const lots = allData.filter(d => d.material === mat)
+                .sort((a, b) => b.umur - a.umur);
+
+            lots.forEach((lot, idx) => {
+                const div = document.createElement('div');
+                div.className = 'priority-item';
+                div.innerHTML = `
+                    <div class="prio-num">#${idx + 1}</div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="text-cyan">${lot.lot}</span>
+                            <span class="badge-age ${lot.umur > 90 ? 'age-old' : (lot.umur >= 30 ? 'age-mid' : 'age-new')}">${lot.umur} HARI</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">
+                            Gudang: ${lot.gudang} | Sisa: ${lot.sisa}
+                        </div>
+                    </div>
+                `;
+                prioList.appendChild(div);
+            });
+
+            toggleDetail(true);
+        }
+
+        function toggleDetail(show) {
+            const detail = document.getElementById('detail-view');
+            if (show) detail.classList.add('active');
+            else detail.classList.remove('active');
+        }
+
+        function renderMap() {
+            const container = document.getElementById('container-map');
+            container.innerHTML = '';
+
+            // Group by warehouse
+            const whGroups = {};
+            allData.forEach(d => {
+                if (!whGroups[d.gudang]) whGroups[d.gudang] = { old: 0, total: 0 };
+                whGroups[d.gudang].total++;
+                if (d.umur >= 45) whGroups[d.gudang].old++; // Threshold for "Tua" in map
+            });
+
+            Object.keys(whGroups).forEach(wh => {
+                const stats = whGroups[wh];
+                const oldPerc = Math.round((stats.old / stats.total) * 100);
+                const youngPerc = 100 - oldPerc;
+
+                const node = document.createElement('div');
+                node.className = 'wh-node';
+                node.innerHTML = `
+                    <div class="wh-icon"><i class="fas fa-warehouse"></i></div>
+                    <div class="wh-info">
+                        <div class="wh-name">${wh}</div>
+                        <div class="progress-container">
+                            <div class="progress-old" style="width: ${oldPerc}%"></div>
+                            <div class="progress-young" style="width: ${youngPerc}%"></div>
+                        </div>
+                        <div class="wh-stats">
+                            <span>Old: ${oldPerc}%</span>
+                            <span>Young: ${youngPerc}%</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(node);
+            });
+        }
+
+        // SEARCH EVENT
+        document.getElementById('input-search').addEventListener('input', (e) => {
+            renderMaterialList(e.target.value);
+        });
+
+    </script>
+</body>
+
+</html>

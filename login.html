@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - Secure Access</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <style>
+        /* RESET */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #020617;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- BACKGROUND ANIMATION --- */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: center top;
+            animation: gridMove 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 1000px;
+            }
+        }
+
+        .ambient-light {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.15), transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse-ambient 4s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes pulse-ambient {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        /* --- ELECTRIC CARD --- */
+        .login-card {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
+            background: rgba(10, 10, 20, 0.7);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            z-index: 10;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            /* Enhanced Glow */
+            overflow: hidden;
+        }
+
+        /* Electric Borders */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 4px;
+            /* Thicker */
+            background: linear-gradient(90deg, transparent, #00f3ff, #fff);
+            /* Brighter center */
+            box-shadow: 0 0 20px #00f3ff;
+            /* Glow */
+            animation: borderRunTop 2s linear infinite;
+        }
+
+        .login-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -100%;
+            width: 100%;
+            height: 4px;
+            /* Thicker */
+            background: linear-gradient(270deg, transparent, #9333ea, #fff);
+            box-shadow: 0 0 20px #9333ea;
+            animation: borderRunBottom 2s linear infinite;
+        }
+
+        .border-left {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 4px;
+            /* Thicker */
+            height: 100%;
+            background: linear-gradient(0deg, transparent, #00f3ff, #fff);
+            box-shadow: 0 0 20px #00f3ff;
+            animation: borderRunLeft 2s linear infinite;
+            animation-delay: 1s;
+        }
+
+        .border-right {
+            position: absolute;
+            top: -100%;
+            right: 0;
+            width: 4px;
+            /* Thicker */
+            height: 100%;
+            background: linear-gradient(180deg, transparent, #9333ea, #fff);
+            box-shadow: 0 0 20px #9333ea;
+            animation: borderRunRight 2s linear infinite;
+            animation-delay: 1s;
+        }
+
+        @keyframes borderRunTop {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 100%;
+            }
+        }
+
+        @keyframes borderRunBottom {
+            0% {
+                right: -100%;
+            }
+
+            50%,
+            100% {
+                right: 100%;
+            }
+        }
+
+        @keyframes borderRunLeft {
+            0% {
+                bottom: -100%;
+            }
+
+            50%,
+            100% {
+                bottom: 100%;
+            }
+        }
+
+        @keyframes borderRunRight {
+            0% {
+                top: -100%;
+            }
+
+            50%,
+            100% {
+                top: 100%;
+            }
+        }
+
+        /* Content Styles */
+        .card-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .icon-lock {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 15px #00f3ff);
+            /* Stronger glow */
+            animation: floatLock 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatLock {
+            from {
+                transform: translateY(0);
+            }
+
+            to {
+                transform: translateY(-5px);
+            }
+        }
+
+        .title-main {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.8), 0 0 20px rgba(0, 243, 255, 0.5);
+            /* Stronger glow */
+            margin-bottom: 5px;
+        }
+
+        .title-sub {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #00f3ff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            border-color: #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        /* Button */
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #00f3ff, #2563eb);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
+        }
+
+        /* Error Message */
+        .error-msg {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid #dc2626;
+            color: #f87171;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Holographic Glitch Effect on Title Hover */
+        .title-main:hover {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: #00f3ff;
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0);
+            }
+
+            20% {
+                transform: translate(-2px, 2px);
+            }
+
+            40% {
+                transform: translate(-2px, -2px);
+            }
+
+            60% {
+                transform: translate(2px, 2px);
+            }
+
+            80% {
+                transform: translate(2px, -2px);
+            }
+
+            100% {
+                transform: translate(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="ambient-light"></div>
+
+    <div class="login-card">
+        <!-- Electric Borders -->
+        <div class="border-left"></div>
+        <div class="border-right"></div>
+
+        <div class="card-header">
+            <div class="icon-lock">🔐</div>
+            <h1 class="title-main">SECURE ACCESS</h1>
+            <p class="title-sub">SMART WAREHOUSE V2.0 SYSTEM</p>
+        </div>
+
+        <div class="error-msg" id="error-message">Access Denied: Invalid Credentials</div>
+
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label">Username ID</label>
+                <div class="input-wrapper">
+                    <input type="text" id="username" class="form-input" placeholder="ENTER ID..." autocomplete="off"
+                        required>
+                    <span class="input-icon">👤</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password Code</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" class="form-input" placeholder="ENTER CODE..." required>
+                    <span class="input-icon">🔑</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">
+                INITIALIZE SESSION
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            // CREDENTIALS LOGIC
+            // HUMAN RESOURCE ONLY
+            if (user === 'WH' && pass === '1891') {
+                sessionStorage.setItem('userRole', 'HR_ACCESS');
+                sessionStorage.setItem('isLoggedIn', 'true');
+                loginSuccess();
+            }
+            // FULL ACCESS (HR + HUB)
+            else if (user === 'WAREHOUSE' && pass === '1891') {
+                sessionStorage.setItem('userRole', 'FULL_ACCESS');
+                sessionStorage.setItem('isLoggedIn', 'true');
+                loginSuccess();
+            }
+            // INVALID
+            else {
+                showError();
+            }
+        }
+
+        function loginSuccess() {
+            const btn = document.querySelector('.btn-login');
+            btn.innerHTML = 'ACCESS GRANTED...';
+            btn.style.background = '#10b981'; // Success Green
+            btn.style.boxShadow = '0 0 30px #10b981';
+
+            // Check for redirect param
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+
+            setTimeout(() => {
+                window.location.href = redirect ? decodeURIComponent(redirect) : 'homepage-v1.html';
+            }, 1000);
+        }
+
+        function showError() {
+            const errorBox = document.getElementById('error-message');
+            errorBox.style.display = 'block';
+            setTimeout(() => {
+                errorBox.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>

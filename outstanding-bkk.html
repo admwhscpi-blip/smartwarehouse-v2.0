@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V3.3 - BKK LIVE MONITORING</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff0a;
+            --neon-pink: #ff0055;
+            --glass-bg: rgba(7, 15, 25, 0.8);
+            --border: 1px solid rgba(0, 243, 255, 0.2);
+            --void: #020408;
+            --text-main: #e0e6ed;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--void);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-y: auto;
+            /* ALLOW SCROLL IN NORMAL MODE */
+            background-image:
+                radial-gradient(circle at 50% -20%, rgba(0, 243, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(255, 0, 85, 0.05) 0%, transparent 30%);
+            min-height: 100vh;
+        }
+
+        /* LOCKED STATE FOR FULLSCREEN */
+        :fullscreen body,
+        body:fullscreen {
+            overflow: hidden;
+        }
+
+        /* HEADER & UTILS */
+        .live-tag {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            color: var(--neon-pink);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        }
+
+        .live-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-pink);
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        @keyframes blue-glow {
+            from {
+                filter: drop-shadow(0 0 2px rgba(0, 243, 255, 0.2));
+            }
+
+            to {
+                filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.6));
+            }
+        }
+
+        @keyframes pulse-button {
+            0% {
+                box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(0, 243, 255, 0.8);
+            }
+
+            100% {
+                box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+            }
+        }
+
+        .fullscreen-btn-nav-fixed {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            z-index: 10000;
+            background: var(--neon-cyan);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            animation: pulse-button 2s infinite;
+            text-transform: uppercase;
+        }
+
+        .fullscreen-btn-nav-fixed:hover {
+            background: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        /* CONTAINER */
+        .control-container {
+            max-width: 1900px;
+            margin: 0 auto;
+            padding: 80px 40px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        :fullscreen .navbar {
+            display: none !important;
+        }
+
+        :fullscreen .live-tag {
+            top: 15px;
+            left: 20px;
+            font-size: 1rem;
+        }
+
+        :fullscreen .control-container {
+            padding: 50px 30px 10px 30px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #connector-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* PULSATING CONNECTORS */
+        .connector-path {
+            fill: none;
+            stroke: var(--neon-gold);
+            stroke-width: 3;
+            stroke-dasharray: 6, 6;
+            filter: drop-shadow(0 0 8px var(--neon-gold));
+            opacity: 0.8;
+            animation: dashMove 3s linear infinite, blinkPulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes dashMove {
+            to {
+                stroke-dashoffset: -100;
+            }
+        }
+
+        @keyframes blinkPulse {
+            from {
+                opacity: 0.5;
+                stroke-width: 2.5;
+            }
+
+            to {
+                opacity: 1;
+                stroke-width: 4;
+                filter: drop-shadow(0 0 12px var(--neon-gold));
+            }
+        }
+
+        /* DECK 1: COMMAND CENTER */
+        .command-deck {
+            display: grid;
+            grid-template-columns: 800px 1fr;
+            gap: 40px;
+            z-index: 60;
+        }
+
+        .intake-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+        }
+
+        .intake-unit {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .intake-unit.active {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(10, 255, 10, 0.1);
+        }
+
+        .intake-label {
+            font-family: 'Orbitron';
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .intake-type {
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .intake-status {
+            font-family: 'Share Tech Mono';
+            font-size: 1rem;
+            color: #555;
+            min-height: 20px;
+        }
+
+        .intake-status.running {
+            color: var(--neon-green);
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        .viz-stage {
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .truck-icon {
+            font-size: 2.5rem;
+            color: #333;
+            transition: all 0.5s;
+        }
+
+        .intake-unit.active .truck-icon {
+            color: #fff;
+            filter: drop-shadow(0 0 10px #fff);
+        }
+
+        .anchor-point {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+        }
+
+        .warning-box {
+            background: rgba(255, 215, 0, 0.03);
+            border-left: 4px solid var(--neon-gold);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: #bbb;
+            font-family: 'Rajdhani';
+            font-size: 1.1rem;
+        }
+
+        .warning-title {
+            font-family: 'Orbitron';
+            color: var(--neon-gold);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warn-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .warn-list li {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .warn-list i {
+            color: var(--neon-pink);
+            margin-top: 4px;
+        }
+
+        .warn-hl {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* DECK 2: ANALYTICS */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            z-index: 40;
+        }
+
+        .analytics-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .group-title {
+            font-family: 'Orbitron';
+            color: var(--neon-cyan);
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .dual-card-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: var(--border);
+            border-left: 3px solid var(--neon-cyan);
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-cyan);
+        }
+
+        .small-card {
+            padding: 10px;
+            border-left-width: 2px;
+        }
+
+        .card-title {
+            font-family: 'Orbitron';
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-val-big {
+            font-family: 'Share Tech Mono';
+            font-size: 2.5rem;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .text-acid {
+            color: var(--neon-cyan);
+        }
+
+        .text-hot {
+            color: var(--neon-pink);
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        /* DECK 3: SILO FARM */
+        .silo-deck {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding-top: 10px;
+        }
+
+        .silo-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            flex: 1;
+        }
+
+        .silo-wrapper.receiving .warehouse-visual {
+            box-shadow: 0 0 30px var(--neon-gold);
+            border-color: var(--neon-gold);
+        }
+
+        .warehouse-visual {
+            width: 100%;
+            height: 280px;
+            background: rgba(10, 20, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            backdrop-filter: blur(5px);
+        }
+
+        .liquid-fill {
+            width: 100%;
+            transition: height 1s;
+            position: relative;
+        }
+
+        .liquid-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .fill-yellow {
+            background: linear-gradient(0deg, #ffcc00 80%, #fff 100%);
+            box-shadow: inset 0 0 20px rgba(255, 204, 0, 0.3);
+        }
+
+        .fill-brown {
+            background: linear-gradient(0deg, #8b4513 80%, #d2691e 100%);
+            box-shadow: inset 0 0 20px rgba(139, 69, 19, 0.3);
+        }
+
+        /* NEW: FILLING ANIMATION (ONLY WHEN RECEIVING) */
+        .silo-wrapper.receiving .liquid-fill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+                radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+            background-size: 30px 40px;
+            animation: flow-particles 2s linear infinite;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        @keyframes flow-particles {
+            0% {
+                background-position: 0 100%, 10px 80%, -10px 120%;
+            }
+
+            100% {
+                background-position: 0 0, 10px -20%, -10px 20%;
+            }
+        }
+
+        .silo-info-card {
+            width: 100%;
+            margin-top: 15px;
+            background: rgba(0, 5, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .silo-name {
+            font-family: 'Orbitron';
+            font-size: 1rem;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .silo-pct {
+            color: var(--neon-cyan);
+            font-weight: 700;
+            text-shadow: 0 0 5px var(--neon-cyan);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .info-label {
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .info-val {
+            font-family: 'Rajdhani';
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .info-alert {
+            color: var(--neon-pink);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* DECK 4: TABLE */
+        .table-deck {
+            flex: 1;
+            background: var(--glass-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: var(--border);
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--neon-cyan);
+            padding: 15px;
+            text-align: left;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+        }
+
+        tbody {
+            overflow-y: auto;
+            flex: 1;
+            display: block;
+        }
+
+        tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Share Tech Mono';
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            width: 80%;
+            max-width: 1000px;
+            background: #050b14;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+        }
+
+        .loading {
+            position: fixed;
+            inset: 0;
+            background: #020408;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* FULLSCREEN OPTIMIZATION (MATCHING RM STYLE) */
+        :fullscreen .control-container,
+        body:fullscreen .control-container {
+            padding: 50px 40px 10px 40px;
+            gap: 8px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        :fullscreen .command-deck {
+            flex: 0 0 auto;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        :fullscreen .intake-group {
+            padding: 10px;
+            gap: 10px;
+        }
+
+        :fullscreen .intake-unit {
+            padding: 10px;
+        }
+
+        :fullscreen .viz-stage {
+            height: 40px;
+            margin-bottom: 5px;
+        }
+
+        :fullscreen .truck-icon {
+            font-size: 1.5rem;
+        }
+
+        :fullscreen .analytics-grid {
+            flex: 0 0 auto;
+            gap: 10px;
+        }
+
+        :fullscreen .card {
+            padding: 8px;
+        }
+
+        :fullscreen .stat-val-big {
+            font-size: 2rem;
+        }
+
+        :fullscreen .silo-deck {
+            flex: 0 0 auto;
+            gap: 10px;
+            padding-top: 0;
+        }
+
+        :fullscreen .warehouse-visual {
+            height: 150px;
+        }
+
+        :fullscreen .table-deck {
+            flex: 1;
+            margin-top: 5px;
+            min-height: 0;
+        }
+
+        :fullscreen tbody {
+            overflow-y: auto !important;
+        }
+
+        :fullscreen td,
+        :fullscreen th {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div id="loading" class="loading">
+        <h2 style="font-family:'Orbitron'; color:var(--neon-cyan);">LOADING BKK SYSTEM...</h2>
+    </div>
+
+    <button class="fullscreen-btn-nav-fixed" onclick="toggleFullscreen()">
+        <i class="fas fa-expand"></i> KLIK FULLSCREEN
+    </button>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link" style="text-decoration: none;">
+            <div class="logo-text" style="display: flex; align-items: center; gap: 8px; font-family: 'Orbitron';">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- Tombol dipindahkan ke fixed position untuk menjamin visibilitas -->
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="control-container">
+        <!-- LIVE MONITORING HEADER -->
+        <div class="live-tag">
+            <div class="live-dot"></div> LIVE MONITORING
+        </div>
+
+        <svg id="connector-canvas"></svg>
+
+        <!-- 1. COMMAND DECK (TOP) -->
+        <div class="command-deck">
+            <!-- INTAKES -->
+            <div class="intake-group">
+                <div class="intake-unit" id="node-71a">
+                    <div class="intake-label">INTAKE 71A</div>
+                    <div class="intake-type">MANUAL DISCHARGE</div>
+                    <div class="viz-stage">
+                        <i class="fas fa-truck truck-icon"></i>
+                        <i class="fas fa-user-cog"
+                            style="position:absolute; right:30%; bottom:0; color:var(--neon-gold);"></i>
+                    </div>
+                    <div class="intake-status" id="stat-71a">OFFLINE</div>
+                    <div style="font-size:0.8rem; color:#aaa; margin-top:5px;" id="mat-71a">-</div>
+                    <div class="anchor-point" id="anchor-71a"></div>
+                </div>
+
+                <div class="intake-unit" id="node-71b">
+                    <div class="intake-label">INTAKE 71B</div>
+                    <div class="intake-type" style="color:var(--neon-pink); border:1px solid var(--neon-pink);">
+                        TILTING
+                        SYSTEM</div>
+                    <div class="viz-stage">
+                        <div style="width:60px; height:8px; background:#444; position:relative; transform-origin:left; animation:tilt 3s infinite paused;"
+                            id="tilt-anim">
+                            <i class="fas fa-truck truck-icon"
+                                style="position:absolute; bottom:8px; left:10px; font-size:1.8rem !important;"></i>
+                        </div>
+                    </div>
+                    <div class="intake-status" id="stat-71b">OFFLINE</div>
+                    <div style="font-size:0.8rem; color:#aaa; margin-top:5px;" id="mat-71b">-</div>
+                    <div class="anchor-point" id="anchor-71b"></div>
+                </div>
+            </div>
+
+            <!-- WARNING -->
+            <div class="warning-box">
+                <div class="warning-title"><i class="fas fa-exclamation-triangle"></i> DIRECT DISCHARGE LIMITATION
+                </div>
+                <ul class="warn-list">
+                    <li><i class="fas fa-angle-right"></i><span><span class="warn-hl"
+                                style="color:var(--neon-gold)">BK1</span> : Max 1,000 Ton. Over? Switch to Intake
+                            71.</span></li>
+                    <li><i class="fas fa-angle-right"></i><span><span class="warn-hl" style="color:var(--neon-pink)">BK2
+                                & BK3</span> : NO DIRECT ACCESS (Use Intake 71 Only).</span></li>
+                    <li><i class="fas fa-angle-right"></i><span><span class="warn-hl">BK4 - BK6</span> : Max 700
+                            Ton/Block. Over? Switch to Intake 71.</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. ANALYTICS (MIDDLE - NEW STRUCTURE) -->
+        <div class="analytics-grid">
+
+            <!-- GROUP 1: CONTROL MATERIAL -->
+            <div class="analytics-group">
+                <div class="group-title">KONTROL MATERIAL</div>
+                <div class="card" onclick="openDetail('PKM')">
+                    <div class="card-title">PKM TRUCKS <i class="fas fa-truck"></i></div>
+                    <div class="stat-val-big text-acid" id="val-pkm">0</div>
+                    <div class="stat-sub">WAITING UNLOADING</div>
+                </div>
+                <div class="card" onclick="openDetail('SBM')">
+                    <div class="card-title">SBM TRUCKS <i class="fas fa-truck-monster"></i></div>
+                    <div class="stat-val-big text-hot" id="val-sbm">0</div>
+                    <div class="stat-sub">WAITING UNLOADING</div>
+                </div>
+            </div>
+
+            <!-- GROUP 3: TOTAL TONASE -->
+            <div class="analytics-group">
+                <div class="group-title">TOTAL TONASE <span id="val-total-label" style="float:right; color:#fff">0
+                        KG</span></div>
+                <div class="card" onclick="openDetail('TON_PKM')">
+                    <div class="card-title">TONASE PKM <i class="fas fa-weight-hanging"></i></div>
+                    <div class="stat-val-big" id="val-kg-pkm">0</div>
+                    <div class="stat-sub">KG (EST)</div>
+                </div>
+                <div class="card" onclick="openDetail('TON_SBM')">
+                    <div class="card-title">TONASE SBM <i class="fas fa-weight-hanging"></i></div>
+                    <div class="stat-val-big" id="val-kg-sbm">0</div>
+                    <div class="stat-sub">KG (EST)</div>
+                </div>
+            </div>
+
+            <!-- GROUP 2: CONTROL INAPAN -->
+            <div class="analytics-group">
+                <div class="group-title">KONTROL INAPAN</div>
+                <div class="dual-card-row">
+                    <div class="card small-card" onclick="openDetail('TODAY')">
+                        <div class="card-title">INPUTAN HARI INI</div>
+                        <div class="stat-val-big" id="val-today">0</div>
+                    </div>
+                    <div class="card small-card" onclick="openDetail('INAP')">
+                        <div class="card-title">TRUCK INAP</div>
+                        <div class="stat-val-big text-hot" id="val-inap">0</div>
+                    </div>
+                </div>
+                <!-- Occupy remaining space visually or just keep 1 row if enough -->
+            </div>
+
+        </div>
+
+        <!-- 3. SILO FARM (BOTTOM) -->
+        <div class="silo-deck" id="silo-container">
+            <!-- JS GENERATED -->
+        </div>
+
+        <!-- 4. FOOTER TABLE -->
+        <div class="table-deck">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SEQUENCE</th>
+                        <th>DATE</th>
+                        <th>MATERIAL</th>
+                        <th>STATUS / GRADE</th>
+                        <th style="text-align:right">NETTO (KG)</th>
+                        <th>AGING</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="detail-modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">DETAIL DATA</div>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div id="modal-body">
+                <!-- Table goes here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbx20_uJ4EEbN6BHNFw1PP_DaRvl_iGDR3-BFW52qZSLbfV3uPAnIotTUxuugJjskyVi/exec";
+
+        const SILO_META = [
+            { id: 'BK1', cap: 6000000, width: 2, colorClass: 'fill-yellow' },
+            { id: 'BK2', cap: 3000000, width: 1, colorClass: 'fill-yellow' },
+            { id: 'BK3', cap: 3000000, width: 1, colorClass: 'fill-yellow' },
+            { id: 'BK4', cap: 3000000, width: 1, colorClass: 'fill-brown' },
+            { id: 'BK5', cap: 3000000, width: 1, colorClass: 'fill-brown' },
+            { id: 'BK6', cap: 3000000, width: 1, colorClass: 'fill-brown' }
+        ];
+
+        let appData = null;
+
+        function fetchBKK() {
+            return new Promise((resolve, reject) => {
+                const cb = 'bkk_' + Math.round(Math.random() * 100000);
+                window[cb] = (d) => { delete window[cb]; document.body.removeChild(tag); resolve(d); };
+                const tag = document.createElement('script');
+                const sep = API_URL.includes('?') ? '&' : '?';
+                tag.src = `${API_URL}${sep}callback=${cb}&t=${Date.now()}`;
+                tag.onerror = reject;
+                document.body.appendChild(tag);
+            });
+        }
+
+        async function init() {
+            try {
+                const data = await fetchBKK();
+                appData = data;
+                document.getElementById('loading').style.display = 'none';
+                renderDashboard(data);
+                setTimeout(drawConnectors, 500);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderDashboard(data) {
+            renderKPI(data.trucks || []);
+            renderIntakes(data.intake || []);
+            renderSilos(data.silos || []);
+            renderTable(data.trucks || []);
+        }
+
+        function renderKPI(trucks) {
+            let pkm = 0, sbm = 0, today = 0, inap = 0;
+            let kgPkm = 0, kgSbm = 0;
+
+            trucks.forEach(t => {
+                const m = (t.material || '').toUpperCase();
+                const a = (t.aging || '').toUpperCase();
+                const n = parseFloat(t.netto || 0);
+
+                if (m.includes('PKM')) {
+                    pkm++;
+                    kgPkm += n;
+                }
+                if (m.includes('SBM') || m.includes('SOYA')) {
+                    sbm++;
+                    kgSbm += n;
+                }
+
+                if (a.includes('HARI INI')) {
+                    today++;
+                } else {
+                    inap++; // Asumsi selain Hari Ini adalah Inap
+                }
+            });
+
+            document.getElementById('val-pkm').innerText = pkm;
+            document.getElementById('val-sbm').innerText = sbm;
+            document.getElementById('val-today').innerText = today;
+            document.getElementById('val-inap').innerText = inap;
+
+            // Tonnage formatted nicely
+            document.getElementById('val-kg-pkm').innerText = kgPkm.toLocaleString();
+            document.getElementById('val-kg-sbm').innerText = kgSbm.toLocaleString();
+            document.getElementById('val-total-label').innerText = ((kgPkm + kgSbm) / 1000).toLocaleString() + ' TONS';
+        }
+
+        function renderIntakes(intakes) {
+            updateNode('71a', intakes[0]);
+            updateNode('71b', intakes[1]);
+        }
+
+        function updateNode(suffix, data) {
+            const el = document.getElementById('node-' + suffix);
+            const statEl = document.getElementById('stat-' + suffix);
+            const matEl = document.getElementById('mat-' + suffix);
+
+            const rawStatus = (data.status || 'IDLE').toUpperCase();
+            const rawMaterial = (data.material || '').toUpperCase();
+
+            // Search target in both Status and Material
+            let bkMatch = rawStatus.match(/\[BK(\d+)\]/i);
+            if (!bkMatch) {
+                bkMatch = rawMaterial.match(/\[BK(\d+)\]/i);
+            }
+
+            const target = bkMatch ? 'BK' + parseInt(bkMatch[1]) : '';
+
+            el.dataset.target = target;
+            statEl.innerText = rawStatus.replace(/\[BK\d+\]/gi, '').split('>')[0].substring(0, 20);
+            matEl.innerText = data.material || '-';
+
+            if (rawStatus.includes('RUNNING') || rawStatus.includes('BONGKAR') || rawStatus.includes('ON')) {
+                statEl.className = 'intake-status running';
+                el.className = 'intake-unit active';
+                if (suffix === '71b') {
+                    const anim = document.getElementById('tilt-anim');
+                    if (anim) anim.style.animationPlayState = 'running';
+                }
+            } else {
+                statEl.className = 'intake-status';
+                el.className = 'intake-unit';
+                if (suffix === '71b') {
+                    const anim = document.getElementById('tilt-anim');
+                    if (anim) anim.style.animationPlayState = 'paused';
+                }
+            }
+        }
+
+        function renderSilos(siloData) {
+            const container = document.getElementById('silo-container');
+            container.innerHTML = '';
+
+            SILO_META.forEach(meta => {
+                const live = siloData.find(s => s.id === meta.id) || {};
+
+                let pct = 0;
+                if (live.percentage) pct = parseFloat(live.percentage) * 100;
+                else if (live.stock) pct = (live.stock / meta.cap) * 100;
+                const safePct = Math.min(100, Math.max(0, pct));
+
+                const flex = meta.width;
+
+                const mat = (live.material || '').toUpperCase();
+                let dynamicClass = meta.colorClass;
+                if (mat.includes('PKM')) dynamicClass = 'fill-yellow';
+                else if (mat.includes('SBM') || mat.includes('SOYA')) dynamicClass = 'fill-brown';
+
+                container.innerHTML += `
+                    <div class="silo-wrapper" id="silo-${meta.id}" style="flex:${flex}">
+                        <div class="warehouse-visual">
+                            <div class="liquid-fill ${dynamicClass}" style="height:${safePct}%"></div>
+                            <div id="anchor-${meta.id}" style="position:absolute; top:-10px; left:50%; width:10px; height:10px;"></div>
+                        </div>
+                        <div class="silo-info-card">
+                            <div class="silo-name">
+                                <span>${meta.id}</span>
+                                <span class="silo-pct">${Math.round(safePct)}%</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">MATERIAL</span>
+                                <span class="info-val" style="color:var(--neon-gold); font-size:0.85rem; line-height:1.2;">${live.material || 'EMPTY'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">STOCK</span>
+                                <span class="info-val" style="font-size:1rem;">${(live.stock || 0).toLocaleString()} <small style="font-size:0.7rem; color:#666; font-family:'Inter';">kg</small></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">AGE</span>
+                                <span class="info-val">${live.age || 0} <small style="font-size:0.7rem; color:#666; font-family:'Inter';">Days</small></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">DoH</span>
+                                <span class="info-val ${Math.floor(live.doh) > 30 ? 'info-alert' : ''}">${Math.floor(live.doh || 0)} <small style="font-size:0.7rem; color:#666; font-family:'Inter';">Days</small></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTable(trucks) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            trucks.slice(0, 20).forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${t.sequence}</td>
+                        <td>${t.date}</td>
+                        <td style="color:var(--neon-cyan)">${t.material}</td>
+                        <td style="color:var(--neon-gold)">${t.grade || '-'}</td>
+                        <td style="text-align:right">${parseFloat(t.netto || 0).toLocaleString()}</td>
+                        <td style="${(t.aging || '').includes('INAP') ? 'color:var(--neon-pink)' : 'color:#00ff00'}">${t.aging}</td>
+                    </tr>
+                 `;
+            });
+        }
+
+        // --- INTERACTIVITY ---
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').style.display = 'none';
+        }
+
+        function openDetail(type) {
+            const modal = document.getElementById('detail-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+
+            if (!appData || !appData.trucks) return;
+            const all = appData.trucks;
+
+            let filtered = [];
+            if (type === 'PKM') {
+                title.innerText = "PKM TRUCKS DETAIL";
+                filtered = all.filter(t => (t.material || '').toUpperCase().includes('PKM'));
+            } else if (type === 'SBM') {
+                title.innerText = "SBM TRUCKS DETAIL";
+                filtered = all.filter(t => (t.material || '').toUpperCase().includes('SBM'));
+            } else if (type === 'TODAY') {
+                title.innerText = "INPUTAN HARI INI";
+                filtered = all.filter(t => (t.aging || '').toUpperCase().includes('HARI INI'));
+            } else if (type === 'INAP') {
+                title.innerText = "TRUCK INAP ( > 24H )";
+                filtered = all.filter(t => !(t.aging || '').toUpperCase().includes('HARI INI'));
+            } else if (type === 'TON_PKM') {
+                title.innerText = "RINCIAN TONASE PKM";
+                filtered = all.filter(t => (t.material || '').toUpperCase().includes('PKM'));
+            } else if (type === 'TON_SBM') {
+                title.innerText = "RINCIAN TONASE SBM";
+                filtered = all.filter(t => (t.material || '').toUpperCase().includes('SBM'));
+            } else {
+                title.innerText = "ALL TRUCKS";
+                filtered = all;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SEQ</th><th>DATE</th><th>MATERIAL</th><th>NETTO</th><th>AGING</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filtered.forEach(t => {
+                html += `
+                    <tr>
+                        <td>${t.sequence}</td>
+                        <td>${t.date}</td>
+                        <td style="color:var(--neon-cyan)">${t.material}</td>
+                        <td>${parseFloat(t.netto || 0).toLocaleString()}</td>
+                        <td style="${(t.aging || '').includes('INAP') ? 'color:var(--neon-pink)' : 'color:#00ff00'}">${t.aging}</td>
+                    </tr>
+                 `;
+            });
+            html += '</tbody></table>';
+
+            body.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function drawConnectors() {
+            const svg = document.getElementById('connector-canvas');
+            svg.innerHTML = '';
+
+            const root = document.querySelector('.control-container').getBoundingClientRect();
+
+            ['71a', '71b'].forEach(suffix => {
+                const node = document.getElementById('node-' + suffix);
+                const target = node.dataset.target;
+
+                if (target) {
+                    const startEl = document.getElementById('anchor-' + suffix);
+                    const endContainer = document.getElementById('silo-' + target);
+
+                    if (startEl && endContainer) {
+                        endContainer.classList.add('receiving');
+
+                        const endEl = document.getElementById('anchor-' + target);
+                        const sR = startEl.getBoundingClientRect();
+                        const eR = endEl.getBoundingClientRect();
+
+                        const x1 = sR.left + sR.width / 2 - root.left;
+                        const y1 = sR.top + sR.height / 2 - root.top;
+                        const x2 = eR.left + eR.width / 2 - root.left;
+                        const y2 = eR.top + eR.height / 2 - root.top;
+
+                        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        // Flowing bezier curve
+                        const d = `M ${x1} ${y1} C ${x1} ${y1 + 150}, ${x2} ${y2 - 150}, ${x2} ${y2}`;
+                        path.setAttribute('d', d);
+                        // Using new class name
+                        path.setAttribute('class', 'connector-path');
+                        svg.appendChild(path);
+                    }
+                }
+            });
+        }
+
+        window.onload = init;
+        window.onresize = drawConnectors;
+        document.addEventListener('fullscreenchange', () => {
+            setTimeout(drawConnectors, 500);
+        });
+        setInterval(init, 30000);
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse OS v2.0</title>
+
+    <!-- STYLES V2 -->
+    <link rel="stylesheet" href="css/style_v2.css">
+
+    <!-- MODULE STYLES (Keep strict for functionality) -->
+    <link rel="stylesheet" href="css/style-main.css">
+    <link rel="stylesheet" href="css/style-warehouse.css">
+    <link rel="stylesheet" href="css/style-warehouse-3d.css">
+    <link rel="stylesheet" href="css/style-cpo.css">
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-rental-detail.css">
+    <link rel="stylesheet" href="css/style-rm-detail.css">
+
+    <!-- LIBS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app-rental-f.js"></script>
+</head>
+
+<body>
+
+    <!-- BACKGROUND FX -->
+    <div class="ambient-light"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- 1. NAVIGATION (PILL STYLE) -->
+    <div class="nav-wrapper">
+        <div class="nav-pill">
+            <div class="nav-brand">
+                <div class="brand-logo"></div>
+                <div class="brand-text">SaatifyClone</div>
+            </div>
+
+            <a onclick="AppV2.goHome()" class="nav-item active">Home</a>
+            <a onclick="AppV2.goModule('rm')" class="nav-item">RM Stock</a>
+            <a onclick="AppV2.goModule('cpo')" class="nav-item">CPO Farm</a>
+            <a onclick="AppV2.goModule('layout')" class="nav-item">Layout Map</a>
+            <a onclick="RentalFService.open()" class="nav-item">Gudang F</a>
+
+            <button class="nav-cta">Connect</button>
+        </div>
+    </div>
+
+    <!-- 2. HOME LANDING (The V2 Design) -->
+    <div id="v2-landing">
+
+        <!-- HERO -->
+        <div class="hero-section">
+            <div class="hero-badge">✨ V2.0 Now Available</div>
+            <div class="hero-title">
+                Smart Finance Solutions for<br>
+                <span>Growth & Efficiency</span>
+            </div>
+            <div class="hero-desc">
+                Automate your financial operations, gain real-time insights, and focus on growth.
+                System integrity check: <span class="highlight-text">Normal</span>.
+            </div>
+
+            <!-- FAKE INPUT BAR -->
+            <div
+                style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:50px; padding:6px; display:inline-flex; width:400px; max-width:90%;">
+                <input type="text" placeholder="Enter your email..."
+                    style="background:transparent; border:none; color:#fff; flex:1; padding-left:20px; outline:none;">
+                <button
+                    style="background:#7c3aed; color:white; border:none; border-radius:50px; padding:10px 24px; cursor:pointer;">Get
+                    Notified</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD DECK (NAVIGATION CARDS) -->
+        <div class="dashboard-deck">
+            <!-- DECORATIVE FLOATING WIDGET -->
+            <div class="floating-widget fw-right">
+                <div style="font-size:0.8rem; color:#a78bfa; margin-bottom:5px;">Invoice Statistics</div>
+                <div
+                    style="height:80px; width:80px; border-radius:50%; border:5px solid #7c3aed; border-left-color:transparent; margin:0 auto;">
+                </div>
+            </div>
+
+            <!-- CARD 1: RM STOCK -->
+            <div class="stat-card" onclick="AppV2.goModule('rm')">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Total Revenue</div>
+                        <div class="card-value">$1.89K</div>
+                    </div>
+                    <div class="card-icon">🏭</div>
+                </div>
+                <div class="card-trend trend-up">↗ 45% Since last period</div>
+                <div class="visual-bar-chart">
+                    <div class="v-bar" style="height:40%"></div>
+                    <div class="v-bar" style="height:70%"></div>
+                    <div class="v-bar active" style="height:100%"></div>
+                    <div class="v-bar" style="height:50%"></div>
+                </div>
+            </div>
+
+            <!-- CARD 2: CPO TANKS -->
+            <div class="stat-card" onclick="AppV2.goModule('cpo')">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Total Revenue</div>
+                        <div class="card-value">$1,00,500</div>
+                    </div>
+                    <div class="card-icon">🛢️</div>
+                </div>
+                <div class="card-trend trend-stable">↗ 80% Since last period</div>
+                <div
+                    style="background:linear-gradient(90deg, transparent, rgba(124,58,237,0.5), transparent); height:40px; margin-top:10px; border-radius:8px;">
+                </div>
+            </div>
+
+            <!-- CARD 3: LAYOUT -->
+            <div class="stat-card" onclick="AppV2.goModule('layout')">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Avg. Order Revenue</div>
+                        <div class="card-value">$249.50K</div>
+                    </div>
+                    <div class="card-icon">🗺️</div>
+                </div>
+                <div class="card-trend trend-up">↗ 70% Since last period</div>
+                <div class="visual-bar-chart">
+                    <div class="v-bar" style="height:30%"></div>
+                    <div class="v-bar active" style="height:80%"></div>
+                    <div class="v-bar" style="height:60%"></div>
+                    <div class="v-bar" style="height:40%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. APP MODULE CONTAINERS (Hidden by default, shown via JS) -->
+    <div id="app-modules" style="display:none; padding-top:80px;">
+        <div id="module-rm" style="display:none;">
+            <!-- RM Content will be injected or visible here -->
+            <div style="padding:20px;">
+                <h2 style="color:white;">RM WAREHOUSE MODULE</h2>
+                <!-- Copied structure from original if needed, or better: 
+                     Use the same IDs that app-core.js expects.
+                     Original index.html had specific structures. 
+                     For now, I provide the containers. Existing JS should fill them.
+                -->
+                <canvas id="rmStockChart"></canvas>
+                <!-- Note: The original generic dashboard might fail if elements aren't exactly there.
+                     But user said "Dilarang Menimpa".
+                -->
+            </div>
+        </div>
+        <div id="module-cpo" style="display:none;"></div>
+        <div id="view-layout" style="display:none;"></div>
+    </div>
+
+
+    <!-- CUSTOM V2 LOGIC -->
+    <script>
+        const AppV2 = {
+            goModule: function (moduleName) {
+                // 1. Hide Landing
+                document.getElementById('v2-landing').style.display = 'none';
+                document.getElementById('app-modules').style.display = 'block';
+
+                // 2. Hide all modules
+                document.getElementById('module-rm').style.display = 'none';
+                document.getElementById('module-cpo').style.display = 'none';
+                document.getElementById('view-layout').style.display = 'none';
+
+                // 3. Show Target
+                if (moduleName === 'rm') document.getElementById('module-rm').style.display = 'block';
+                if (moduleName === 'cpo') document.getElementById('module-cpo').style.display = 'block';
+                if (moduleName === 'layout') {
+                    document.getElementById('view-layout').style.display = 'block';
+                    if (typeof LayoutService !== 'undefined') LayoutService.init();
+                }
+
+                // 4. Update Nav
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            },
+            goHome: function () {
+                document.getElementById('v2-landing').style.display = 'block';
+                document.getElementById('app-modules').style.display = 'none';
+            }
+        };
+
+        // Attach to Window for external scripts (if any try to call it)
+        window.showView = AppV2.goModule; 
+    </script>
+
+    <!-- ORIGINAL SCRIPTS (To ensure logic loads) -->
+    <script src="js/app-core.js"></script>
+    <script src="js/app-layout.js"></script>
+    <script src="js/app-cpo.js"></script>
+    <!-- Add other necessary scripts from original index.html if known -->
+
+</body>
+
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - RM Staffel Master Data</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        /* Navbar Tweaks for this page */
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        /* Table Styles */
+        .staffel-table-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .staffel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .staffel-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(135deg,
+                    rgba(0, 243, 255, 0.2),
+                    rgba(147, 51, 234, 0.2));
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(0, 243, 255, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .staffel-table th {
+            padding: 18px 14px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            border-right: 1px solid rgba(0, 243, 255, 0.2);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .staffel-table th:last-child {
+            border-right: none;
+        }
+
+        .staffel-table tbody tr {
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .staffel-table tbody tr:hover {
+            background: linear-gradient(90deg,
+                    rgba(0, 243, 255, 0.08),
+                    rgba(147, 51, 234, 0.08));
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .staffel-table td {
+            padding: 16px 14px;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 500;
+        }
+
+        .staffel-table td:last-child {
+            border-right: none;
+        }
+
+        /* Column Groups */
+        .col-group-header {
+            background: linear-gradient(135deg,
+                    rgba(147, 51, 234, 0.3),
+                    rgba(236, 72, 153, 0.3)) !important;
+            text-align: center !important;
+            font-size: 0.85rem;
+            color: #ec4899;
+            text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+        }
+
+        .col-date {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        .col-shift {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+
+        .col-number {
+            text-align: right;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+        }
+
+        /* Stats Cards - FUTURISTIC 2050 DESIGN */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            position: relative;
+            background: linear-gradient(135deg,
+                    rgba(0, 243, 255, 0.05) 0%,
+                    rgba(147, 51, 234, 0.05) 50%,
+                    rgba(236, 72, 153, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            padding: 28px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg,
+                    rgba(0, 243, 255, 0.1),
+                    rgba(147, 51, 234, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 20px;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(0, 243, 255, 0.8);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow:
+                0 20px 60px rgba(0, 243, 255, 0.3),
+                0 0 40px rgba(147, 51, 234, 0.2),
+                inset 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                    #00f3ff, #9333ea, #ec4899, #00f3ff);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            filter: blur(10px);
+            transition: opacity 0.4s ease;
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+        }
+
+        .stat-card:hover::after {
+            opacity: 0.6;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00f3ff, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+            line-height: 1.2;
+            text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.5));
+        }
+
+        .stat-subtitle {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Refresh Button - FUTURISTIC */
+        .refresh-btn {
+            position: relative;
+            background: linear-gradient(135deg, #00f3ff, #9333ea);
+            border: 2px solid rgba(0, 243, 255, 0.5);
+            padding: 14px 32px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            overflow: hidden;
+        }
+
+        .refresh-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .refresh-btn:hover::before {
+            left: 100%;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 10px 30px rgba(0, 243, 255, 0.4),
+                0 0 20px rgba(147, 51, 234, 0.3);
+            border-color: rgba(0, 243, 255, 1);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Table Container - FUTURISTIC */
+        .staffel-table-container {
+            position: relative;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.3),
+                inset 0 0 20px rgba(0, 243, 255, 0.05);
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: flex-end;
+            padding: 12px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            gap: 10px;
+        }
+
+        .table-control-btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: #00f3ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .table-control-btn:hover {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: rgba(0, 243, 255, 0.6);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Scrollable Table */
+        .table-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
+            position: relative;
+        }
+
+        .staffel-table-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            background: rgba(5, 5, 5, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 0;
+        }
+
+        .staffel-table-container.fullscreen .table-scroll {
+            max-height: calc(100vh - 60px);
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 5px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00f3ff, #9333ea);
+            border-radius: 5px;
+            border: 2px solid rgba(15, 23, 42, 0.6);
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #00f3ff, #ec4899);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            color: #fca5a5;
+            text-align: center;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body style="background-color: #050505; color: #fff;">
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL KEMBALI KE HOME DIHAPUS -->
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT SECTION -->
+    <section id="main-content" style="padding:50px 60px;">
+        <div class="section-header"
+            style="margin-bottom:40px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-family:'Orbitron'; font-size:2rem; color:#fff;">RM STAFFEL MASTER DATA</h2>
+                <div style="color:#64748b;" id="last-update">Last updated: Loading...</div>
+            </div>
+            <button class="refresh-btn" onclick="loadStaffelData()">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <!-- STATS CARDS - FUTURISTIC 2050 -->
+        <div class="stats-grid" id="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">📦 Stock Pallet Ready</div>
+                <div class="stat-value" id="stat-stock-ready">-</div>
+                <div class="stat-subtitle">Beginning stock pallet kosong</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🔧 Belum Stapel (Badrun)</div>
+                <div class="stat-value" id="stat-belum-badrun">-</div>
+                <div class="stat-subtitle">Pemakaian belum stapel</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🔧 Belum Stapel (Kartono)</div>
+                <div class="stat-value" id="stat-belum-kartono">-</div>
+                <div class="stat-subtitle">Pemakaian belum stapel</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🔧 Belum Stapel (Kulhar)</div>
+                <div class="stat-value" id="stat-belum-kulhar">-</div>
+                <div class="stat-subtitle">Pemakaian belum stapel</div>
+            </div>
+        </div>
+
+        <!-- ERROR MESSAGE (Hidden by default) -->
+        <div id="error-message" class="error-message" style="display:none;">
+            <strong>⚠️ Error Loading Data</strong><br>
+            <span id="error-text"></span>
+        </div>
+
+        <!-- DATA TABLE -->
+        <div class="staffel-table-container" id="table-container">
+            <div class="table-controls">
+                <button class="table-control-btn" onclick="toggleFullscreen()">
+                    🖥️ Fullscreen
+                </button>
+            </div>
+            <div class="table-scroll" id="table-scroll">
+                <table class="staffel-table" id="staffel-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Tanggal</th>
+                            <th rowspan="2">Shift</th>
+                            <th rowspan="2">Beginning<br>Stock</th>
+                            <th rowspan="2">Pemakaian<br>Serba Serbi</th>
+                            <th colspan="3" class="col-group-header">Pemakaian Belum Stapel</th>
+                            <th colspan="3" class="col-group-header">Bongkaran Baru</th>
+                            <th colspan="3" class="col-group-header">Hasil Stapel</th>
+                            <th rowspan="2">Ending<br>Stock</th>
+                            <th colspan="3" class="col-group-header">Merger Summary</th>
+                            <th colspan="3" class="col-group-header">Qty Hasil Stapel</th>
+                        </tr>
+                        <tr>
+                            <!-- Pemakaian Belum Stapel -->
+                            <th>Tim Badrun</th>
+                            <th>Tim Kartono</th>
+                            <th>Tim Kulhar</th>
+                            <!-- Bongkaran Baru -->
+                            <th>Tim Badrun</th>
+                            <th>Tim Kartono</th>
+                            <th>Kuli Harian</th>
+                            <!-- Hasil Stapel -->
+                            <th>Tim Badrun</th>
+                            <th>Tim Kartono</th>
+                            <th>Tim Kulhar</th>
+                            <!-- Merger Summary -->
+                            <th>Pallet Kosong</th>
+                            <th>Pemakaian<br>Serba Serbi</th>
+                            <th>Material<br>Belum Stapel</th>
+                            <!-- Qty Hasil Stapel -->
+                            <th>Tim Badrun</th>
+                            <th>Tim Kartono</th>
+                            <th>Tim Kuli Harian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffel-tbody">
+                        <tr>
+                            <td colspan="22" style="text-align:center; padding:40px; color:#64748b;">
+                                Loading data from Google Sheets...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+
+    <script>
+        // ============================================
+        // KONFIGURASI GOOGLE APPS SCRIPT
+        // ============================================
+        // GANTI URL INI dengan Web App URL dari Google Apps Script Anda
+        // Cara dapat URL: Lihat file appscript-staffel.gs untuk instruksi lengkap
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwngqhLdzcdAQvt5ubmcZpT3-fzrYcqBuwMpNqYZabMflPSE4gKRO6d7swFzS-FHhP0/exec';
+
+        // ============================================
+        // FUNGSI UTAMA - LOAD DATA DARI GOOGLE SHEETS
+        // ============================================
+        async function loadStaffelData() {
+            const overlay = document.getElementById('loading-overlay');
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const tbody = document.getElementById('staffel-tbody');
+
+            try {
+                // Tampilkan loading
+                overlay.classList.remove('hidden');
+                errorDiv.style.display = 'none';
+
+                // Cek apakah URL sudah diganti
+                if (APPS_SCRIPT_URL === 'PASTE_WEB_APP_URL_DISINI') {
+                    throw new Error('Silakan ganti APPS_SCRIPT_URL dengan Web App URL dari Google Apps Script Anda. Lihat file appscript-staffel.gs untuk instruksi.');
+                }
+
+                // Ambil data dari Google Apps Script
+                const response = await fetch(APPS_SCRIPT_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}. Cek apakah Web App sudah di-deploy dengan benar.`);
+                }
+
+                const result = await response.json();
+
+                // Cek apakah berhasil
+                if (!result.success) {
+                    throw new Error(result.error || 'Gagal mengambil data dari Google Sheets');
+                }
+
+                const data = result.data || [];
+
+                // Kosongkan tabel
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="20" style="text-align:center; padding:40px; color:#64748b;">Belum ada data di sheet.</td></tr>';
+                    updateStats(0, 0, 0, 0);
+                    return;
+                }
+
+                // Ambil data terakhir untuk statistik
+                const lastRow = data[data.length - 1];
+                const stockReady = parseFloat(lastRow.beginningStock) || 0;
+                // PERBAIKAN: Ambil dari PEMAKAIAN BELUM STAPEL (kolom F, G, H)
+                const belumStapelBadrun = parseFloat(lastRow.pemakaianBadrun) || 0;
+                const belumStapelKartono = parseFloat(lastRow.pemakaianKartono) || 0;
+                const belumStapelKulhar = parseFloat(lastRow.pemakaianKulhar) || 0;
+
+                // Isi tabel dengan data
+                data.forEach((row) => {
+                    const tr = document.createElement('tr');
+
+                    // Helper function untuk format angka
+                    const formatNum = (val) => {
+                        if (!val || val === 0) return '-';
+                        return parseFloat(val).toLocaleString('id-ID');
+                    };
+
+                    // Helper function untuk format tanggal - HANYA TANGGAL, TANPA JAM
+                    const formatDate = (val) => {
+                        if (!val) return '-';
+
+                        try {
+                            // Jika sudah string tanggal sederhana (dd/mm/yyyy atau dd-mm-yyyy), langsung return
+                            if (typeof val === 'string' && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(val)) {
+                                return val;
+                            }
+
+                            // Jika Date object atau string ISO
+                            const date = new Date(val);
+
+                            // Cek apakah valid
+                            if (isNaN(date.getTime())) {
+                                return val; // Return as-is jika tidak bisa diparse
+                            }
+
+                            // Format ke dd/mm/yyyy
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const year = date.getFullYear();
+
+                            return `${day}/${month}/${year}`;
+                        } catch {
+                            return val;
+                        }
+                    };
+
+                    // Build baris tabel
+                    tr.innerHTML = `
+                        <td class="col-date">${formatDate(row.tanggal)}</td>
+                        <td class="col-shift">${row.shift || '-'}</td>
+                        <td class="col-number">${formatNum(row.beginningStock)}</td>
+                        <td class="col-number">${formatNum(row.pemakaianSerba)}</td>
+                        <td class="col-number">${formatNum(row.pemakaianBadrun)}</td>
+                        <td class="col-number">${formatNum(row.pemakaianKartono)}</td>
+                        <td class="col-number">${formatNum(row.pemakaianKulhar)}</td>
+                        <td class="col-number">${formatNum(row.bongkaranBadrun)}</td>
+                        <td class="col-number">${formatNum(row.bongkaranKartono)}</td>
+                        <td class="col-number">${formatNum(row.bongkaranKulhar)}</td>
+                        <td class="col-number">${formatNum(row.stapelBadrun)}</td>
+                        <td class="col-number">${formatNum(row.stapelKartono)}</td>
+                        <td class="col-number">${formatNum(row.stapelKulhar)}</td>
+                        <td class="col-number">${formatNum(row.endingStock)}</td>
+                        <td class="col-number">${formatNum(row.mergerPallet)}</td>
+                        <td class="col-number">${formatNum(row.mergerSerba)}</td>
+                        <td class="col-number">${formatNum(row.mergerMaterial)}</td>
+                        <td class="col-number">${formatNum(row.qtyBadrun)}</td>
+                        <td class="col-number">${formatNum(row.qtyKartono)}</td>
+                        <td class="col-number">${formatNum(row.qtyKulhar)}</td>
+                    `;
+
+                    tbody.appendChild(tr);
+                });
+
+                // Update statistik dengan data terakhir
+                updateStats(stockReady, belumStapelBadrun, belumStapelKartono, belumStapelKulhar);
+
+                // Update waktu terakhir update
+                const now = new Date();
+                document.getElementById('last-update').textContent =
+                    `Terakhir diperbarui: ${now.toLocaleString('id-ID', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    })}`;
+
+            } catch (error) {
+                console.error('Error saat load data:', error);
+                errorDiv.style.display = 'block';
+                errorText.textContent = error.message;
+                tbody.innerHTML = `<tr><td colspan="20" style="text-align:center; padding:40px; color:#ef4444;">
+                    Gagal memuat data. Cek console untuk detail.<br>
+                    <small style="color:#94a3b8; margin-top:10px; display:block;">${error.message}</small>
+                </td></tr>`;
+            } finally {
+                // Sembunyikan loading
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 500);
+            }
+        }
+
+        // ============================================
+        // UPDATE KARTU STATISTIK
+        // ============================================
+        function updateStats(stockReady, belumBadrun, belumKartono, belumKulhar) {
+            document.getElementById('stat-stock-ready').textContent = stockReady.toLocaleString('id-ID');
+            document.getElementById('stat-belum-badrun').textContent = belumBadrun.toLocaleString('id-ID');
+            document.getElementById('stat-belum-kartono').textContent = belumKartono.toLocaleString('id-ID');
+            document.getElementById('stat-belum-kulhar').textContent = belumKulhar.toLocaleString('id-ID');
+        }
+
+        // ============================================
+        // FULLSCREEN TOGGLE
+        // ============================================
+        function toggleFullscreen(event) {
+            const tableContainer = document.getElementById('table-container');
+            const btn = event.target;
+
+            if (tableContainer.classList.contains('fullscreen')) {
+                tableContainer.classList.remove('fullscreen');
+                btn.innerHTML = '🖥️ Fullscreen';
+            } else {
+                tableContainer.classList.add('fullscreen');
+                btn.innerHTML = '❌ Exit Fullscreen';
+            }
+        }
+
+        // ESC key untuk keluar dari fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const tableContainer = document.getElementById('table-container');
+                if (tableContainer.classList.contains('fullscreen')) {
+                    tableContainer.classList.remove('fullscreen');
+                    const btn = document.querySelector('.table-control-btn');
+                    if (btn) btn.innerHTML = '🖥️ Fullscreen';
+                }
+            }
+        });
+
+        // ============================================
+        // LOAD DATA SAAT HALAMAN DIBUKA
+        // ============================================
+        window.onload = () => {
+            loadStaffelData();
+        };
+
+        // ============================================
+        // AUTO-REFRESH SETIAP 5 MENIT
+        // ============================================
+        setInterval(loadStaffelData, 5 * 60 * 1000);
+    </script>
+</body>
+
+</html>

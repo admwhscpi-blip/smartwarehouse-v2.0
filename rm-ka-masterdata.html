@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - RM Kadar Air Master Data</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        /* GRID LAYOUT FOR TWO TABLES */
+        .master-data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .master-data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ka-table-container {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .table-header-title {
+            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .ka-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            min-width: 600px;
+        }
+
+        .ka-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .ka-table th {
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 2px solid rgba(0, 243, 255, 0.5);
+            white-space: nowrap;
+        }
+
+        .ka-table td {
+            padding: 12px;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ka-table tbody tr:hover {
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        .moisture-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #00f3ff, #9333ea);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.4);
+        }
+
+        /* Loading Spinner */
+        .loading-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 243, 255, 0.1);
+            border-top: 4px solid #00f3ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body style="background-color: #050505; color: #fff;">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL DIHAPUS -->
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <section style="padding:40px 60px;">
+        <div class="section-header"
+            style="margin-bottom:30px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-family:'Orbitron'; font-size:1.8rem; color:#fff;">RM KADAR AIR MASTER DATA</h2>
+                <div id="last-update" style="color:#64748b; font-size:0.9rem;">Menghubungkan ke Google Sheets...</div>
+            </div>
+            <button class="refresh-btn" onclick="initFetch()">🔄 Refresh Data</button>
+        </div>
+
+        <div class="master-data-grid">
+            <!-- TABEL PENERIMAAN -->
+            <div class="ka-table-container">
+                <div class="table-header-title">
+                    📥 DATA PENERIMAAN
+                    <span id="count-penerimaan" style="font-size:0.8rem; color:#64748b;">0 entries</span>
+                </div>
+                <div class="table-scroll">
+                    <table class="ka-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Material</th>
+                                <th>Supplier</th>
+                                <th>Nopol</th>
+                                <th>KA (%)</th>
+                                <th>Kapal</th>
+                                <th>Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-penerimaan">
+                            <!-- Data injected here -->
+                        </tbody>
+                    </table>
+                    <div id="loading-penerimaan" class="loading-inner">
+                        <div class="spinner"></div>
+                        <span>Memuat data...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABEL PENGIRIMAN -->
+            <div class="ka-table-container">
+                <div class="table-header-title">
+                    📤 DATA PENGIRIMAN
+                    <span id="count-pengiriman" style="font-size:0.8rem; color:#64748b;">0 entries</span>
+                </div>
+                <div class="table-scroll">
+                    <table class="ka-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Material</th>
+                                <th>Lokasi</th>
+                                <th>KA (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-pengiriman">
+                            <!-- Data injected here -->
+                        </tbody>
+                    </table>
+                    <div id="loading-pengiriman" class="loading-inner">
+                        <div class="spinner"></div>
+                        <span>Memuat data...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyb4Hngv6G-tSZFW2JQIIqKIZXu1RTPAp_nqL_ZkasPsG_qmzp-BLG3tfMYmVAtLWIy4w/exec';
+
+
+        async function initFetch() {
+            try {
+                // Show loading
+                document.getElementById('loading-penerimaan').style.display = 'flex';
+                document.getElementById('loading-pengiriman').style.display = 'flex';
+                document.getElementById('tbody-penerimaan').innerHTML = '';
+                document.getElementById('tbody-pengiriman').innerHTML = '';
+
+                const response = await fetch(API_URL + '?action=getKadarAir');
+
+                const data = await response.json();
+
+                renderPenerimaan(data.penerimaan);
+                renderPengiriman(data.pengiriman);
+
+                document.getElementById('last-update').textContent = 'Last update: ' + new Date().toLocaleString('id-ID');
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('last-update').textContent = 'Error koneksi: ' + error.message;
+            } finally {
+                if (document.getElementById('loading-penerimaan')) document.getElementById('loading-penerimaan').style.display = 'none';
+                if (document.getElementById('loading-pengiriman')) document.getElementById('loading-pengiriman').style.display = 'none';
+            }
+        }
+
+        function renderPenerimaan(list) {
+            const tbody = document.getElementById('tbody-penerimaan');
+            document.getElementById('count-penerimaan').textContent = list.length + ' entries';
+
+            list.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${formatDate(item.date)}</td>
+                        <td style="font-weight:600;">${item.material}</td>
+                        <td>${item.supplier}</td>
+                        <td>${item.nopol}</td>
+                        <td class="moisture-val">${item.moisture}%</td>
+                        <td>${item.kapal}</td>
+                        <td>${item.lokasi}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderPengiriman(list) {
+            const tbody = document.getElementById('tbody-pengiriman');
+            document.getElementById('count-pengiriman').textContent = list.length + ' entries';
+
+            list.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${formatDate(item.date)}</td>
+                        <td style="font-weight:600;">${item.material}</td>
+                        <td>${item.lokasi}</td>
+                        <td class="moisture-val">${item.moisture}%</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function parseRobustDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) return dateStr;
+            let d = new Date(dateStr);
+            if (!isNaN(d.getTime())) return d;
+
+            const cleanStr = String(dateStr).trim();
+            const parts = cleanStr.split(/[\s\/-]+/);
+            if (parts.length >= 3) {
+                let day = parseInt(parts[0]);
+                let monthStr = parts[1].toLowerCase();
+                let year = parseInt(parts[2]);
+                const idMonths = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"];
+                let month = idMonths.findIndex(m => monthStr.startsWith(m));
+                if (month === -1) month = parseInt(parts[1]) - 1;
+                if (month >= 0 && month <= 11) {
+                    if (year < 100) year += 2000;
+                    return new Date(year, month, day);
+                }
+            }
+            return null;
+        }
+
+        function formatDate(dateStr) {
+            const d = parseRobustDate(dateStr);
+            if (!d) return dateStr;
+            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        window.onload = initFetch;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - SOP & WI CENTER</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #ffd700;
+            /* Gold */
+            --secondary: #facc15;
+            --accent: #3b82f6;
+            /* Blue for reliability */
+            --dark-bg: #050505;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        /* BACKGROUND */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, transparent 90%);
+        }
+
+        /* HEADER */
+        .library-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, var(--primary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #ccc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(250, 204, 21, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* SEARCH & FILTER */
+        .controls-section {
+            padding: 30px 40px 10px 40px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: rgba(250, 204, 21, 0.2);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* DOCUMENT GRID */
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 30px 40px;
+        }
+
+        .doc-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px -10px rgba(250, 204, 21, 0.2);
+        }
+
+        .doc-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .type-sop .doc-icon {
+            color: #facc15;
+        }
+
+        /* SOP = Yellow */
+        .type-wi .doc-icon {
+            color: #3b82f6;
+        }
+
+        /* WI = Blue */
+
+        .doc-meta {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .doc-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .doc-desc {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .doc-actions {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, var(--secondary), #eab308);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+        }
+
+        .revision-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="grid-bg"></div>
+
+    <header class="library-header">
+        <div class="header-title">
+            <h1>SOP & WI CENTER</h1>
+            <div style="font-size: 0.8rem; color: #94a3b8; letter-spacing: 1px;">DOCUMENT CONTROL REPOSITORY</div>
+        </div>
+        <a href="homepage-v1.html" class="back-btn">← BACK TO HOME</a>
+    </header>
+
+    <!-- CONTROLS -->
+    <div class="controls-section">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Cari dokumen SOP atau WI..."
+                onkeyup="filterDocs()">
+        </div>
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="setFilter('ALL')">ALL</button>
+            <button class="filter-btn" onclick="setFilter('WAREHOUSE')">WAREHOUSE</button>
+            <button class="filter-btn" onclick="setFilter('LOGISTICS')">LOGISTICS</button>
+            <button class="filter-btn" onclick="setFilter('SAFETY')">SAFETY</button>
+            <button class="filter-btn" onclick="setFilter('HR')">HR</button>
+        </div>
+    </div>
+
+    <!-- DOCUMENT GRID -->
+    <div class="doc-grid" id="docGrid">
+        <!-- DYNAMIC CONTENT WILL BE INJECTED HERE -->
+    </div>
+
+    <script>
+        // REAL DATA FROM DOWNLOADS
+        const DOCUMENTS = [
+            // RM STORAGE
+            {
+                id: 1,
+                title: "SOP - RM STORAGE MANAJEMEN",
+                type: "SOP",
+                category: "WAREHOUSE",
+                rev: "Rev 01",
+                date: "2026-01-01",
+                desc: "Standard Operating Procedure untuk pengelolaan gudang Raw Material (Penerimaan, Penyimpanan, Pengeluaran).",
+                file: "assets/sop-wi/SOP-RM-Storage.pdf"
+            },
+            {
+                id: 2,
+                title: "WI - RM STORAGE OPERATIONAL",
+                type: "WI",
+                category: "WAREHOUSE",
+                rev: "Rev 01",
+                date: "2026-01-01",
+                desc: "Instruksi Kerja teknis (Work Instruction) untuk operator gudang RM.",
+                file: "assets/sop-wi/WI-RM Storage.pdf"
+            },
+
+            // CPO
+            {
+                id: 3,
+                title: "SOP - CPO TANK FARM",
+                type: "SOP",
+                category: "LOGISTICS",
+                rev: "Rev 01",
+                date: "2026-01-01",
+                desc: "Prosedur operasional standar untuk penanganan CPO di Tank Farm.",
+                file: "assets/sop-wi/SOP-CPO.pdf"
+            },
+            {
+                id: 4,
+                title: "WI - CPO HANDLING",
+                type: "WI",
+                category: "LOGISTICS",
+                rev: "Rev 01",
+                date: "2026-01-01",
+                desc: "Instruksi kerja detail untuk sounding, transfer, dan maintenance ringan tanki CPO.",
+                file: "assets/sop-wi/WI-CPO.pdf"
+            },
+
+            // BKK (BULK STORAGE)
+            {
+                id: 5,
+                title: "SOP - BULK STORAGE (BKK)",
+                type: "SOP",
+                category: "WAREHOUSE",
+                rev: "Rev 01",
+                date: "2026-01-01",
+                desc: "Prosedur pengelolaan penyimpanan bahan baku curah (Bulk Storage/BKK).",
+                file: "assets/sop-wi/SOP-BULK STORAGE.pdf"
+            },
+            {
+                id: 6,
+                title: "WI - BULK STORAGE (BKK)",
+                type: "WI",
+                category: "WAREHOUSE",
+                rev: "Rev 01",
+                date: "2026-01-01",
+                desc: "Instruksi kerja operasional untuk area Bulk Storage.",
+                file: "assets/sop-wi/WI-Bulk Storage.pdf"
+            }
+        ];
+
+        let currentFilter = 'ALL';
+
+        window.onload = () => {
+            renderDocs(DOCUMENTS);
+        };
+
+        function setFilter(category) {
+            currentFilter = category;
+
+            // Update UI
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === category) btn.classList.add('active');
+            });
+
+            filterDocs();
+        }
+
+        function filterDocs() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = DOCUMENTS.filter(doc => {
+                const matchesCategory = currentFilter === 'ALL' || doc.category === currentFilter;
+                const matchesSearch = doc.title.toLowerCase().includes(query) ||
+                    doc.desc.toLowerCase().includes(query) ||
+                    doc.type.toLowerCase().includes(query);
+                return matchesCategory && matchesSearch;
+            });
+
+            renderDocs(filtered);
+        }
+
+        function renderDocs(list) {
+            const grid = document.getElementById('docGrid');
+            grid.innerHTML = '';
+
+            if (list.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h3>TIDAK DITEMUKAN DOKUMEN</h3><p>Coba kata kunci atau kategori lain.</p></div>';
+                return;
+            }
+
+            list.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = `doc-card type-${doc.type.toLowerCase()}`;
+
+                // Icon selection
+                const icon = doc.type === 'SOP' ? '📜' : '🛠️';
+
+                card.innerHTML = `
+                    <div class="doc-meta">
+                        <span>${doc.category} • ${doc.type}</span>
+                        <span>${doc.date}</span>
+                    </div>
+                    <div class="doc-icon">${icon}</div>
+                    <div class="doc-title">${doc.title}</div>
+                    <div class="doc-desc">${doc.desc}</div>
+                    <div class="doc-actions">
+                        <div class="revision-badge">${doc.rev}</div>
+                        <a href="${doc.file}" class="download-btn">⬇ DOWNLOAD</a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+
+</html>

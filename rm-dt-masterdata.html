@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RM MASTERDATA // SMART WAREHOUSE V2.0</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+    <link rel="stylesheet" href="css/sim_2050.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        .container {
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Tabs System */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #64748b;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Orbitron';
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: #00f3ff;
+            color: #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table Styling */
+        .table-container {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: auto;
+            max-height: 70vh;
+            backdrop-filter: blur(10px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter';
+            font-size: 0.8rem;
+        }
+
+        th {
+            background: rgba(0, 243, 255, 0.05);
+            color: #00f3ff;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            padding: 15px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+        }
+
+        .merger-header {
+            text-align: center;
+            border-bottom: 2px solid rgba(0, 243, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            color: #bc13fe;
+            font-weight: 700;
+            background: rgba(188, 19, 254, 0.05);
+        }
+
+        /* Fullscreen Mode */
+        body.fullscreen-mode .navbar {
+            display: none;
+        }
+
+        body.fullscreen-mode .container {
+            max-width: 100%;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.fullscreen-mode .table-container {
+            max-height: calc(100vh - 120px);
+            height: 100%;
+        }
+
+        /* Modern Luxury Data Table */
+        td {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+            /* Consistent size */
+            color: #e2e8f0;
+        }
+
+        th {
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            background: #0f172a;
+            /* Solid background for sticky */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #00f3ff;
+            color: #00f3ff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <button class="btn-hud-primary" onclick="MasterApp.toggleFullscreen()">FULL SCREEN MODE</button>
+            <button class="btn-hud-primary" onclick="MasterApp.fetchData()" style="margin-left:10px;">RELOAD
+                DATA</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header
+            style="margin-bottom: 30px; border-left: 4px solid #00f3ff; padding-left: 20px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1 style="font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; margin: 0;">DOWNTIME MASTERDATA</h1>
+                <p style="color: #64748b; font-size: 0.8rem; margin: 5px 0 0 0;">SYSTEM LOGGING & INPUT TRACKER</p>
+            </div>
+            <div style="text-align:right;">
+                <div id="sync-status" style="font-family:'Orbitron'; font-size:0.6rem; color:#10b981;">● SYSTEM ONLINE
+                </div>
+                <div id="last-update" style="font-size:0.6rem; color:#475569; margin-top:5px;">LAST SYNC: NEVER</div>
+            </div>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="MasterApp.switchTab('template')">TABEL 1: TEMPLATE</button>
+            <button class="tab-btn" onclick="MasterApp.switchTab('borong')">TABEL 2: KULI BORONG</button>
+            <button class="tab-btn" onclick="MasterApp.switchTab('harian')">TABEL 3: KULI HARIAN</button>
+            <button class="tab-btn" onclick="MasterApp.switchTab('activity')">TABEL 4: DAILY ACTIVITY</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="tab-template" class="tab-content active">
+            <div class="table-container">
+                <table id="table-template">
+                    <thead>
+                        <tr id="head-template"></tr>
+                    </thead>
+                    <tbody id="body-template"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-borong" class="tab-content">
+            <div class="table-container">
+                <table id="table-borong">
+                    <thead>
+                        <tr id="head-borong"></tr>
+                    </thead>
+                    <tbody id="body-borong"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-harian" class="tab-content">
+            <div class="table-container">
+                <table id="table-harian">
+                    <thead>
+                        <tr id="head-harian"></tr>
+                    </thead>
+                    <tbody id="body-harian"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-activity" class="tab-content">
+            <div class="table-container">
+                <table id="table-activity">
+                    <thead>
+                        <tr id="head-activity-merger"></tr>
+                        <tr id="head-activity-main"></tr>
+                    </thead>
+                    <tbody id="body-activity"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/app-config.js"></script>
+    <script src="js/rm-dt-masterdata.js"></script>
+</body>
+
+</html>

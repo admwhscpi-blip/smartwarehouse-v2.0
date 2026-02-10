@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - RM Langsiran Live</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #00ff9d;
+            --neon-red: #ff3e3e;
+            --glass-bg: rgba(7, 12, 24, 0.9);
+            --glass-border: rgba(0, 243, 255, 0.3);
+            --panel-shadow: 0 0 40px rgba(0, 15, 30, 0.9);
+        }
+
+        /* FORCE FONT GLOBALLY */
+        * {
+            font-family: 'Orbitron', sans-serif !important;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #0a1a3a 0%, #050a1a 100%);
+            color: #fff;
+            overflow-x: hidden;
+            font-family: 'Orbitron', sans-serif;
+            background-attachment: fixed;
+        }
+
+        /* FUTURE GRID BACKGROUND */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .navbar {
+            border-bottom: 2px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 10, 25, 0.9);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            box-shadow: 0 5px 25px rgba(0, 243, 255, 0.1);
+        }
+
+        .langsiran-container {
+            padding: 30px 20px;
+            max-width: 100%;
+            /* FULL WIDTH AS REQUESTED */
+            margin: 0 auto;
+        }
+
+        /* SECTION HEADERS - HUD STYLE */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            margin-top: 40px;
+            border-left: 5px solid var(--neon-blue);
+            padding-left: 15px;
+            background: linear-gradient(90deg, rgba(0, 243, 255, 0.1) 0%, transparent 100%);
+            height: 45px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron';
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        /* GLASS CARD - PREMIUM EFFECT */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+            /* Sharper, more technical look */
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            margin-bottom: 30px;
+            box-shadow: var(--panel-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, transparent 50%, var(--glass-border) 50%);
+        }
+
+        /* TABLE 1 SPECIFIC: SCROLL 2 ROWS ONLY */
+        .table-scroll-container {
+            max-height: 135px;
+            /* EXACTLY ~2 ROWS + HEADER */
+            overflow-y: auto;
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .scifi-table th {
+            background: #0f172a;
+            color: var(--neon-blue);
+            font-size: 1rem;
+            /* LARGER THAN DATA */
+            letter-spacing: 2px;
+            padding: 16px;
+            text-align: left;
+            border-bottom: 3px solid var(--neon-blue);
+            text-transform: uppercase;
+        }
+
+        .scifi-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 0.85rem;
+            /* UNIFORM DATA SIZE */
+            transition: all 0.3s ease;
+        }
+
+        .scifi-table tr:hover td {
+            background: rgba(0, 243, 255, 0.05);
+            color: #fff;
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        /* TABLE 2: FLEET CARDS */
+        .fleet-control-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+
+        .fleet-summary-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .fleet-total-val {
+            font-family: 'Orbitron';
+            font-size: 3rem;
+            color: #fff;
+            margin: 10px 0;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        .fleet-stats-mini {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-btn {
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid transparent;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .stat-btn.active-btn {
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--neon-green);
+            border-color: var(--neon-green);
+        }
+
+        .stat-btn.off-btn {
+            background: rgba(255, 62, 62, 0.1);
+            color: var(--neon-red);
+            border-color: var(--neon-red);
+        }
+
+        .stat-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* TABLE 3: ZONE SPLIT */
+        .zone-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .zone-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .zone-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #050a1a;
+            padding: 2px 15px;
+            color: var(--neon-purple);
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            border: 1px solid var(--neon-purple);
+            border-radius: 20px;
+        }
+
+        .asset-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .asset-name {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .asset-val {
+            color: #fff;
+            font-family: 'Orbitron';
+            font-size: 0.9rem;
+        }
+
+        /* DECORATIVE CONNECTORS */
+        .connector-line {
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-blue), transparent);
+            margin: 10px 0;
+            width: 50px;
+        }
+
+        @media (max-width: 1200px) {
+
+            .fleet-control-grid,
+            .zone-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* FULLSCREEN OPTIMIZATIONS */
+        :fullscreen body {
+            overflow: hidden !important;
+            /* Prevent scrollbar */
+        }
+
+        :fullscreen .navbar {
+            display: none !important;
+        }
+
+        :fullscreen .langsiran-container {
+            padding: 10px 15px !important;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* COMPACT HEADERS IN FULLSCREEN */
+        :fullscreen .section-header {
+            margin-top: 5px !important;
+            margin-bottom: 5px !important;
+            height: 30px !important;
+            border-left-width: 3px !important;
+        }
+
+        :fullscreen .section-title {
+            font-size: 0.9rem !important;
+        }
+
+        :fullscreen .glass-card {
+            margin-bottom: 0 !important;
+            padding: 10px !important;
+            backdrop-filter: none;
+            /* Perf */
+        }
+
+        /* AUTO FIT TABLES */
+        :fullscreen .table-scroll-container {
+            max-height: 25vh !important;
+            /* Dynamic height */
+        }
+
+        :fullscreen .table-scroll-container-t4 {
+            max-height: 25vh !important;
+        }
+
+        /* COMPACT GRID */
+        :fullscreen .grid-split {
+            gap: 15px !important;
+        }
+
+        :fullscreen .fleet-control-grid {
+            gap: 15px !important;
+        }
+
+        /* FLEET SUMMARY SMALLER */
+        :fullscreen .fleet-summary-card {
+            padding: 10px;
+        }
+
+        :fullscreen .fleet-total-val {
+            font-size: 2rem !important;
+            margin: 5px 0;
+        }
+
+        :fullscreen .fleet-stats-mini {
+            margin-top: 5px;
+        }
+
+        /* TEXT SCALING */
+        :fullscreen .scifi-table th,
+        :fullscreen .scifi-table td {
+            padding: 6px 10px !important;
+            font-size: 0.75rem !important;
+        }
+
+        /* HIDE SCROLLBARS IF POSSIBLE BUT ALLOW SCROLL IF NEEDED */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" style="justify-content: space-between;">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <!-- ONLY FULL SCREEN BUTTON REMAINS -->
+        <button class="btn-primary" id="fs-btn" onclick="toggleFullScreen()"
+            style="font-size: 0.8rem; padding: 10px 20px;">
+            ENTER FULL SCREEN
+        </button>
+    </nav>
+
+    <div class="langsiran-container">
+
+        <!-- TABLE 1 -->
+        <div class="section-header">
+            <div class="section-title">01. ACUAN LANGSIR (MASTER MONITOR)</div>
+        </div>
+        <div class="glass-card">
+            <div class="table-scroll-container">
+                <table class="scifi-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Grade</th>
+                            <th>Stock</th>
+                            <th>Target</th>
+                            <th>Langsir</th>
+                            <th>Ritase</th>
+                            <th>Usage</th>
+                            <th>DoH</th>
+                            <th>Stock Luar</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-acuan"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid-split" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <!-- TABLE 2 -->
+            <div class="fleet-section">
+                <div class="section-header">
+                    <div class="section-title">02. FLEET CONTROL CENTER</div>
+                </div>
+                <div class="fleet-control-grid">
+                    <div class="fleet-summary-card">
+                        <span style="color: #64748b; font-size: 0.8rem; font-family: 'Orbitron';">TOTAL LOGISTICS</span>
+                        <div class="fleet-total-val" id="fleet-total-qty">0</div>
+                        <div class="fleet-stats-mini">
+                            <div class="stat-btn active-btn" onclick="filterFleet('Active')">
+                                <small>Active</small><br><span id="fleet-active-qty">0</span>
+                            </div>
+                            <div class="stat-btn off-btn" onclick="filterFleet('Grounded')">
+                                <small>Off</small><br><span id="fleet-off-qty">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card" style="margin-bottom: 0; min-height: 200px;">
+                        <div id="fleet-view-title"
+                            style="font-family:'Orbitron'; color:var(--neon-blue); font-size:0.8rem; margin-bottom:15px; border-bottom:1px solid var(--glass-border); padding-bottom:10px; letter-spacing:2px;">
+                            ACTIVE FLEET (RUNNING)</div>
+                        <div style="overflow-x: auto;">
+                            <table class="scifi-table" id="fleet-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama</th>
+                                        <th>Driver</th>
+                                        <th style="text-align: right;">No Pol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body-fleet"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE 3 -->
+            <div class="equipment-section" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="section-container" style="display: flex; flex-direction: column; gap: 0;">
+                    <div class="section-header" style="margin-top: 0;">
+                        <div class="section-title" style="font-size: 1rem;">03. EQUIPMENT & MAN POWER</div>
+                    </div>
+                    <div class="zone-container" id="body-equipment">
+                        <!-- Zones injected here -->
+                    </div>
+                </div>
+
+                <!-- RITASE SUMMARY CARDS -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="glass-card"
+                        style="margin-bottom: 0; padding: 15px; border-left: 4px solid var(--neon-blue); background: rgba(0, 243, 255, 0.05);">
+                        <div style="color: #64748b; font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 5px;">GEBANG
+                            TOTAL</div>
+                        <div style="font-family: 'Orbitron'; color: #fff; font-size: 1.1rem;"><span
+                                id="sum-gebang-rit">0</span> <small
+                                style="font-size: 0.6rem; color: var(--neon-blue);">RIT</small></div>
+                    </div>
+                    <div class="glass-card"
+                        style="margin-bottom: 0; padding: 15px; border-left: 4px solid var(--neon-purple); background: rgba(188, 19, 254, 0.05);">
+                        <div style="color: #64748b; font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 5px;">
+                            SAMPING TOTAL</div>
+                        <div style="font-family: 'Orbitron'; color: #fff; font-size: 1.1rem;"><span
+                                id="sum-samping-rit">0</span> <small
+                                style="font-size: 0.6rem; color: var(--neon-purple);">RIT</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE 4 -->
+        <div class="section-header">
+            <div class="section-title">04. PLANING LANGSIRAN GUDANG LUAR & MONITORING</div>
+        </div>
+        <div class="grid-split" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; align-items: start;">
+            <div class="glass-card" style="margin-bottom: 0;">
+                <div class="table-scroll-container-t4">
+                    <table class="scifi-table">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Grade</th>
+                                <th>Gudang</th>
+                                <th>Ruang</th>
+                                <th>Tgl Datang</th>
+                                <th>Umur</th>
+                                <th>Ritase</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-plan"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DoH WARNING LIST CARD -->
+            <div class="glass-card"
+                style="margin-bottom: 0; display: flex; flex-direction: column; background: rgba(255, 62, 62, 0.03); border: 1px solid rgba(255, 62, 62, 0.2);">
+                <div
+                    style="font-family:'Orbitron'; color:var(--neon-red); font-size:0.8rem; margin-bottom:15px; border-bottom:1px solid rgba(255, 62, 62, 0.2); padding-bottom:10px; letter-spacing:2px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2rem;">⚠️</span> DOH CRITICAL MONITORING
+                </div>
+                <div id="doh-warning-list"
+                    style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 5px 0;">
+                    <!-- List injected here -->
+                </div>
+                <div
+                    style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255, 62, 62, 0.2); text-align: center;">
+                    <div
+                        style="color: var(--neon-red); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: 900; letter-spacing: 1px; animation: pulse 2s infinite;">
+                        PASTIKAN PROSES LANGSIR BERJALAN LANCAR!!!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyxleUnKP0EqTSXDOTvR9FtfIQwj3EGOvLxNkwBvH9ELcIwmLQNmHkSRwftvgAYS7hl/exec";
+        let RAW_FLEET_DATA = [];
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                renderAll(data);
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+
+        function renderAll(data) {
+            // Table 1: Acuan (Integer + Caps + Highlight)
+            const bodyAcuan = document.getElementById('body-acuan');
+            bodyAcuan.innerHTML = data.acuan.map(row => {
+                let cls = "";
+                const ket = (row.ket || "").toString().toUpperCase();
+                if (ket.includes("PRIORITAS LANGSIR 1")) cls = "priority-1";
+                else if (ket.includes("PRIORITAS LANGSIR 2")) cls = "priority-2";
+                else if (ket.includes("URGENT")) cls = "urgent";
+
+                return `<tr class="${cls}">
+                    <td style="font-weight:700;">${row.mat}</td>
+                    <td>${row.grade || "-"}</td>
+                    <td style="color:#fff;">${Math.floor(row.stock || 0)}</td>
+                    <td style="color:#64748b;">${Math.floor(row.target || 0)}</td>
+                    <td style="color:var(--neon-blue); font-weight:bold;">${Math.floor(row.langsir || 0)}</td>
+                    <td>${Math.floor(row.ritase || 0)}</td>
+                    <td>${Math.floor(row.usage || 0)}</td>
+                    <td>${Math.floor(row.doh || 0)}</td>
+                    <td style="color:#fbbf24;">${row.stockLuar || 0}</td>
+                    <td style="font-size:0.7rem; color:var(--neon-blue);">${ket}</td>
+                </tr>`;
+            }).join('');
+
+            // DoH Warning List: Sort lowest first, always show 5
+            const sortedDoh = [...data.acuan].sort((a, b) => (a.doh || 0) - (b.doh || 0));
+            const dohList = document.getElementById('doh-warning-list');
+
+            let listHtml = "";
+            for (let i = 0; i < 5; i++) {
+                const item = sortedDoh[i];
+                if (item) {
+                    listHtml += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: rgba(255, 62, 62, 0.05); border-radius: 4px; border-left: 3px solid ${item.doh < 3 ? 'var(--neon-red)' : '#fbbf24'}">
+                            <span style="font-size: 0.75rem; color: #94a3b8;">${i + 1}. <strong style="color: #fff;">${item.mat}</strong></span>
+                            <span style="font-family: 'Orbitron'; font-size: 0.8rem; color: ${item.doh < 3 ? 'var(--neon-red)' : '#fbbf24'};">DOH ${Math.floor(item.doh || 0)} HARI</span>
+                        </div>`;
+                } else {
+                    listHtml += `<div style="padding: 8px 15px; opacity:0.1; font-size:0.75rem;">${i + 1}. --- NO DATA ---</div>`;
+                }
+            }
+            dohList.innerHTML = listHtml;
+
+            // Table 2: Fleet (Split + Details)
+            RAW_FLEET_DATA = data.fleet;
+            const activeFleet = RAW_FLEET_DATA.filter(f => (f.status || "").toLowerCase().includes("active"));
+            const offFleet = RAW_FLEET_DATA.filter(f => !(f.status || "").toLowerCase().includes("active"));
+
+            document.getElementById('fleet-total-qty').innerText = RAW_FLEET_DATA.length;
+            document.getElementById('fleet-active-qty').innerText = activeFleet.length;
+            document.getElementById('fleet-off-qty').innerText = offFleet.length;
+
+            filterFleet('Active'); // Default view
+
+            // Table 3: Equipment (Zone Based)
+            const bodyEquip = document.getElementById('body-equipment');
+            const zones = {};
+            data.equipment.forEach(item => {
+                if (!zones[item.zone]) zones[item.zone] = [];
+                zones[item.zone].push(item);
+            });
+
+            bodyEquip.innerHTML = Object.keys(zones).map(z => `
+                <div class="zone-card">
+                    <div class="zone-label">${z}</div>
+                    <div class="connector-line"></div>
+                    ${zones[z].map(a => `
+                        <div class="asset-row">
+                            <span class="asset-name">${a.tool}</span>
+                            <span class="asset-val" style="color:${a.val.toString().includes('Active') ? 'var(--neon-green)' : '#fff'}">${a.val}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+
+            // Table 4: Plan (Date Only - Time Stripped) + Ritase Sum logic for Warehouse
+            const bodyPlan = document.getElementById('body-plan');
+            let sumGebang = 0;
+            let sumSamping = 0;
+
+            bodyPlan.innerHTML = data.plan.map(row => {
+                const whName = (row.wh || "").toUpperCase();
+                // Logic: Count number of rows as Ritase if data isn't a simple number
+                if (whName.includes("GEBANG")) sumGebang++;
+                else if (whName.includes("SAMPING")) sumSamping++;
+
+                // Formatting date: strip time (handle ISO 'T' or space)
+                let dateStr = (row.tgl || "").toString();
+                if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+                else dateStr = dateStr.split(' ')[0];
+
+                return `<tr>
+                    <td>${row.mat}</td>
+                    <td>${row.grade || "-"}</td>
+                    <td style="color:var(--neon-blue);">${row.wh}</td>
+                    <td>#${row.room}</td>
+                    <td style="font-weight:700;">${dateStr}</td>
+                    <td>${row.age} HR</td>
+                    <td><span style="color:var(--neon-purple);">${row.rit}</span></td>
+                    <td><span class="status-badge status-waiting">${row.status}</span></td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('sum-gebang-rit').innerText = sumGebang;
+            document.getElementById('sum-samping-rit').innerText = sumSamping;
+        }
+
+        function filterFleet(type) {
+            const body = document.getElementById('body-fleet');
+            const title = document.getElementById('fleet-view-title');
+
+            title.innerText = type === 'Active' ? 'ACTIVE FLEET (RUNNING)' : 'GROUNDED / MAINTENANCE (OFF)';
+            title.style.color = type === 'Active' ? 'var(--neon-green)' : 'var(--neon-red)';
+
+            const filtered = type === 'Active'
+                ? RAW_FLEET_DATA.filter(f => (f.status || "").toLowerCase().includes("active"))
+                : RAW_FLEET_DATA.filter(f => !(f.status || "").toLowerCase().includes("active"));
+
+            body.innerHTML = filtered.map(row => `
+                <tr>
+                    <td>${row.name}</td>
+                    <td style="color:#94a3b8;">${row.driver}</td>
+                    <td style="font-family:'Orbitron'; font-size:0.75rem; color:#fff; text-align: right;">${row.nopol}</td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleFullScreen() {
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('fs-btn');
+            if (document.fullscreenElement) {
+                btn.innerText = "EXIT FULL SCREEN";
+                btn.classList.add('active');
+            } else {
+                btn.innerText = "FULL SCREEN";
+                btn.classList.remove('active');
+            }
+        });
+
+        window.onload = async () => {
+            await fetchData();
+            setTimeout(() => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) overlay.classList.add('hidden');
+            }, 1200);
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <style>
+        /* --- 1. IMPORT FONT MEWAH --- */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Cinzel:wght@700&display=swap');
+
+        /* --- 2. SETUP BODY & BACKGROUND --- */
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #0b0f19;
+            /* Dark Navy Deep */
+            color: #e2e8f0;
+            margin: 0;
+            padding: 100px 40px 40px;
+            /* Adjusted padding-top for Navbar */
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* Mencegah scroll samping berlebih */
+        }
+
+        /* Canvas untuk background animasi */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% -20%, #1e293b, #020617);
+        }
+
+        /* NAVBAR STYLES (INJECTED TO MATCH ABOUT PAGE) */
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            height: 80px;
+            box-sizing: border-box;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0 !important;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: cyber-glow 4s infinite alternate;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        @keyframes blue-glow {
+            from {
+                filter: drop-shadow(0 0 2px rgba(0, 243, 255, 0.2));
+            }
+
+            to {
+                filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.6));
+            }
+        }
+
+        @keyframes cyber-glow {
+            from {
+                text-shadow: 0 0 5px rgba(0, 243, 255, 0.2);
+            }
+
+            to {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            }
+        }
+
+        /* Fullscreen Helper */
+        body.is-fullscreen .navbar {
+            display: none !important;
+        }
+
+        body.is-fullscreen {
+            padding-top: 40px !important;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #aaa;
+            font-family: 'Orbitron';
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #00f3ff;
+            box-shadow: 0 0 10px #00f3ff;
+        }
+
+        /* --- 3. HEADER SECTION (MEWAH) --- */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 70px;
+            position: relative;
+            z-index: 2;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .main-headline {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 6px;
+            color: #38bdf8;
+            /* Sky Blue */
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .luxury-title {
+            font-family: 'Cinzel', serif;
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0;
+            /* Gradient Text Gold/Platinum */
+            background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+        }
+
+        .division-pill {
+            display: inline-flex;
+            margin-top: 30px;
+            padding: 10px 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            gap: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .pill-item {
+            color: #cbd5e1;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        .pill-sep {
+            color: #f59e0b;
+        }
+
+        /* Gold Separator */
+
+        /* --- 4. TREE STRUCTURE CSS --- */
+        .tree {
+            display: flex;
+            justify-content: center;
+            /* Center tree */
+            padding-bottom: 50px;
+        }
+
+        .tree ul {
+            position: relative;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .tree li {
+            position: relative;
+            padding: 20px 0 0 50px;
+            /* Jarak antar node vertikal */
+            margin-left: 20px;
+            border-left: 1px dashed rgba(56, 189, 248, 0.3);
+            /* Garis putus-putus biru */
+            transition: all 0.5s;
+        }
+
+        /* Garis Horizontal ke Node */
+        .tree li::before {
+            content: "";
+            position: absolute;
+            top: 45px;
+            /* Sesuaikan dengan tengah kartu */
+            left: 0;
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.3), rgba(56, 189, 248, 0.6));
+        }
+
+        /* --- 5. CARD / NODE DESIGN (THE CORE) --- */
+        .node {
+            position: relative;
+            display: inline-block;
+            min-width: 340px;
+            padding: 15px 25px;
+            border-radius: 15px;
+            /* Glassmorphism Effect */
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            /* Untuk efek shine */
+            cursor: default;
+        }
+
+        /* Hover Effect: Scale & Glow */
+        .node:hover {
+            transform: translateX(10px) scale(1.02);
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);
+            z-index: 10;
+        }
+
+        /* Efek Kilatan Cahaya (Shine) saat Hover */
+        .node::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: skewX(-25deg);
+            transition: 0.5s;
+        }
+
+        .node:hover::after {
+            left: 150%;
+            transition: 0.7s;
+        }
+
+        /* Typography dalam Card */
+        .name {
+            display: block;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .role {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            /* Slate text */
+        }
+
+        /* --- 6. WARNA AKSEN & BADGES --- */
+
+        /* Border Kiri Berwarna (Indikator Level) */
+        .mngr {
+            border-left: 4px solid #f43f5e;
+            box-shadow: inset 10px 0 20px -10px rgba(244, 63, 94, 0.2);
+        }
+
+        .spv {
+            border-left: 4px solid #3b82f6;
+            box-shadow: inset 10px 0 20px -10px rgba(59, 130, 246, 0.2);
+        }
+
+        .kord {
+            border-left: 4px solid #10b981;
+            box-shadow: inset 10px 0 20px -10px rgba(16, 185, 129, 0.2);
+        }
+
+        .sk {
+            border-left: 4px solid #f59e0b;
+            box-shadow: inset 10px 0 20px -10px rgba(245, 158, 11, 0.2);
+        }
+
+        .krani {
+            border-left: 4px solid #8b5cf6;
+            box-shadow: inset 10px 0 20px -10px rgba(139, 92, 246, 0.2);
+        }
+
+        .staff {
+            border-left: 2px solid #64748b;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges (Label Kecil di kanan) */
+        .badge {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .bg-wh {
+            background: linear-gradient(135deg, #334155, #475569);
+            border: 1px solid #64748b;
+        }
+
+        .bg-rm {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            border: 1px solid #3b82f6;
+            box-shadow: 0 0 8px #2563eb;
+        }
+
+        .bg-bk {
+            background: linear-gradient(135deg, #b45309, #d97706);
+            border: 1px solid #f59e0b;
+            box-shadow: 0 0 8px #d97706;
+        }
+
+        .bg-cpo {
+            background: linear-gradient(135deg, #047857, #059669);
+            border: 1px solid #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* --- 7. DETAILS / SUMMARY ANIMATION --- */
+        details summary {
+            outline: none;
+            list-style: none;
+            cursor: pointer;
+        }
+
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        /* Animasi saat dibuka */
+        details[open]>ul {
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- BACKGROUND ANIMATION CANVAS -->
+    <canvas id="bg-canvas"></canvas>
+
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-actions">
+            <button id="btn-fullscreen"
+                style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #38bdf8; padding: 10px 20px; font-family: 'Orbitron'; font-size: 0.8rem; border-radius: 4px; cursor: pointer; transition: all 0.3s;">
+                FULL SCREEN
+            </button>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <div class="hero-section">
+        <span class="main-headline">Strategic Organizational Structure</span>
+        <h1 class="luxury-title">THE MASTER CORE<br>WAREHOUSE OPERATIONS</h1>
+        <div class="division-pill">
+            <span class="pill-item">RM</span>
+            <span class="pill-sep">///</span>
+            <span class="pill-item">BK</span>
+            <span class="pill-sep">///</span>
+            <span class="pill-item">CPO</span>
+        </div>
+    </div>
+
+    <!-- TREE CHART -->
+    <div class="tree">
+        <ul>
+            <li>
+                <div class="node mngr">
+                    <span class="badge bg-wh">WH MASTER</span>
+                    <span class="name">ZULKIFLI</span>
+                    <span class="role">Manager Warehouse</span>
+                </div>
+                <ul>
+                    <li>
+                        <details open>
+                            <summary>
+                                <div class="node spv">
+                                    <span class="name">CECEP ABDUL RAZAK</span>
+                                    <span class="role">Operations Supervisor</span>
+                                </div>
+                            </summary>
+                            <ul>
+                                <!-- DIVISI 1: NUR ARIFIN -->
+                                <li>
+                                    <details open>
+                                        <summary>
+                                            <div class="node kord">
+                                                <span class="badge bg-rm">RM DIV</span>
+                                                <span class="name">MUHAMAD NUR ARIFIN</span>
+                                                <span class="role">Koordinator RM</span>
+                                            </div>
+                                        </summary>
+                                        <ul>
+                                            <li>
+                                                <div class="node sk"><span class="name">Jaenal Asikin</span><span
+                                                        class="role">ADMIN RM</span></div>
+                                            </li>
+                                            <li>
+                                                <div class="node sk"><span class="badge bg-cpo">CPO</span><span
+                                                        class="name">Mumuh M</span><span class="role">OPERATOR
+                                                        CPO</span></div>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">Abi Fajar Ahmad
+                                                                Fauzi</span><span class="role">STOCK KEEPER GD
+                                                                SEWA</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <div class="node staff"><span class="name">Syaeful Akhir,
+                                                                    Mohammad Rizqi, Moh. Adib, Inggi Indra, Sofyan
+                                                                    Hasyim, Agus Abdurohim J, Moh. Abdul
+                                                                    Basit</span><span class="role">KRANI GD SEWA</span>
+                                                            </div>
+                                                        </li>
+                                                        <li>
+                                                            <div class="node staff"><span class="name">Sigit, Samsul
+                                                                    Hidayat</span><span class="role">OPERATOR
+                                                                    FORKLIFT</span></div>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">Munawar</span><span
+                                                                class="role">HELPER RM (KEBERSIHAN RM)</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <div class="node staff"><span class="name">Dimas Prasetya,
+                                                                    Hisyam, M. Abdul Aziz, Saefudin (2), Kusnadi, Hamzah
+                                                                    Has, Farid Rizki, Radima, M. Zaelani, Runta, Maryam,
+                                                                    Yustomo, Sawal, M. Ivan Alfarisi, Wawin Nurjati,
+                                                                    Supra Nur Fajar, Fahrul Sahroji, Saber</span><span
+                                                                    class="role">PELAKSANA KEBERSIHAN RM</span></div>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">Carwin</span><span
+                                                                class="role">MANDOR KEBERSIHAN GD SEWA</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <div class="node staff"><span class="name">Mohammad Faiz
+                                                                    Prasetyo, Muhammad Rafli Setiadi, Arya Gading
+                                                                    Kusnadi</span><span class="role">PELAKSANA
+                                                                    KEBERSIHAN GD SEWA</span></div>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">M. Rizki Haikal
+                                                                R</span><span class="role">KORD. AYAK BIN</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <div class="node staff"><span class="name">Abdul Gofur,
+                                                                    Muhammad Dzikri, Robin, Ruslan Nawawi, Muhammad
+                                                                    Firdaus, Danur Adinata</span><span
+                                                                    class="role">OPERATOR AYAKBIN</span></div>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                        </ul>
+                                    </details>
+                                </li>
+
+                                <!-- DIVISI 2: HADI S -->
+                                <li>
+                                    <details>
+                                        <summary>
+                                            <div class="node kord">
+                                                <span class="badge bg-rm">RM DIV</span>
+                                                <span class="name">HADI S</span><span class="role">Koordinator RM</span>
+                                            </div>
+                                        </summary>
+                                        <ul>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">Nanang Kosim</span><span
+                                                                class="role">STOCK KEEPER RM</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Imron
+                                                                            Rosyadi (Krani Tuang)</span><span
+                                                                            class="role">KRANI</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Saleh
+                                                                                Efendi, M. Syafrudin, Tri Agung
+                                                                                Prasetyo, Ika Faturohman, Aditya, Andi
+                                                                                Permata</span><span
+                                                                                class="role">Operator Forklift</span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li>
+                                                                        <div class="node staff"><span
+                                                                                class="name">Yunus, Yani</span><span
+                                                                                class="role">Operator Loader</span>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Maulana
+                                                                            Ibrahim (Krani Bongkar)</span><span
+                                                                            class="role">KRANI</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Dede
+                                                                                Mukhidin, Toidin</span><span
+                                                                                class="role">Helper RM</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="badge bg-bk">BK</span><span
+                                                                class="name">Muhammad Saefuddin</span><span
+                                                                class="role">OPERATOR BK</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Arief
+                                                                            Anggara</span><span class="role">KRANI
+                                                                            BK</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span
+                                                                                class="name">Muhammad Harun</span><span
+                                                                                class="role">Helper BK</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <div class="node sk"><span class="badge bg-cpo">CPO</span><span
+                                                        class="name">Muh. Akil</span><span class="role">OPERATOR
+                                                        CPO</span></div>
+                                            </li>
+                                        </ul>
+                                    </details>
+                                </li>
+
+                                <!-- DIVISI 3: ADE YANTO -->
+                                <li>
+                                    <details>
+                                        <summary>
+                                            <div class="node kord">
+                                                <span class="badge bg-rm">RM DIV</span>
+                                                <span class="name">ADE YANTO</span><span class="role">Koordinator
+                                                    RM</span>
+                                            </div>
+                                        </summary>
+                                        <ul>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">M. Makbub</span><span
+                                                                class="role">STOCK KEEPER RM</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Abdullah
+                                                                            (Krani Tuang)</span><span
+                                                                            class="role">KRANI</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span
+                                                                                class="name">Hidayat, Lucky Wijaya V,
+                                                                                Aldo Novianto, Engki Saedi, Akhmad
+                                                                                Royan, Luki Alamsyah</span><span
+                                                                                class="role">Operator Forklift</span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li>
+                                                                        <div class="node staff"><span
+                                                                                class="name">Gilang,
+                                                                                Syaefurrohman</span><span
+                                                                                class="role">Operator Loader</span>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Angga
+                                                                            Fauzi (Krani Bongkar)</span><span
+                                                                            class="role">KRANI</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Ahmad
+                                                                                Syakir, M. Riyadi</span><span
+                                                                                class="role">Helper RM</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="badge bg-bk">BK</span><span
+                                                                class="name">Ahmad Azis</span><span
+                                                                class="role">OPERATOR BK</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">M.
+                                                                            Kholim</span><span class="role">KRANI
+                                                                            BK</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Moh.
+                                                                                Zefri</span><span class="role">Helper
+                                                                                BK</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <div class="node sk"><span class="badge bg-cpo">CPO</span><span
+                                                        class="name">Nurhadi</span><span class="role">OPERATOR
+                                                        CPO</span></div>
+                                            </li>
+                                        </ul>
+                                    </details>
+                                </li>
+
+                                <!-- DIVISI 4: M. SYAFII -->
+                                <li>
+                                    <details>
+                                        <summary>
+                                            <div class="node kord">
+                                                <span class="badge bg-rm">RM DIV</span>
+                                                <span class="name">M. SYAFII</span><span class="role">Koordinator
+                                                    RM</span>
+                                            </div>
+                                        </summary>
+                                        <ul>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="name">Faturokhman</span><span
+                                                                class="role">STOCK KEEPER RM</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Sahroni
+                                                                            (Krani Tuang)</span><span
+                                                                            class="role">KRANI</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Anton
+                                                                                Sujarwo, Khaerul Anam, Amirul Mukminin,
+                                                                                Endang Hidayat, Taufiq,
+                                                                                Akhyadi</span><span
+                                                                                class="role">Operator Forklift</span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li>
+                                                                        <div class="node staff"><span
+                                                                                class="name">Suadi, Asep
+                                                                                Dudi</span><span class="role">Operator
+                                                                                Loader</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span class="name">Diki
+                                                                            Ramdani (Krani Bongkar)</span><span
+                                                                            class="role">KRANI</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Figo
+                                                                                Permana S, Hamzah Has</span><span
+                                                                                class="role">Helper RM</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <div class="node sk"><span class="badge bg-bk">BK</span><span
+                                                                class="name">Endang Sepharyanto</span><span
+                                                                class="role">OPERATOR BK</span></div>
+                                                    </summary>
+                                                    <ul>
+                                                        <li>
+                                                            <details>
+                                                                <summary>
+                                                                    <div class="node krani"><span
+                                                                            class="name">Riyadi</span><span
+                                                                            class="role">KRANI BK</span></div>
+                                                                </summary>
+                                                                <ul>
+                                                                    <li>
+                                                                        <div class="node staff"><span class="name">Moh.
+                                                                                Abdul Basit</span><span
+                                                                                class="role">Helper BK</span></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </details>
+                                                        </li>
+                                                    </ul>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <div class="node sk"><span class="badge bg-cpo">CPO</span><span
+                                                        class="name">Febriyanto Suryo A</span><span
+                                                        class="role">OPERATOR CPO</span></div>
+                                            </li>
+                                        </ul>
+                                    </details>
+                                </li>
+
+                            </ul>
+                        </details>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Script untuk Background Particles -->
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function initStars() {
+            stars = [];
+            const numStars = 100;
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.5,
+                    vx: (Math.random() - 0.5) * 0.2,
+                    vy: (Math.random() - 0.5) * 0.2,
+                    alpha: Math.random()
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(180, 210, 255, ${star.alpha})`;
+                ctx.fill();
+
+                star.x += star.vx;
+                star.y += star.vy;
+
+                // Pantul
+                if (star.x < 0 || star.x > width) star.vx *= -1;
+                if (star.y < 0 || star.y > height) star.vy *= -1;
+            });
+
+            // Hubungkan garis tipis
+            stars.forEach((star, i) => {
+                for (let j = i + 1; j < stars.length; j++) {
+                    let other = stars[j];
+                    let dist = Math.hypot(star.x - other.x, star.y - other.y);
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.1 - dist / 1000})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(star.x, star.y);
+                        ctx.lineTo(other.x, other.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', () => { resize(); initStars(); });
+        resize();
+        initStars();
+        draw();
+
+        // LOGIKA FULLSCREEN
+        const fsBtn = document.getElementById('btn-fullscreen');
+        if (fsBtn) {
+            fsBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                document.body.classList.add('is-fullscreen');
+                if (fsBtn) fsBtn.innerHTML = 'EXIT FULL SCREEN';
+            } else {
+                document.body.classList.remove('is-fullscreen');
+                if (fsBtn) fsBtn.innerHTML = 'FULL SCREEN';
+            }
+        });
+    </script>
+
+</body>
+
+</html>

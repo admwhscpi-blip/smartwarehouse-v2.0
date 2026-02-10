@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE V2.0 - RM-SEALMAP</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@900&family=Rajdhani:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --gold: #fbbf24;
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        @keyframes fire {
+            0% {
+                background-position: 0% 50%
+            }
+
+            100% {
+                background-position: 200% 50%
+            }
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -100
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #020617;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* NAV */
+        nav {
+            display: flex;
+            align-items: center;
+            padding: 12px 30px;
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 9999;
+        }
+
+        .logo {
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .l1 {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire 3s linear infinite;
+        }
+
+        .l2 {
+            background: #fff;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 900;
+        }
+
+        /* LAYOUT - USE CALC TO FIT */
+        .wrap {
+            display: flex;
+            gap: 15px;
+            padding: 70px 20px 15px 20px;
+            height: 100vh;
+        }
+
+        /* LEFT: MAP */
+        .map-box {
+            flex: 1;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* TABS */
+        .tabs {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            display: flex;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 4px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            color: #64748b;
+            padding: 8px 20px;
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: 0.3s;
+        }
+
+        .tab.on {
+            background: linear-gradient(135deg, var(--gold), #f59e0b);
+            color: #000;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+        }
+
+        /* MAP CANVAS - PERCENTAGE BASED */
+        .canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        /* AREAS - ALL PERCENTAGE POSITIONS */
+        .a {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani';
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        /* CHECKPOINTS - ALWAYS display:flex, hide via .hidden class */
+        .c {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background: #000;
+            border: 3px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            z-index: 900;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.8), inset 0 0 8px rgba(251, 191, 36, 0.3);
+            transition: opacity 0.3s, visibility 0.3s, transform 0.2s;
+        }
+
+        .c.hidden {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .c:hover {
+            transform: scale(1.25);
+            background: var(--gold);
+            color: #000;
+        }
+
+        .c.sel {
+            background: #fff;
+            border-color: #fff;
+            color: #000;
+            box-shadow: 0 0 30px #fff;
+        }
+
+        .vl {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            color: var(--gold);
+            font-size: 0.6rem;
+        }
+
+        /* SVG */
+        .svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .line {
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 3;
+            stroke-dasharray: 10, 5;
+            stroke-linecap: round;
+            display: none;
+            filter: drop-shadow(0 0 6px var(--gold));
+        }
+
+        .line.on {
+            display: block;
+            animation: dash 2s linear infinite;
+        }
+
+        /* RIGHT: INFO */
+        .info-box {
+            width: 340px;
+            min-width: 340px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .ih {
+            border-left: 4px solid var(--gold);
+            padding-left: 12px;
+            margin-bottom: 15px;
+        }
+
+        .ih h2 {
+            font-family: 'Orbitron';
+            font-size: 1.3rem;
+            font-weight: 900;
+        }
+
+        .ih p {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .wi {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .wi.show {
+            display: block;
+            border-left: 4px solid var(--gold);
+        }
+
+        .wb {
+            font-size: 0.55rem;
+            color: #000;
+            background: var(--gold);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 900;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .wt {
+            font-family: 'Orbitron';
+            color: #fff;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .wd {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .wr {
+            font-size: 0.6rem;
+            color: #64748b;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+            font-style: italic;
+        }
+
+        #empty {
+            text-align: center;
+            color: #475569;
+            padding-top: 60px;
+            font-size: 0.8rem;
+        }
+
+        #empty i {
+            font-size: 3rem;
+            opacity: 0.1;
+            display: block;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="homepage-v1.html" class="logo"><span class="l1">SMART WAREHOUSE</span><span class="l2">V2.0</span></a>
+    </nav>
+
+    <div class="wrap">
+        <!-- LEFT MAP -->
+        <div class="map-box" id="mapBox">
+            <div class="tabs">
+                <button class="tab on" id="tB" onclick="go('b')">ALUR BONGKARAN</button>
+                <button class="tab" id="tL" onclick="go('l')">ALUR LANGSIRAN</button>
+            </div>
+
+            <div class="canvas" id="cv">
+                <!-- SVG CONNECTOR LINES (percentage coordinates) -->
+                <svg class="svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <!-- Bongkaran: 1->2->3->4->5->6->7->8 -->
+                    <polyline id="lnB" class="line on" points="4,6 48,60 32,60 10,60 90,6 90,32 48,92 32,92"
+                        vector-effect="non-scaling-stroke" />
+                    <!-- Langsiran: 1->2->3 (ENDS at 3, no continuation) -->
+                    <polyline id="lnL" class="line" points="90,6 90,32 32,60" vector-effect="non-scaling-stroke" />
+                </svg>
+
+                <!-- AREA BOXES (percentage positions) -->
+                <div class="a" style="top:2%;left:2%;width:28%;height:28%;">Parkir Area / Outstanding</div>
+                <div class="a" style="top:65%;left:22%;width:16%;height:22%;border-color:rgba(0,243,255,0.2);">Gudang RM
+                    (Pabrik)</div>
+                <div class="a" style="top:65%;left:40%;width:8%;height:22%;border-color:rgba(251,191,36,0.25);"><span
+                        class="vl">TIMBANGAN TIMUR</span></div>
+                <div class="a" style="top:65%;left:8%;width:8%;height:22%;border-color:rgba(251,191,36,0.25);"><span
+                        class="vl">TIMBANGAN BARAT</span></div>
+                <div class="a" style="top:50%;left:55%;width:12%;height:14%;">Samping C</div>
+                <div class="a" style="top:66%;left:55%;width:12%;height:16%;">Samping D</div>
+                <div class="a" style="top:52%;left:70%;width:12%;height:30%;">Samping E</div>
+                <div class="a" style="top:14%;left:70%;width:12%;height:28%;">Samping F</div>
+                <div class="a" style="top:2%;left:85%;width:13%;height:22%;">Gebang A (Luar)</div>
+                <div class="a" style="top:26%;left:85%;width:13%;height:20%;">Gebang B (Luar)</div>
+
+                <!-- BONGKARAN CHECKPOINTS (1-8) - VISIBLE BY DEFAULT -->
+                <!-- Markers positioned ABOVE area boxes, not on top of text -->
+                <div class="c bc" style="top:3%;left:2%;" data-wi="B1">1</div>
+                <div class="c bc" style="top:57%;left:46%;" data-wi="B2">2</div>
+                <div class="c bc" style="top:57%;left:30%;" data-wi="B3">3</div>
+                <div class="c bc" style="top:57%;left:8%;" data-wi="B4">4</div>
+                <div class="c bc" style="top:3%;left:88%;" data-wi="B5">5</div>
+                <div class="c bc" style="top:29%;left:88%;" data-wi="B6">6</div>
+                <div class="c bc" style="top:90%;left:46%;" data-wi="B7">7</div>
+                <div class="c bc" style="top:90%;left:30%;" data-wi="B8">8</div>
+
+                <!-- LANGSIRAN CHECKPOINTS (1-3) - HIDDEN BY DEFAULT -->
+                <div class="c lc hidden" style="top:3%;left:88%;" data-wi="L1">1</div>
+                <div class="c lc hidden" style="top:29%;left:88%;" data-wi="L2">2</div>
+                <div class="c lc hidden" style="top:57%;left:30%;" data-wi="L3">3</div>
+            </div>
+        </div>
+
+        <!-- RIGHT INFO -->
+        <div class="info-box">
+            <div class="ih">
+                <h2 id="hT">ALUR BONGKARAN</h2>
+                <p id="hS">SOP PROTOCOL V2.2</p>
+            </div>
+            <div id="empty"><i class="fas fa-crosshairs"></i>
+                <p>PILIH ANGKA PADA PETA<br>UNTUK MELIHAT INSTRUKSI</p>
+            </div>
+
+            <div id="wiB1" class="wi"><span class="wb">CHECKPOINT 1</span>
+                <div class="wt">PLANNING & KOORDINASI</div>
+                <div class="wd">
+                    <b>Lokasi: Parkir Area / Outstanding</b><br><br>
+                    Tim RM mengatur rencana penempatan bongkaran dan menginformasikan ke operator Timbangan:<br>
+                    • Tentukan <b>lokasi gudang tujuan</b> bongkar (Gudang Sewa Samping C/D/E/F atau Gebang A/B)
+                    berdasarkan jenis RM dan kapasitas gudang<br>
+                    • Koordinasi dengan <b>Krani Gudang RM</b> dan <b>Operator Timbangan</b><br>
+                    • Operator Timbangan menyiapkan jadwal timbang dan jalur <b>Timbangan Timur</b>
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 4 (Ruang Lingkup Penerapan)</div>
+            </div>
+            <div id="wiB2" class="wi"><span class="wb">CHECKPOINT 2</span>
+                <div class="wt">TIMBANG MASUK (BRUTO)</div>
+                <div class="wd">
+                    <b>Lokasi: Timbangan Timur</b><br><br>
+                    Operator Timbangan memanggil truck dari Parkir Area untuk masuk proses timbang:<br>
+                    • Truck masuk melewati <b>Timbangan Timur</b><br>
+                    • Ditimbang untuk mendapatkan <b>berat bruto</b> (berat awal + muatan)<br>
+                    • Setelah timbang selesai, truck diarahkan masuk ke <b>Gudang RM (Pabrik)</b>
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 4a (Pengiriman bahan baku antar lokasi)</div>
+            </div>
+            <div id="wiB3" class="wi"><span class="wb">CHECKPOINT 3</span>
+                <div class="wt">PROSES SEGEL DI GUDANG RM</div>
+                <div class="wd">
+                    <b>Lokasi: Gudang RM (Pabrik)</b><br><br>
+                    Truck tiba di Gudang RM. <b>Krani Gudang RM</b> melakukan penyegelan muatan:<br>
+                    • Pasang segel di <b>4 sisi</b>: kanan, kiri, depan, belakang<br>
+                    • Pastikan RM <b>tertutup terpal</b> secara menyeluruh<br>
+                    • <b>Dokumentasi foto</b> keempat sisi truck<br>
+                    • Gabungkan menjadi <b>1 Foto Kolase</b> (crop/perbaiki pencahayaan jika perlu)<br>
+                    • Sertakan keterangan: <b>Nopol, Jenis RM, Tujuan Bongkar, Kondisi Segel</b><br>
+                    • Kirim ke <b>grup WA resmi</b> sesuai lokasi gudang tujuan
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 1 (Dokumentasi Segel), Poin 2 (Lampiran Keterangan
+                    Foto), Poin 5a (Sebelum Pengiriman), Poin 6 (Grup WhatsApp)</div>
+            </div>
+            <div id="wiB4" class="wi"><span class="wb">CHECKPOINT 4</span>
+                <div class="wt">TIMBANG KELUAR & ARAH GUDANG TUJUAN</div>
+                <div class="wd">
+                    <b>Lokasi: Timbangan Barat</b><br><br>
+                    Truck yang sudah disegel diarahkan keluar dari Gudang RM:<br>
+                    • Keluar melewati <b>Timbangan Barat</b> untuk timbang keluar<br>
+                    • Truck menuju <b>gudang tujuan</b>:<br>
+                    &nbsp;&nbsp;— Gudang Sewa Samping (C/D/E/F) → Kode SLOC: <b>RW03</b><br>
+                    &nbsp;&nbsp;— Gebang (A/B Luar) → Kode SLOC: <b>RW01</b><br>
+                    &nbsp;&nbsp;— Kopo/HSB → Kode SLOC: <b>RW02</b>
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 3 (Kode SLOC / Lokasi Gudang)</div>
+            </div>
+            <div id="wiB5" class="wi"><span class="wb">CHECKPOINT 5</span>
+                <div class="wt">VERIFIKASI SEGEL DI GUDANG TUJUAN</div>
+                <div class="wd">
+                    <b>Lokasi: Gebang / Gudang Sewa Samping</b><br><br>
+                    Truck tiba di gudang tujuan. <b>Krani Gudang Sewa</b> verifikasi kondisi segel:<br>
+                    • Cek segel di <b>4 sisi</b> masih lengkap dan utuh<br>
+                    • Cocokkan dengan <b>dokumentasi awal</b> dari grup WA<br><br>
+                    <b>Hasil Verifikasi:</b><br>
+                    ✅ <b>Segel lengkap</b> → Konfirmasi di grup WA status <i>"Tersegel Lengkap"</i> → Lanjut bongkar<br>
+                    ❌ <b>Segel rusak/hilang</b> → Lapor ke <b>Supervisor RM Storage</b> → Truck diminta <b>balik ke
+                        pabrik</b>
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 5b (Saat Barang Diterima di Gudang Sewa)</div>
+            </div>
+            <div id="wiB6" class="wi"><span class="wb">CHECKPOINT 6</span>
+                <div class="wt">PROSES BONGKAR</div>
+                <div class="wd">
+                    <b>Lokasi: Gebang / Gudang Sewa Samping</b><br><br>
+                    Jika segel terverifikasi lengkap, proses bongkar dilaksanakan:<br>
+                    • Bongkar material dari truck sesuai <b>arahan Krani</b><br>
+                    • Catat jumlah dan jenis material yang dibongkar<br>
+                    • Update progress ke <b>grup WA resmi</b>
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 5b (Saat Barang Diterima di Gudang Sewa)</div>
+            </div>
+            <div id="wiB7" class="wi"><span class="wb">CHECKPOINT 7</span>
+                <div class="wt">SEGEL ULANG SISA & RETURN KE PABRIK</div>
+                <div class="wd">
+                    <b>Lokasi: Gudang Sewa → Timbangan Timur</b><br><br>
+                    Setelah bongkar selesai, jika ada <b>material sisa yang ditolak</b>:<br>
+                    • Krani Gudang Sewa wajib pasang <b>segel kembali</b> pada truck (4 sisi)<br>
+                    • Dokumentasi ulang: foto kolase + kirim ke grup WA<br>
+                    • Update status segel baru<br><br>
+                    Jika bongkar habis tanpa sisa, truck langsung kembali ke pabrik.<br><br>
+                    Truck masuk via <b>Timbangan Timur</b> menuju <b>Gudang RM</b>.
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 5c (Jika Bongkaran Ditolak dari Gudang Sewa)</div>
+            </div>
+            <div id="wiB8" class="wi"><span class="wb">CHECKPOINT 8</span>
+                <div class="wt">FINAL AUDIT & TIMBANG KOSONG</div>
+                <div class="wd">
+                    <b>Lokasi: Gudang RM → Timbangan Barat</b><br><br>
+                    Truck tiba kembali di Gudang RM. Tim RM <b>verifikasi ulang segel</b>:<br><br>
+                    ✅ <b>Segel masih utuh</b> → Truck timbang kosong via <b>Timbangan Barat</b> → <b>SELESAI ✓</b><br>
+                    ❌ <b>Segel tidak utuh</b> → Lapor ke <b>Supervisor RM Storage</b>, investigasi lanjutan<br><br>
+                    Seluruh laporan akhir dikirim ke <b>grup WA resmi</b> sebagai dokumentasi final.
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 5c.iii (Tim RM cek ulang kondisi segel), Poin 6
+                    (Prosedur Update Grup WA)</div>
+            </div>
+
+            <div id="wiL1" class="wi"><span class="wb">CHECKPOINT 1</span>
+                <div class="wt">PROSES MUAT DI GUDANG SEWA</div>
+                <div class="wd">
+                    <b>Lokasi: Gudang Sewa Samping / Gebang</b><br><br>
+                    Proses langsir dimulai dari Gudang Sewa:<br>
+                    • Tim gudang sewa melakukan pemuatan (loading) bahan baku ke truck<br>
+                    • Berlaku untuk <b>pengiriman bahan baku antar lokasi</b> (antar gudang sewa)<br>
+                    • Berlaku juga untuk <b>tolakan bahan baku</b> dari Gudang Sewa ke Feedmill/Pabrik<br>
+                    • Pastikan muatan sesuai dengan <b>rencana pengiriman</b>
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 4b (Proses langsir bahan baku antar gudang sewa)
+                </div>
+            </div>
+            <div id="wiL2" class="wi"><span class="wb">CHECKPOINT 2</span>
+                <div class="wt">SEGEL OLEH KRANI GUDANG SEWA</div>
+                <div class="wd">
+                    <b>Lokasi: Gudang Sewa Samping / Gebang</b><br><br>
+                    Setelah muat selesai, <b>Krani Gudang Sewa</b> wajib melakukan penyegelan:<br>
+                    • Pasang segel pada truck di <b>4 sisi</b> (kanan, kiri, depan, belakang)<br>
+                    • Dokumentasi: foto keempat sisi → gabung <b>1 Foto Kolase</b><br>
+                    • Sertakan keterangan: <b>Nopol, Jenis RM, Tujuan, Kondisi Segel</b><br>
+                    • Kirim ke <b>grup WA resmi</b> sesuai lokasi gudang
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 1 (Dokumentasi Segel), Poin 5a (Sebelum Pengiriman),
+                    Poin 6 (Grup WhatsApp)</div>
+            </div>
+            <div id="wiL3" class="wi"><span class="wb">CHECKPOINT 3</span>
+                <div class="wt">VERIFIKASI SEGEL & BONGKAR DI RM</div>
+                <div class="wd">
+                    <b>Lokasi: Gudang RM (Pabrik)</b><br><br>
+                    Truck tiba di Gudang RM. Sebelum bongkar, Tim RM <b>verifikasi kondisi segel</b>:<br><br>
+                    ✅ <b>Segel OK (lengkap & utuh)</b> → Bongkar hingga <b>habis</b> → <b>SELESAI ✓</b><br>
+                    ❌ <b>Segel tidak OK</b> → Lapor ke <b>Supervisor RM Storage</b>, pengecekan lanjutan<br><br>
+                    Pengawasan dan dokumentasi segel menjadi <b>tanggung jawab bersama</b> antara Krani Gudang RM dan
+                    Krani Gudang Sewa.
+                </div>
+                <div class="wr">📄 Ref: WI-WHS/RM/001 — Bab 7 Poin 4c (Tanggung jawab bersama), Poin 5b (Saat Barang
+                    Diterima)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function go(m) {
+            // Tabs
+            document.getElementById('tB').className = m === 'b' ? 'tab on' : 'tab';
+            document.getElementById('tL').className = m === 'l' ? 'tab on' : 'tab';
+
+            // Title
+            document.getElementById('hT').innerText = m === 'b' ? 'ALUR BONGKARAN' : 'ALUR LANGSIRAN';
+            document.getElementById('hS').innerText = m === 'b' ? 'SOP PROTOCOL V2.2' : 'INTERNAL LOGISTICS';
+
+            // Toggle checkpoints via hidden class (NO display manipulation!)
+            var bc = document.querySelectorAll('.bc');
+            var lc = document.querySelectorAll('.lc');
+            var i;
+
+            if (m === 'b') {
+                for (i = 0; i < bc.length; i++) bc[i].classList.remove('hidden');
+                for (i = 0; i < lc.length; i++) lc[i].classList.add('hidden');
+            } else {
+                for (i = 0; i < bc.length; i++) bc[i].classList.add('hidden');
+                for (i = 0; i < lc.length; i++) lc[i].classList.remove('hidden');
+            }
+
+            // Deselect all
+            var all = document.querySelectorAll('.c');
+            for (i = 0; i < all.length; i++) all[i].classList.remove('sel');
+
+            // Lines
+            document.getElementById('lnB').className = m === 'b' ? 'line on' : 'line';
+            document.getElementById('lnL').className = m === 'l' ? 'line on' : 'line';
+
+            // Reset WI
+            document.getElementById('empty').style.display = 'block';
+            var wis = document.querySelectorAll('.wi');
+            for (i = 0; i < wis.length; i++) wis[i].classList.remove('show');
+        }
+
+        // Click handlers
+        var cks = document.querySelectorAll('.c');
+        for (var i = 0; i < cks.length; i++) {
+            cks[i].addEventListener('click', function () {
+                var id = this.getAttribute('data-wi');
+                var all = document.querySelectorAll('.c');
+                for (var j = 0; j < all.length; j++) all[j].classList.remove('sel');
+                this.classList.add('sel');
+
+                document.getElementById('empty').style.display = 'none';
+                var wis = document.querySelectorAll('.wi');
+                for (var j = 0; j < wis.length; j++) wis[j].classList.remove('show');
+                var el = document.getElementById('wi' + id);
+                if (el) el.classList.add('show');
+            });
+        }
+
+        // No window.onload needed:
+        // - Bongkaran markers: visible by default (no .hidden class)
+        // - Langsiran markers: hidden by default (has .hidden class in HTML)
+        // - Bongkaran SVG line: visible by default (has .on class in HTML)
+    </script>
+</body>
+
+</html>

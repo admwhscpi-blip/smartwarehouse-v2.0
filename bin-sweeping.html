@@ -1,0 +1,3118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - Bin Sweeping</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        .sweeping-container {
+            padding: 40px 20px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .placeholder-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* MODERN & COMPACT TABLE */
+        .table-wrapper {
+            max-height: 600px;
+            /* Limit to roughly 20 rows */
+            overflow: auto;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            /* Enable smooth horizontal and vertical scrolling */
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
+        .table-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 243, 255, 0.5);
+        }
+
+        .scifi-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .scifi-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 15px;
+            text-align: left;
+            background: rgba(0, 243, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .scifi-table td {
+            padding: 8px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+        }
+
+        .scifi-table tr:hover td {
+            background: rgba(0, 243, 255, 0.02);
+            color: #fff;
+        }
+
+        .icon-box {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.5));
+        }
+
+        .title {
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-family: 'Rajdhani';
+            color: #94a3b8;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 30px;
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            border: 1px solid #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* TABS */
+        .tab-btn {
+            padding: 10px 20px;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: #00f3ff !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            border-color: #00f3ff;
+        }
+
+        .spec-table-container th {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* INTERACTIVE CARDS */
+        .interactive-card {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interactive-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 243, 255, 0.5) !important;
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .interactive-card::after {
+            content: 'CLICK FOR DETAIL';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            font-size: 0.5rem;
+            font-family: 'Orbitron';
+            padding: 2px 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .interactive-card:hover::after {
+            opacity: 1;
+        }
+
+        /* MODAL STYLING */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.15);
+            animation: modalSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            margin: 0;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: right;
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        /* ANALYTICS STYLES */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* LEVEL 10: 2050 HUD AESTHETICS */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-amber: #fbbf24;
+            --neon-toxic: #10b981;
+            --neon-red: #ef4444;
+            --hud-bg: rgba(10, 15, 25, 0.7);
+            --hud-border: rgba(0, 243, 255, 0.2);
+        }
+
+        .chart-card {
+            background: var(--hud-bg);
+            border: 1px solid var(--hud-border);
+            border-radius: 4px;
+            /* Sharper, more industrial */
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(15px);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.05);
+        }
+
+        /* Scanline HUD effect */
+        .chart-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* HUD Glowing Corners */
+        .chart-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--neon-blue);
+            border-left: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .chart-card-corner-tr {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--neon-blue);
+            border-right: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .chart-card-corner-bl {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--neon-blue);
+            border-left: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .chart-card-corner-br {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--neon-blue);
+            border-right: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .chart-card:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .chart-title {
+            font-family: 'Orbitron';
+            color: var(--neon-blue);
+            font-size: 0.75rem;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .chart-title i {
+            color: var(--neon-amber);
+            text-shadow: 0 0 5px var(--neon-amber);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            /* Reduced height for better fit in grid */
+            width: 100%;
+        }
+
+        /* ANALYTICS DECK */
+        .analytics-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card.wide {
+            grid-column: span 2;
+        }
+
+        /* TIME SELECTOR */
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .scale-selector {
+            display: flex;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px;
+            border-radius: 0;
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+        }
+
+        .scale-btn {
+            padding: 4px 10px;
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            background: transparent;
+            color: var(--neon-blue);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .scale-btn:hover {
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+
+
+        /* FOCUS MODE STYLING */
+        body.focus-mode .navbar,
+        body.focus-mode #dashboard-top {
+            display: none !important;
+        }
+
+        body.focus-mode .sweeping-container {
+            padding-top: 20px;
+        }
+
+        .btn-focus {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .btn-focus:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .btn-focus.active {
+            background: var(--neon-amber);
+            border-color: var(--neon-amber);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-amber);
+        }
+
+        /* MONTH FILTER SELECTOR */
+        .month-filter {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 4px 10px;
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            margin-right: 15px;
+            cursor: pointer;
+            outline: none;
+            border-radius: 4px;
+            /* Matches aesthetics */
+            box-shadow: 0 0 5px rgba(0, 243, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .month-filter:hover {
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        .month-filter option {
+            background: #0f172a;
+            color: #fff;
+            padding: 5px;
+        }
+
+        /* MINI CALENDAR STYLES (Refined) */
+        .scifi-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            color: #64748b;
+            cursor: default;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .cal-day.holiday {
+            border: 1px solid rgba(255, 0, 60, 0.4);
+            background: rgba(255, 0, 60, 0.1);
+            color: var(--neon-red);
+        }
+
+        .cal-day.has-data {
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            cursor: pointer;
+        }
+
+        .cal-day:hover,
+        .cal-day.active-day {
+            background: rgba(176, 38, 255, 0.5) !important;
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 0 15px var(--neon-purple);
+            border: 1px solid #fff;
+            color: #fff;
+        }
+
+        .cal-day.selected {
+            background: #fbbf24 !important;
+            color: #000 !important;
+            box-shadow: 0 0 10px #fbbf24;
+            border: 1px solid #fff;
+        }
+
+        .val-badge {
+            font-weight: bold;
+            color: #fff;
+            font-size: 0.7rem;
+            margin-top: 2px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px 10px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 5px;
+        }
+
+        .mini-month-select {
+            background: #000;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            border-radius: 4px;
+            padding: 2px 5px;
+            outline: none;
+        }
+
+        /* Interactive Detail Rows */
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clickable-row:hover {
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
+            transform: translateX(5px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+        </div>
+        <div class="dropdown-nested"><a href="#" class="nav-link-item has-submenu">RM-STAFFEL</a>
+            <div class="dropdown-submenu"><a href="rm-staffel-masterdata.html" class="nav-link-sub">MASTER
+                    DATA</a><a href="rm-staffel-analys.html" class="nav-link-sub">ANALYS</a></div>
+        </div>
+        <div class="dropdown-nested"><a href="#" class="nav-link-item has-submenu">RM-DOWNTIME</a>
+            <div class="dropdown-submenu"><a href="rm-downtime.html" class="nav-link-sub">MASTER
+                    DATA</a><a href="#" class="nav-link-sub disabled">ANALYS</a></div>
+        </div>
+        <div class="dropdown-nested"><a href="#" class="nav-link-item has-submenu">RM-LANGSIR</a>
+            <div class="dropdown-submenu"><a href="rm-langsiran.html" class="nav-link-sub">CONTROLLING</a><a href="#"
+                    class="nav-link-sub disabled">GPS
+                    TRACKER</a></div>
+        </div>
+        <div class="dropdown-nested"><a href="#" class="nav-link-item has-submenu" style="color:#D9FF66;">BIN
+                SWEEPING</a>
+            <div class="dropdown-submenu"><a href="bin-sweeping.html" class="nav-link-sub active">MASTER
+                    DATA</a><a href="#" class="nav-link-sub disabled">ANALYS</a></div>
+        </div>
+        <div class="dropdown-nested"><a href="#" class="nav-link-item has-submenu disabled">RM-KADAR
+                AIR</a></div>
+        </div>
+        </div>
+        <!-- CPO DROPDOWN -->
+        <div class="dropdown"><a href="#" class="nav-link dropdown-toggle">CPO</a>
+            <div class="dropdown-content"><a href="cpo-dashboard.html" class="nav-link-item">CPO
+                    STOCK</a><a href="cpo-simulation.html" class="nav-link-item">CPO SIMULASI</a>
+            </div>
+        </div>
+        <!-- BKK DROPDOWN -->
+        <div class="dropdown"><a href="#" class="nav-link dropdown-toggle">BKK</a>
+            <div class="dropdown-content"><a href="bkk-dashboard.html" class="nav-link-item">BKK
+                    STOCK</a><a href="bkk-simulasi.html" class="nav-link-item">BKK SIMULASI</a>
+            </div>
+        </div>
+        <!-- ABOUT DROPDOWN -->
+        <div class="dropdown"><a href="#" class="nav-link dropdown-toggle">ABOUT</a>
+            <div class="dropdown-content"><a href="about-page.html" class="nav-link-item">LAYOUT
+                    RUANG LINGKUP</a><a href="about-structure.html" class="nav-link-item">STRUKTUR
+                    ORGANISASI</a></div>
+        </div>
+        <!-- OUTSTANDING DROPDOWN -->
+        <div class="dropdown"><a href="#" class="nav-link dropdown-toggle">OUTSTANDING</a>
+            <div class="dropdown-content"><a href="outstanding-rm.html" class="nav-link-item">OUTSTANDING
+                    RM</a><a href="outstanding-bkk.html" class="nav-link-item">OUTSTANDING
+                    BKK</a></div>
+        </div>
+        </div>
+        <div class="nav-actions"><button class="btn-primary">Emergency Alert</button></div>
+    </nav>
+    <div class="sweeping-container">
+        <!-- TOP SECTION: SPLIT DASHBOARD -->
+        <div id="dashboard-top"
+            style="display:none; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-bottom: 40px; align-items: start;">
+            <!-- LEFT COLUMN: DIAGRAM & SUMMARY -->
+            <div id="dashboard-left">
+                <!-- MACHINE DIAGRAM -->
+                <div
+                    style="text-align: center; margin-bottom: 25px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); padding: 5px;">
+                    <img src="assets/bin_sweeping_diagram.png" alt="Bin Sweeping Diagram"
+                        style="max-width: 100%; height: auto; display: block; margin: 0 auto; filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.1));">
+                </div>
+                <!-- SUMMARY STATS GRID -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="interactive-card" onclick="showHasilDetail()"
+                        style="background: rgba(15,23,42,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="color: #64748b; font-size: 0.65rem; font-family: 'Orbitron'; margin-bottom: 5px;">
+                            HASIL AYAK</div>
+                        <div id="stat-hasil-ayak"
+                            style="color: #fff; font-family: 'Rajdhani'; font-weight: 700; font-size: 1.4rem;">
+                            -</div>
+                    </div>
+                    <div class="interactive-card" onclick="showBahanDetail()"
+                        style="background: rgba(15,23,42,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="color: #64748b; font-size: 0.65rem; font-family: 'Orbitron'; margin-bottom: 5px;">
+                            BAHAN AYAK (TON)</div>
+                        <div id="stat-bahan-ayak"
+                            style="color: #00f3ff; font-family: 'Rajdhani'; font-weight: 700; font-size: 1.4rem;">
+                            - </div>
+                    </div>
+                    <div
+                        style="background: rgba(15,23,42,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 8px; padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="color: #64748b; font-size: 0.65rem; font-family: 'Orbitron'; margin-bottom: 5px;">
+                            NS </div>
+                        <div id="stat-ns"
+                            style="color: #ef4444; font-family: 'Rajdhani'; font-weight: 700; font-size: 1.4rem; line-height: 1;">
+                            - </div>
+                    </div>
+                </div>
+                <!-- MESSAGE BOX -->
+                <div id="status-message"
+                    style="background:rgba(34,211,238,0.1); border-left: 4px solid #00f3ff; padding: 15px; border-radius: 4px; font-family: 'Inter'; font-size: 0.8rem; color: #cbd5e1; line-height: 1.5;">
+                    Initializing System Status... </div>
+            </div>
+            <!-- RIGHT COLUMN: SPEC TABLES -->
+            <div id="dashboard-right">
+                <!-- TABLE 1: SPESIFIKASI & KONTROL TEKNIS -->
+                <div style="margin-bottom: 20px;">
+                    <div
+                        style="background: #22d3ee; color: #000; font-family: 'Orbitron'; font-weight: 700; font-size: 0.75rem; padding: 8px 15px; border-radius: 4px 4px 0 0; display: inline-block;">
+                        Spesifikasi & Kontrol Teknis</div>
+                    <div
+                        style="background: rgba(15,23,42,0.8); border: 1px solid rgba(34,211,238,0.2); border-radius: 0 8px 8px 8px; overflow: hidden;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'Inter'; font-size: 0.75rem;">
+                            <thead style="background: rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        ITEM KONTROL</th>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-technical"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- TABLE 2: STATUS OPERASIONAL HARIAN -->
+                <div style="margin-bottom: 20px;">
+                    <div
+                        style="background: #fbbf24; color: #000; font-family: 'Orbitron'; font-weight: 700; font-size: 0.75rem; padding: 8px 15px; border-radius: 4px 4px 0 0; display: inline-block;">
+                        Status Operasional Harian</div>
+                    <div
+                        style="background: rgba(15,23,42,0.8); border: 1px solid rgba(251,191,36,0.2); border-radius: 0 8px 8px 8px; overflow: hidden;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'Inter'; font-size: 0.75rem;">
+                            <thead style="background: rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        PARAMETER</th>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        STATUS / KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-operational"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- TABLE 3: USAGE & DOH -->
+                <div>
+                    <div
+                        style="background: #10b981; color: #000; font-family: 'Orbitron'; font-weight: 700; font-size: 0.75rem; padding: 8px 15px; border-radius: 4px 4px 0 0; display: inline-block;">
+                        Usage & DoH</div>
+                    <div
+                        style="background: rgba(15,23,42,0.8); border: 1px solid rgba(16,185,129,0.2); border-radius: 0 8px 8px 8px; overflow: hidden;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'Inter'; font-size: 0.75rem;">
+                            <thead style="background: rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        PARAMETER</th>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        STATUS / KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-usage"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="placeholder-card" id="main-card">
+            <div class="icon-box">🧹</div>
+            <h1 class="title">Bin Sweeping Module</h1>
+            <p class="subtitle">System Active - Sensors Initialized</p>
+            <div class="status-badge">Phase: Operational</div>
+        </div>
+        <!-- TABLE SELECTION TABS -->
+        <div id="tab-container"
+            style="display: none; align-items: center; gap: 10px; margin-bottom: 20px; padding: 0 10px;">
+            <button onclick="switchTable('proc')" id="btn-tab-proc" class="tab-btn active">📈 Process
+                Log</button><button onclick="switchTable('fifo')" id="btn-tab-fifo" class="tab-btn">🚚
+                Fifo Monitor</button><button onclick="switchTable('raw')" id="btn-tab-raw" class="tab-btn">📋
+                Raw Data Log</button><button onclick="toggleFocusMode()" id="btn-focus-toggle" class="btn-focus"><span
+                    id="focus-icon">🖥️</span><span id="focus-text">Full
+                    Screen</span></button>
+        </div>
+        <!-- PROCESS LOG TABLE -->
+        <div id="section-proc" style="display:none; margin-top: 20px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; padding: 0 10px;">
+                <h2 style="font-family:'Orbitron'; color:#00f3ff; margin:0; font-size: 1rem; letter-spacing: 1px;">
+                    📈 Daily Production Log: Proses</h2>
+                <div id="proc-count" style="color:#64748b; font-family:'Orbitron'; font-weight:700; font-size: 0.7rem;">
+                    Loading...</div>
+            </div>
+            <!-- PROCESS ANALYTICS ENGINE v2 -->
+            <div class="analytics-header">
+                <div style="font-family:'Orbitron'; font-size: 0.8rem; color:#00f3ff; letter-spacing: 1px;">
+                    Process Performance Engine <span style="color:#64748b; font-size: 0.6rem;">•
+                        10 Metric Deck</span></div>
+                <div style="display: flex; align-items: center;"><select id="filter-proc-month" class="month-filter"
+                        onchange="changeFilter('proc', this.value)">
+                        <option value="ALL">ALL PERIODS</option>
+                    </select>
+                    <div class="scale-selector"><button class="scale-btn active"
+                            onclick="changeScale('proc', 'D', this)">D</button><button class="scale-btn"
+                            onclick="changeScale('proc', 'W', this)">W</button><button class="scale-btn"
+                            onclick="changeScale('proc', 'M', this)">M</button><button class="scale-btn"
+                            onclick="changeScale('proc', 'Y', this)">Y</button></div>
+                </div>
+            </div>
+            <div class="analytics-deck">
+                <!-- Row 1 -->
+                <div class="chart-card wide">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>⚡</i>PRODUCTION TREND
+                            [Tgl-Output]</span><span style="font-size:0.5rem; opacity:0.5;">CYBER-LINK ACTIVE</span>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-p1"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>🎯</i>ACCURACY MIX</span><span
+                            style="font-size:0.5rem; opacity:0.5;">HU-D DATA</span></div>
+                    <div class="chart-container"><canvas id="chart-p2"></canvas></div>
+                </div>
+                <!-- Row 2 -->
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>⚙️</i>YIELD RATIO</span></div>
+                    <div class="chart-container"><canvas id="chart-p3"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>⚠️</i>NS FLUCTUATION</span></div>
+                    <div class="chart-container"><canvas id="chart-p4"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>🚮</i>WASTE VOLUME</span></div>
+                    <div class="chart-container"><canvas id="chart-p5"></canvas></div>
+                </div>
+                <!-- Row 3 -->
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>🚚</i>USAGE STATUS</span>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-p6"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>📊</i>CUMULATIVE YTD</span>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-p7"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>⚡</i>GR SYSTEM ACTIVITY</span>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-p8"></canvas>
+                    </div>
+                </div>
+                <!-- Row 4 -->
+                <div class="chart-card wide">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>✨</i>ACHIEVEMENT
+                            VARIANCE</span></div>
+                    <div class="chart-container"><canvas id="chart-p9"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>🔄</i>STABILITY
+                            INDEX</span></div>
+                    <div class="chart-container"><canvas id="chart-p10"></canvas></div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="proc-table" class="scifi-table">
+                    <thead>
+                        <tr style="background: rgba(0, 0, 0, 0.4);">
+                            <th rowspan="2">Tanggal</th>
+                            <th rowspan="2">Beginning</th>
+                            <th colspan="2" style="text-align:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Hasil Ayak</th>
+                            <th rowspan="2">Usage</th>
+                            <th rowspan="2">Ending</th>
+                            <th rowspan="2">Sampah</th>
+                            <th rowspan="2">Target</th>
+                            <th rowspan="2">NS</th>
+                            <th colspan="2" style="text-align:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Gr System</th>
+                            <th colspan="2" style="text-align:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Achievement</th>
+                            <th rowspan="2">Keterangan</th>
+                            <th colspan="2" style="text-align:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Bahan Ayak</th>
+                        </tr>
+                        <tr style="background: rgba(0, 0, 0, 0.4);">
+                            <th style="top: 38px;">915</th>
+                            <th style="top: 38px;">919</th>
+                            <th style="top: 38px;">915</th>
+                            <th style="top: 38px;">919</th>
+                            <th style="top: 38px;">TOTAL</th>
+                            <th style="top: 38px;">%</th>
+                            <th style="top: 38px;">915</th>
+                            <th style="top: 38px;">919</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proc-body">
+                        <tr>
+                            <td colspan="17" style="padding:40px; text-align:center; color:#64748b;">
+                                Initializing Process Stream...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- FIFO MONITOR TABLE -->
+        <div id="section-fifo" style="display:none; margin-top: 20px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; padding: 0 10px;">
+                <h2 style="font-family:'Orbitron'; color:#00f3ff; margin:0; font-size: 1rem; letter-spacing: 1px;">
+                    🚚 Fefo/Fifo Monitor: Stock Movement</h2>
+                <div id="fifo-count" style="color:#64748b; font-family:'Orbitron'; font-weight:700; font-size: 0.7rem;">
+                    Loading...</div>
+            </div>
+            <div class="table-wrapper">
+                <table id="fifo-table" class="scifi-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Stock</th>
+                            <th>Proses</th>
+                            <th>Usage</th>
+                            <th>Ending</th>
+                            <th>Lokasi</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fifo-body">
+                        <tr>
+                            <td colspan="7" style="padding:40px; text-align:center; color:#64748b;">
+                                Initializing FIFO Stream...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- RAW DATA TABLE SECTION -->
+        <div id="section-raw" style="display:none; margin-top: 20px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; padding: 0 10px;">
+                <h2 style="font-family:'Orbitron'; color:#00f3ff; margin:0; font-size: 1rem; letter-spacing: 1px;">
+                    📋 Raw Data: Serah Terima Bahan</h2>
+                <div id="raw-count" style="color:#64748b; font-family:'Orbitron'; font-weight:700; font-size: 0.7rem;">
+                    Loading...</div>
+            </div>
+            <!-- RAW DATA ANALYTICS ENGINE v2 -->
+            <div class="analytics-header">
+                <div style="font-family:'Orbitron'; font-size: 0.8rem; color:#00f3ff; letter-spacing: 1px;">
+                    Raw Material Logistics Engine <span style="color:#64748b; font-size: 0.6rem;">• 10 Metric
+                        Deck</span></div>
+                <div style="display: flex; align-items: center;"><select id="filter-raw-month" class="month-filter"
+                        onchange="changeFilter('raw', this.value)">
+                        <option value="ALL">ALL PERIODS</option>
+                    </select>
+                    <div class="scale-selector"><button class="scale-btn active"
+                            onclick="changeScale('raw', 'D', this)">D</button><button class="scale-btn"
+                            onclick="changeScale('raw', 'W', this)">W</button><button class="scale-btn"
+                            onclick="changeScale('raw', 'M', this)">M</button><button class="scale-btn"
+                            onclick="changeScale('raw', 'Y', this)">Y</button>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-deck">
+                <!-- Row 1: Full Width Incoming Volume -->
+                <div class="chart-card wide" style="width: 100%; grid-column: 1 / -1;">
+                    <div class="chart-card-corner-tr"></div>
+                    <div class="chart-card-corner-bl"></div>
+                    <div class="chart-card-corner-br"></div>
+                    <div class="chart-title"><span><i>📦</i>INCOMING VOLUME TREND [TON]</span><span
+                            style="font-size:0.5rem; opacity:0.5;">LOGISTICS-HUB ACTIVE</span></div>
+                    <div class="chart-container"><canvas id="chart-r1"></canvas></div>
+                </div>
+
+                <!-- Row 2: 3-Column Interaction (Calendar | Dept Summary | Dept Detail) -->
+                <div
+                    style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; height: 350px;">
+
+                    <!-- LEFT: CALENDAR -->
+                    <div class="chart-card" style="height: 100%; margin: 0;">
+                        <div class="chart-card-corner-tr"></div>
+                        <div class="chart-card-corner-bl"></div>
+                        <div class="chart-card-corner-br"></div>
+                        <div class="chart-title"
+                            style="display:flex; justify-content:space-between; align-items:center;">
+                            <span><i>📅</i>MONTHLY ACTIVITY</span>
+                            <select id="calendar-dept-slicer" class="mini-month-select"
+                                style="width:auto; height:20px; font-size:0.7rem;"
+                                onchange="renderMiniCalendar(null, window.cachedRawData)">
+                                <option value="ALL">ALL DEPTS</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <!-- Slicer moved here visually or kept in header? User said 'popup tanggal... buat paling kiri' -->
+                            <!-- Re-using existing structure for calendar injection -->
+                            <div id="calendar-wrapper" style="height:100%; display:flex; flex-direction:column;">
+                                <div class="calendar-header" style="margin-bottom:10px;">
+                                    <select id="mini-month-selector" class="mini-month-select"
+                                        onchange="renderMiniCalendar(null, window.cachedRawData); renderDeptTables();"></select>
+                                </div>
+                                <div id="raw-calendar" class="scifi-calendar-grid" style="flex:1; overflow-y:auto;">
+                                </div>
+                                <div
+                                    style="margin-top:5px; display:flex; justify-content:space-between; font-size:0.65rem; color:#666;">
+                                    <span><span style="color:var(--neon-red)">●</span>HOLIDAY</span>
+                                    <span><span style="color:var(--neon-purple)">●</span>WORKDAY</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MIDDLE: DEPT SUMMARY -->
+                    <div class="chart-card" style="height: 100%; margin: 0;">
+                        <div class="chart-card-corner-tr"></div>
+                        <div class="chart-card-corner-bl"></div>
+                        <div class="chart-card-corner-br"></div>
+                        <div class="chart-title"><span><i>🏢</i>DEPT SUMMARY [TON]</span></div>
+                        <div class="chart-container" style="position:relative;">
+                            <canvas id="dept-summary-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: DEPT DETAIL -->
+                    <div class="chart-card" style="height: 100%; margin: 0;">
+                        <div class="chart-card-corner-tr"></div>
+                        <div class="chart-card-corner-bl"></div>
+                        <div class="chart-card-corner-br"></div>
+                        <div class="chart-title"><span><i>📝</i>MATERIAL DETAILS</span></div>
+                        <div class="chart-container" style="overflow-y: auto;">
+                            <table class="scifi-table" id="dept-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>MATERIAL</th>
+                                        <th>TON</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dept-detail-body">
+                                    <tr>
+                                        <td colspan="2" style="text-align:center; color:#64748b;">Select a
+                                            Department...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ROW 3: DEPT TREND -->
+                <div
+                    style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; gap: 20px; height: 320px; margin-bottom: 20px;">
+
+                    <!-- FULL WIDTH: Dept Trend Chart -->
+                    <div class="chart-card" style="width: 100%; height: 100%; margin: 0;">
+                        <div class="chart-card-corner-tr"></div>
+                        <div class="chart-card-corner-bl"></div>
+                        <div class="chart-card-corner-br"></div>
+
+                        <div class="chart-title"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i>📈</i>DEPT TREND</span>
+
+                            <div style="display: flex; gap: 10px;">
+                                <!-- Dept Slicer -->
+                                <select id="trend-dept-slicer" class="mini-month-select"
+                                    style="width: auto; height: 24px; font-size: 0.8rem;" onchange="renderDeptTrend()">
+                                    <option value="ALL">ALL DEPARTMENTS</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+
+                                <!-- Period Slicer -->
+                                <select id="trend-period-slicer" class="mini-month-select"
+                                    style="width: auto; height: 24px; font-size: 0.8rem;" onchange="renderDeptTrend()">
+                                    <option value="D">DAILY</option>
+                                    <option value="W">WEEKLY</option>
+                                    <option value="M">MONTHLY</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas id="chart-dept-trend"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ROW 4: DEPT COMPARISON & DETAIL -->
+                <div
+                    style="grid-column: 1 / -1; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; height: 280px; margin-bottom: 30px;">
+
+                    <!-- LEFT: Comparison Chart -->
+                    <div class="chart-card" style="height: 100%; margin: 0;">
+                        <div class="chart-card-corner-tr"></div>
+                        <div class="chart-card-corner-bl"></div>
+                        <div class="chart-card-corner-br"></div>
+
+                        <div class="chart-title"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i>📊</i>DEPT COMPARISON [TON]</span>
+                            <!-- Month Slicer for Comparison -->
+                            <select id="comp-month-selector" class="mini-month-select"
+                                style="width: auto; height: 24px; font-size: 0.8rem;" onchange="renderDeptComparison()">
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas id="chart-dept-comparison"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Detail Text List -->
+                    <div class="chart-card"
+                        style="height: 100%; margin: 0; overflow: hidden; display: flex; flex-direction: column;">
+                        <div class="chart-card-corner-tr"></div>
+                        <div class="chart-card-corner-bl"></div>
+                        <div class="chart-card-corner-br"></div>
+
+                        <div class="chart-title"><span><i>📄</i>DETAILS [TON]</span></div>
+
+                        <div class="chart-container" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;">
+                            <table class="scifi-table" style="margin-top: 0;">
+                                <tbody id="comp-detail-body">
+                                    <tr>
+                                        <td style="text-align: center; color: #64748b;">Select a Month</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="sweeping-table" class="scifi-table">
+                    <thead>
+                        <tr id="table-head">
+                            <th>TANGGAL</th>
+                            <th>NAMA_MATERIAL</th>
+                            <th>QTY</th>
+                            <th>ASAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <tr>
+                            <td colspan="10" style="padding:40px; text-align:center; color:#64748b;">
+                                Initializing Data Stream...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- DETAIL MODAL -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">DETAIL DATA</h3><button class="modal-close"
+                    onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body"
+                style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <!-- Data Table will be injected here -->
+            </div>
+            <div class="modal-footer">SMART WAREHOUSE AI • INTERNAL LOGISTICS SYSTEM </div>
+        </div>
+    </div>
+    <!-- SCRIPTS -->
+    <script src="js/app-config.js"></script>
+    <script> // Global state for calculations
+        let cachedResponse = null;
+
+        let charts = {}
+
+            ; // Store chart instances
+
+        let currentScales = {
+            proc: 'D', raw: 'D'
+        }
+
+            ; // Default to Daily for granular view if filtered
+
+        let currentMonths = {
+            proc: 'ALL', raw: 'ALL'
+        }
+
+            ; // Global State for Month Filter
+
+        // Data Aggregation Engine
+        const DataAggregator = {
+            parseDate: (dateStr) => {
+                if (!dateStr || dateStr === "-") return new Date();
+                if (typeof dateStr === 'string' && dateStr.includes('T')) return new Date(dateStr);
+                const d = new Date(dateStr);
+                return isNaN(d.getTime()) ? new Date() : d;
+            }
+
+            ,
+            slicer: (data, scale) => {
+                // AUTO-SLICE to prevent overcrowding (Level 10 Logic)
+                if (scale === 'D') return data.slice(0, 20); // Last 20 days
+                if (scale === 'W') return data.slice(0, 15); // Last 15 weeks
+                if (scale === 'M') return data.slice(0, 12); // Last 12 months
+                return data; // Years show all
+            }
+
+            ,
+            aggregate: (data, scale, dateField, metrics) => {
+
+                // First slice the raw data if it's too much (though aggregation already helps)
+                // Actually, slice AFTER aggregation for precise temporal windows
+                const groups = {}
+
+                    ;
+
+                data.forEach(item => {
+                    const date = DataAggregator.parseDate(item[dateField]);
+                    let key;
+
+                    if (scale === 'W') {
+                        const d = new Date(date);
+                        d.setHours(0, 0, 0, 0);
+                        d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const yearStart = new Date(d.getFullYear(), 0, 1);
+                        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+
+                        key = `W${weekNo}-${d.getFullYear()}`;
+                    }
+
+                    else if (scale === 'M') {
+                        key = date.toLocaleDateString('id-ID', {
+                            month: 'short', year: '2-digit'
+                        });
+                    }
+
+                    else if (scale === 'Y') {
+                        key = date.getFullYear().toString();
+                    }
+
+                    else {
+                        key = date.toLocaleDateString('id-ID', {
+                            day: '2-digit', month: 'short'
+                        });
+                    }
+
+                    if (!groups[key]) {
+                        groups[key] = {
+                            key, count: 0
+                        }
+
+                            ;
+                        metrics.forEach(m => groups[key][m] = 0);
+                    }
+
+                    groups[key].count++;
+
+                    metrics.forEach(m => {
+                        groups[key][m] += parseFloat(item[m]) || 0;
+                    });
+                });
+                let result = Object.values(groups).sort((a, b) => b.key.localeCompare(a.key)); // Newest first
+                result = DataAggregator.slicer(result, scale); // SLICE HERE
+                return result.reverse(); // Back to ASC for chart
+            }
+        }
+
+            ;
+
+        function changeScale(type, scale, btn) {
+            currentScales[type] = scale;
+            const container = btn.parentElement;
+            container.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (type === 'proc' && cachedResponse) renderProcessAnalytics(cachedResponse.proc);
+            if (type === 'raw' && cachedResponse) renderLogAnalytics(cachedResponse.log);
+        }
+
+        function changeFilter(type, value) {
+            currentMonths[type] = value;
+
+            // Re-render
+            if (type === 'proc' && cachedResponse) renderProcessAnalytics(cachedResponse.proc);
+            if (type === 'raw' && cachedResponse) renderLogAnalytics(cachedResponse.log);
+        }
+
+        // Helper to get unique months from data
+        function getAvailableMonths(data, dateField) {
+            const months = new Set();
+
+            data.forEach(item => {
+                const d = DataAggregator.parseDate(item[dateField]);
+
+                // Format: YYYY-MM
+                // Format: YYYY-MM
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                months.add(key);
+            });
+            // Sort desc
+            return Array.from(months).sort().reverse();
+        }
+
+        function populateMonthFilter(elId, monthKeys) {
+            const sel = document.getElementById(elId);
+            const currentVal = sel.value;
+            // Keep "ALL" option
+            sel.innerHTML = '<option value="ALL">ALL PERIODS</option>';
+
+            monthKeys.forEach(key => {
+                const [y, m] = key.split('-');
+
+                const label = new Date(y, m - 1).toLocaleDateString('id-ID', {
+                    month: 'long', year: 'numeric'
+                }).toUpperCase();
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = label;
+                sel.appendChild(opt);
+            });
+
+            // Restore selection if possible, otherwise default ALL
+            if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+                sel.value = currentVal;
+            }
+
+            else {
+                sel.value = "ALL";
+            }
+        }
+
+        // Chart.js Default Theme (Level 10 Cinematic)
+        if (window.Chart) {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Orbitron', sans-serif";
+            Chart.defaults.font.size = 9;
+            Chart.defaults.borderColor = 'rgba(0, 243, 255, 0.08)';
+
+            // Tooltip HUD Style
+            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(10, 15, 25, 0.9)';
+            Chart.defaults.plugins.tooltip.titleColor = '#00f3ff';
+
+            Chart.defaults.plugins.tooltip.titleFont = {
+                family: 'Orbitron', size: 11
+            }
+
+                ;
+
+            Chart.defaults.plugins.tooltip.bodyFont = {
+                family: 'Inter', size: 10
+            }
+
+                ;
+            Chart.defaults.plugins.tooltip.borderColor = 'rgba(0, 243, 255, 0.5)';
+            Chart.defaults.plugins.tooltip.borderWidth = 1;
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.cornerRadius = 2;
+            Chart.defaults.plugins.tooltip.displayColors = true;
+
+            Chart.defaults.elements.bar.borderRadius = 0; // HUD style: square
+            Chart.defaults.elements.line.tension = 0.4;
+            Chart.defaults.elements.point.radius = 2;
+            Chart.defaults.elements.point.hoverRadius = 6;
+
+            // Interaction
+            Chart.defaults.interaction = {
+                intersect: false, mode: 'index'
+            }
+
+                ;
+        }
+
+        async function fetchBinSweepingData() {
+            const url = CONFIG.BIN_SWEEPING_API_URL;
+
+            return new Promise((resolve, reject) => {
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+
+                window[callbackName] = function (data) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(data);
+                }
+
+                    ;
+                const script = document.createElement('script');
+                script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
+        }
+
+        function switchTable(type) {
+            const sections = ['proc',
+                'fifo',
+                'raw'];
+
+            sections.forEach(s => {
+                const section = document.getElementById('section-' + s);
+                const btn = document.getElementById('btn-tab-' + s);
+
+                if (s === type) {
+                    section.style.display = 'block';
+                    btn.classList.add('active');
+                }
+
+                else {
+                    section.style.display = 'none';
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Re-render charts to fix sizing in newly visible containers
+            if (type === 'proc' && cachedResponse) renderProcessAnalytics(cachedResponse.proc);
+            if (type === 'raw' && cachedResponse) renderLogAnalytics(cachedResponse.log);
+        }
+
+        function renderSpecTable(tbodyId, data) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+                let valStyle = "color: #fff; font-weight: 500;";
+                const valStr = String(item.value);
+                if (valStr.includes("ON")) valStyle = "color: #22c55e; font-weight: 700; background: rgba(34,197,94,0.1); padding: 2px 8px; border-radius: 4px; display: inline-block;";
+
+                tr.innerHTML = `<td style="padding: 10px 15px; color: #94a3b8;">${toTitleCase(item.parameter)}</td>
+                                <td style="padding: 10px 15px;"><span style="${valStyle}">${toTitleCase(item.value)}</span></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderProcessTable(data) {
+            const tbody = document.getElementById('proc-body');
+            const countLabel = document.getElementById('proc-count');
+
+            countLabel.innerText = `TOTAL RECORDS: ${data.length}`;
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+
+                // Achievement coloring logic
+                const getAchColor = (val) => {
+                    const num = parseFloat(String(val).replace('%', ''));
+                    if (isNaN(num)) return '#fff';
+                    if (num >= 80) return '#22c55e';
+                    if (num >= 50) return '#fbbf24';
+                    return '#ef4444';
+                }
+
+                    ;
+
+                // Formatter for large numbers
+                const fmt = (val) => {
+                    if (val === undefined || val === null || val === "") return "-";
+                    const num = parseFloat(val);
+                    return isNaN(num) ? val : num.toLocaleString('id-ID');
+                }
+
+                    ;
+
+                // Formatter for Achievement (limit decimals)
+                const fmtAch = (val) => {
+                    if (val === undefined || val === null || val === "") return "-";
+                    let num = parseFloat(val);
+                    if (isNaN(num)) return val;
+                    // If the number is > 1 it's likely already a percentage (e.g. 38.5)
+                    // If it's <= 1 it's likely a fraction (e.g. 0.385)
+                    if (num <= 1 && num > 0) num = num * 100;
+                    return Math.round(num) + "%";
+                }
+
+                    ;
+
+                // Calculate Total Hasil Ayak
+                const totalHasil = (parseFloat(row.hasil_915) || 0) + (parseFloat(row.hasil_919) || 0);
+
+                // Target is 8.800 KG
+                const targetHasilAyak = 8800;
+                const calculatedAch = Math.round((totalHasil / targetHasilAyak) * 100);
+
+                tr.innerHTML = `<td style="white-space:nowrap;">${typeof row.tanggal === 'string' && row.tanggal.includes('T') ? row.tanggal.split('T')[0] : row.tanggal}</td>
+                                <td style="font-weight:700;">${fmt(row.beginning)}</td>
+                                <td style="color:#00f3ff; font-weight:700;">${fmt(row.hasil_915)}</td>
+                                <td style="color:#00f3ff; font-weight:700;">${fmt(row.hasil_919)}</td>
+                                <td>${fmt(row.usage)}</td>
+                                <td>${fmt(row.ending)}</td>
+                                <td style="color:#64748b;">${fmt(row.sampah)}</td>
+                                <td style="color:#94a3b8; border-left: 1px solid rgba(255,255,255,0.05);">${fmt(row.target)}</td>
+                                <td style="color:#ef4444; font-weight:700;">${fmt(row.ns)}</td>
+                                <td>${fmt(row.gr_915)}</td>
+                                <td>${fmt(row.gr_919)}</td>
+                                <td style="color:#00f3ff; font-weight:700;">${fmt(totalHasil)}</td>
+                                <td style="color:${getAchColor(calculatedAch)}; font-weight:900; background: rgba(0,0,0,0.2); text-align:center;">${calculatedAch}%</td>
+                                <td style="font-size:0.65rem; color:#64748b; white-space: normal; min-width: 180px; line-height: 1.2;">${toTitleCase(row.keterangan)}</td>
+                                <td style="border-left: 1px solid rgba(255,255,255,0.05);">${fmt(row.bahan_915)}</td>
+                                <td>${fmt(row.bahan_919)}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderLogTable(data) {
+            const tbody = document.getElementById('table-body');
+            const thead = document.getElementById('table-head');
+            const countLabel = document.getElementById('raw-count');
+
+            countLabel.innerText = `TOTAL RECORDS: ${data.length}`;
+
+            if (data.length > 0) {
+                const headers = Object.keys(data[0]);
+
+                thead.innerHTML = headers.map(h => `<th>${toTitleCase(h.replace(/_/g, ' '))}</th>`).join('');
+                tbody.innerHTML = '';
+
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+
+                    tr.innerHTML = headers.map(h => {
+                        let rawVal = row[h] || "-";
+                        let val = (h === "NAMA_MATERIAL" || h === "Material") ? normalizeMaterial(rawVal) : (typeof rawVal === 'string' && isNaN(parseFloat(rawVal))) ? toTitleCase(rawVal) : rawVal;
+                        let style = "";
+                        if (h === "NAMA_MATERIAL" || h === "Material") style = "color:#00f3ff; font-weight:700;";
+                        if (h === "QTY") style = "font-weight:700; color:#fff; font-family:'Rajdhani';";
+                        if ((h === "STATUS_PROSES" || h === "Status") && String(val).toUpperCase() === "DONE") style = "color:#22c55e;";
+
+                        return `<td style="${style}">${val}</td>`;
+                    }).join('');
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderFifoTable(data) {
+            const tbody = document.getElementById('fifo-body');
+            const countLabel = document.getElementById('fifo-count');
+
+            countLabel.innerText = `TOTAL RECORDS: ${data.length}`;
+            tbody.innerHTML = '';
+
+            // Common dynamic formatting
+            const fmt = (val) => {
+                if (val === undefined || val === null || val === "") return "-";
+                const num = parseFloat(val);
+                return isNaN(num) ? val : num.toLocaleString('id-ID');
+            }
+
+                ;
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+
+                // Status Styling
+                let statusColor = "#94a3b8";
+                let statusBg = "transparent";
+                const status = String(row.status).toUpperCase();
+
+                if (status === "PAKAI") {
+                    statusColor = "#22c55e";
+                    statusBg = "rgba(34,197,94,0.1)";
+                }
+
+                else if (status === "HOLD") {
+                    statusColor = "#ef4444";
+                    statusBg = "rgba(239,68,68,0.1)";
+                }
+
+                tr.innerHTML = `<td style="white-space:nowrap;">${typeof row.tanggal === 'string' && row.tanggal.includes('T') ? row.tanggal.split('T')[0] : row.tanggal}</td>
+                                <td style="font-weight:700; color:#fff;">${fmt(row.stock)}</td>
+                                <td style="color:#fbbf24;">${fmt(row.proses)}</td>
+                                <td>${fmt(row.usage)}</td>
+                                <td style="font-weight:700; color:#00f3ff;">${fmt(row.ending)}</td>
+                                <td style="color:#94a3b8; font-size:0.65rem;">${toTitleCase(row.lokasi)}</td>
+                                <td><span style="color:${statusColor}; background:${statusBg}; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.65rem; border: 1px solid ${statusColor}44;">${toTitleCase(row.status)}</span></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderDashboard(resIn) {
+            if (resIn.status !== "success") return;
+
+            // GLOBAL ERROR CLEANING (Applied to bin-sweeping.html)
+            const cleanProc = (resIn.proc || []).filter(d => {
+                const dt = DataAggregator.parseDate(d.tanggal || d.TANGGAL);
+                const dept = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return dt.getFullYear() !== 2001 && dept !== "UNKNOWN";
+            });
+            const cleanLog = (resIn.log || []).filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl || d.tanggal);
+                const dept = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return dt.getFullYear() !== 2001 && dept !== "UNKNOWN" && dept !== "";
+            });
+            const cleanFifo = (resIn.fifo || []).filter(d => {
+                const dt = DataAggregator.parseDate(d.tanggal || d.TANGGAL);
+                return dt.getFullYear() !== 2001;
+            });
+
+            // Use clean data
+            const response = { ...resIn, proc: cleanProc, log: cleanLog, fifo: cleanFifo };
+            cachedResponse = response;
+            window.cachedRawData = cleanLog;
+
+            const placeholder = document.getElementById('main-card');
+            const topSection = document.getElementById('dashboard-top');
+            const tabContainer = document.getElementById('tab-container');
+
+            placeholder.style.display = 'none';
+            topSection.style.display = 'grid';
+            tabContainer.style.display = 'flex';
+
+            // Default view
+            switchTable('proc');
+
+            // --- DYNAMIC CALCULATIONS ---
+
+            // 1. Calculate HASIL AYAK (Sum of FIFO Ending)
+            let totalHasil = 0;
+
+            if (response.fifo) {
+                totalHasil = response.fifo.reduce((acc, row) => acc + (parseFloat(row.ending) || 0), 0);
+            }
+
+            document.getElementById('stat-hasil-ayak').innerText = totalHasil.toLocaleString('id-ID');
+
+            // 2. Calculate BAHAN AYAK (Sum of Raw Log where Status Proces is NOT DONE)
+            let totalBahan = 0;
+
+            if (response.log) {
+                totalBahan = response.log.reduce((acc, row) => {
+                    const status = String(row.STATUS_PROSES || "").toUpperCase();
+
+                    if (status !== "DONE") {
+                        return acc + (parseFloat(row.QTY_TERIMA || row.QTY || 0) || 0);
+                    }
+
+                    return acc;
+                }
+
+                    , 0);
+            }
+
+            // Convert to TON for card display
+            const totalBahanTon = totalBahan / 1000;
+
+            document.getElementById('stat-bahan-ayak').innerText = totalBahanTon.toLocaleString('id-ID', {
+                minimumFractionDigits: 3, maximumFractionDigits: 3
+            });
+
+            // 3. NS Box (Centered & contained)
+            const summary = response.spec.summary;
+            document.getElementById('stat-ns').innerText = summary.ns || "19"; // Default to 19 or sheet value
+            document.getElementById('status-message').innerText = toTitleCase(summary.status_msg);
+
+            // 2. Render Spec Tables
+            renderSpecTable('table-technical', response.spec.technical);
+            renderSpecTable('table-operational', response.spec.operational);
+            renderSpecTable('table-usage', response.spec.usage);
+
+            // 3. Render Bottom Tables
+            renderProcessTable(response.proc || []);
+            renderFifoTable(response.fifo || []);
+            renderLogTable(response.log || []);
+
+            // 4. Populate Month Filters
+            if (response.proc) {
+                const procMonths = getAvailableMonths(response.proc, 'tanggal');
+                populateMonthFilter('filter-proc-month', procMonths);
+            }
+
+            if (response.log) {
+                const rawMonths = getAvailableMonths(response.log, 'TANGGAL');
+                populateMonthFilter('filter-raw-month', rawMonths);
+            }
+
+            // 5. Render Analytics
+            renderProcessAnalytics(response.proc || []);
+            renderLogAnalytics(response.log || []);
+        }
+
+        // --- ANALYTICS RENDERING ---
+
+        // --- ANALYTICS RENDERING ENGINE v2 ---
+
+        // Helper for Capitalized First Letter (Title Case)
+        function toTitleCase(str) {
+            if (!str || typeof str !== 'string') return str || "-";
+            return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        // Helper to normalize material names (fixes typos)
+        function normalizeMaterial(m) {
+            if (!m) return "-";
+            let n = String(m).trim().toUpperCase();
+            // Specific typo correction
+            if (n === "SAPPUAN FG") n = "SAPUAN FG";
+            if (n === "SAPUAN") n = "SAPUAN FG";
+            return toTitleCase(n);
+        }
+
+        function renderProcessAnalytics(data) {
+            if (!data || data.length === 0) return;
+
+            // FIlTER BY MONTH FIRST
+            let filteredData = data;
+            const monthFilter = currentMonths.proc;
+
+            if (monthFilter !== 'ALL') {
+                filteredData = data.filter(d => {
+                    const date = DataAggregator.parseDate(d.tanggal);
+
+                    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    return key === monthFilter;
+                });
+            }
+
+            const scale = currentScales.proc;
+            const metrics = ['hasil_915',
+                'hasil_919',
+                'beginning',
+                'usage',
+                'ending',
+                'sampah',
+                'target',
+                'ns',
+                'gr_915',
+                'gr_919'];
+
+            // IF FILTER IS ACTIVE, BYPASS SLICER (Show all days in that month)
+            // We modify the aggregator slightly or just handle it here.
+            // Actually, best to slice in aggregator, but we can bypass it by passing a Flag or just pre-slicing
+
+            // If month is selected, we want to see the WHOLE month, usually in Day scale or Week scale. 
+            // If the user selects Month scale while a Single Month is selected, they just see 1 bar.
+
+            let agg = DataAggregator.aggregate(filteredData, scale, 'tanggal', metrics);
+
+            // BYPASS SLICER IF FILTER IS ON. 
+            // The Aggregator.slicer slices to "Last N". We want "All" if filtered.
+            // But DataAggregator.aggregate already called slicer.
+            // Let's refactor calling:
+
+            // To properly fix: RE-AGGREGATE manually here without slice if filtered? 
+            // OR simpler: If filteredData.length < data.length (meaning filter active), 
+            // we assume user wants to see specifically this data, so we don't slice further?
+
+            // Currently DataAggregator.aggregate calls slicer internally. 
+            // Let's hack it: 
+            if (monthFilter !== 'ALL') {
+                // Manually aggreg (copy logic) OR modify DataAggregator to accept "noSlice" flag.
+                // Modifying DataAggregator is better but it's object literal above. 
+                // Let's use a trick: If scale is 'D' and month is selected, we expect <= 31 items. 
+                // Aggregator slices to 20. 
+                // Let's re-implement simple aggreg logic here to override slicer? 
+
+                // Better approach: Modify DataAggregator.slicer logic in place above? No, we are editing this block.
+                // Let's Just redo aggregation without slicing for this specific case.
+
+                const groups = {}
+
+                    ;
+
+                filteredData.forEach(item => {
+                    const date = DataAggregator.parseDate(item.tanggal);
+                    let key;
+
+                    if (scale === 'W') {
+                        const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const weekNo = Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
+
+                        key = `W${weekNo}-${d.getFullYear()}`;
+                    }
+
+                    else if (scale === 'M') {
+                        key = date.toLocaleDateString('id-ID', {
+                            month: 'short', year: '2-digit'
+                        });
+                    }
+
+                    else if (scale === 'Y') {
+                        key = date.getFullYear().toString();
+                    }
+
+                    else {
+                        key = date.toLocaleDateString('id-ID', {
+                            day: '2-digit', month: 'short'
+                        });
+                    }
+
+                    if (!groups[key]) {
+                        groups[key] = {
+                            key, count: 0
+                        }
+
+                            ; metrics.forEach(m => groups[key][m] = 0);
+                    }
+
+                    groups[key].count++;
+                    metrics.forEach(m => groups[key][m] += parseFloat(item[m]) || 0);
+                });
+
+                agg = Object.values(groups).sort((a, b) => {
+                    // Sort logic that works for dates mostly
+                    // However, original logic sorted by key string then reversed.
+                    // Let's trust key string sort for YYYY or rely on reverse for typical date strings?
+                    // Date string "01 Dec" vs "02 Dec" works. 
+                    return b.key.localeCompare(a.key);
+                });
+                agg = agg.reverse(); // ASC
+            }
+
+            const labels = agg.map(a => a.key);
+
+            const getCtx = (id) => document.getElementById(id).getContext('2d');
+
+            const clearChart = (id) => {
+                if (charts[id]) charts[id].destroy();
+            }
+
+                ;
+
+            const getGrad = (ctx, hex) => {
+                const g = ctx.createLinearGradient(0, 0, 0, 200);
+                g.addColorStop(0, hex + '66');
+                g.addColorStop(1, hex + '00');
+                return g;
+            }
+
+                ;
+
+            const hudScaleOptions = {
+                y: {
+                    grid: {
+                        color: 'rgba(0, 243, 255, 0.05)'
+                    }
+
+                    ,
+                    ticks: {
+                        font: {
+                            size: 8
+                        }
+                    }
+                }
+
+                ,
+                x: {
+                    grid: {
+                        display: false
+                    }
+
+                    ,
+                    ticks: {
+                        font: {
+                            size: 8
+                        }
+
+                        ,
+                        maxRotation: 45,
+                        autoSkip: true
+                    }
+                }
+            }
+
+                ;
+
+            // 1. Production Trend
+            clearChart('p1');
+
+            charts.p1 = new Chart(getCtx('chart-p1'), {
+
+                type: 'line',
+                data: {
+
+                    labels,
+                    datasets: [{
+                        label: '915', data: agg.map(a => a.hasil_915), borderColor: '#00f3ff', backgroundColor: getGrad(getCtx('chart-p1'), '#00f3ff'), fill: true, borderWidth: 2, pointRadius: 0
+                    }
+
+                        ,
+                    {
+                        label: '919', data: agg.map(a => a.hasil_919), borderColor: '#fbbf24', backgroundColor: getGrad(getCtx('chart-p1'), '#fbbf24'), fill: true, borderWidth: 2, pointRadius: 0
+                    }
+
+                    ]
+                }
+
+                ,
+                options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+
+            // 2. Accuracy Mix
+            clearChart('p2');
+            const totalActual = agg.reduce((s, a) => s + (a.hasil_915 + a.hasil_919), 0);
+            const totalTarget = agg.reduce((s, a) => s + a.target, 0);
+
+            charts.p2 = new Chart(getCtx('chart-p2'), {
+
+                type: 'doughnut',
+                data: {
+
+                    labels: ['Actual', 'Remaining'],
+                    datasets: [{
+                        data: [totalActual, Math.max(0, totalTarget - totalActual)],
+                        backgroundColor: ['#00f3ff', 'rgba(255,255,255,0.05)'],
+                        borderColor: '#0a0f19', borderWidth: 4
+                    }
+
+                    ]
+                }
+
+                ,
+                options: {
+                    cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: {
+                        legend: {
+                            position: 'bottom', labels: {
+                                boxWidth: 8
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Yield Ratio
+            clearChart('p3');
+
+            charts.p3 = new Chart(getCtx('chart-p3'), {
+
+                type: 'bar',
+                data: {
+
+                    labels,
+                    datasets: [{
+                        label: 'Eff %', data: agg.map(a => a.beginning > 0 ? ((a.hasil_915 + a.hasil_919) / a.beginning * 100).toFixed(1) : 0), backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1
+                    }
+
+                    ]
+                }
+
+                ,
+                options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+
+            // 4. NS Monitor
+            clearChart('p4');
+
+            charts.p4 = new Chart(getCtx('chart-p4'), {
+
+                type: 'line',
+                data: {
+
+                    labels,
+                    datasets: [{
+                        label: 'NS', data: agg.map(a => a.ns), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)', fill: true, pointRadius: 0
+                    }
+
+                    ]
+                }
+
+                ,
+                options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+
+            // 5. Waste Trend
+            clearChart('p5');
+
+            charts.p5 = new Chart(getCtx('chart-p5'), {
+
+                type: 'line',
+                data: {
+
+                    labels,
+                    datasets: [{
+                        label: 'Waste', data: agg.map(a => a.sampah), borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.1)', fill: true, pointRadius: 0
+                    }
+
+                    ]
+                }
+
+                ,
+                options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+
+            // 6-10 ...
+            const p6data = agg.map(a => a.usage);
+            clearChart('p6');
+
+            charts.p6 = new Chart(getCtx('chart-p6'), {
+                type: 'bar', data: {
+                    labels, datasets: [{
+                        label: 'Usage', data: p6data, backgroundColor: '#fbbf2488'
+                    }
+
+                    ]
+                }
+
+                , options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+
+            let cum = 0;
+
+            const p7data = agg.map(a => {
+                cum += (a.hasil_915 + a.hasil_919); return cum;
+            });
+            clearChart('p7');
+
+            charts.p7 = new Chart(getCtx('chart-p7'), {
+                type: 'line', data: {
+                    labels, datasets: [{
+                        label: 'Total', data: p7data, borderColor: '#8b5cf6', fill: true, backgroundColor: '#8b5cf622', stepped: true
+                    }
+
+                    ]
+                }
+
+                , options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+
+            clearChart('p8');
+
+            charts.p8 = new Chart(getCtx('chart-p8'), {
+                type: 'bar', data: {
+                    labels, datasets: [{
+                        label: '915', data: agg.map(a => a.gr_915), backgroundColor: '#00f3ff88'
+                    }
+
+                        , {
+                        label: '919', data: agg.map(a => a.gr_919), backgroundColor: '#fbbf2488'
+                    }
+
+                    ]
+                }
+
+                , options: {
+                    responsive: true, maintainAspectRatio: false, scales: {
+                        ...hudScaleOptions, x: {
+                            stacked: true
+                        }
+
+                        , y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+            clearChart('p9');
+
+            charts.p9 = new Chart(getCtx('chart-p9'), {
+                type: 'line', data: {
+                    labels, datasets: [{
+                        label: 'Var', data: agg.map(a => (a.hasil_915 + a.hasil_919) - a.target), borderColor: '#00f3ff', borderDash: [5, 5], pointRadius: 0
+                    }
+
+                    ]
+                }
+
+                , options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+            clearChart('p10');
+
+            charts.p10 = new Chart(getCtx('chart-p10'), {
+                type: 'line', data: {
+                    labels, datasets: [{
+                        label: 'Stock', data: agg.map(a => a.ending), borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.05)', fill: true, pointRadius: 0
+                    }
+
+                    ]
+                }
+
+                , options: {
+                    responsive: true, maintainAspectRatio: false, scales: hudScaleOptions
+                }
+            });
+        }
+
+        function renderLogAnalytics(data) {
+            if (!data || data.length === 0) return;
+
+            // FILTER BY MONTH
+            // CLEAN UNKNOWN GLOBALLY
+            let filteredData = data.filter(d => {
+                const raw = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return raw !== "UNKNOWN" && raw !== "";
+            });
+            const monthFilter = currentMonths.raw;
+
+            if (monthFilter !== 'ALL') {
+                filteredData = data.filter(d => {
+                    const date = DataAggregator.parseDate(d.TANGGAL || d.Tgl); // Hande inconsistencies
+
+                    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    return key === monthFilter;
+                });
+            }
+
+            const scale = currentScales.raw;
+            const metrics = ['QTY_TERIMA',
+                'QTY'];
+
+            let agg;
+
+            if (monthFilter !== 'ALL') {
+
+                // Manual Aggregation to bypass slice
+                const groups = {}
+
+                    ;
+
+                filteredData.forEach(item => {
+                    const date = DataAggregator.parseDate(item.TANGGAL || item.Tgl);
+                    let key;
+
+                    if (scale === 'W') {
+                        const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const weekNo = Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
+
+                        key = `W${weekNo}-${d.getFullYear()}`;
+                    }
+
+                    else if (scale === 'M') {
+                        key = date.toLocaleDateString('id-ID', {
+                            month: 'short', year: '2-digit'
+                        });
+                    }
+
+                    else if (scale === 'Y') {
+                        key = date.getFullYear().toString();
+                    }
+
+                    else {
+                        key = date.toLocaleDateString('id-ID', {
+                            day: '2-digit', month: 'short'
+                        });
+                    }
+
+                    if (!groups[key]) {
+                        groups[key] = {
+                            key, count: 0
+                        }
+
+                            ; metrics.forEach(m => groups[key][m] = 0);
+                    }
+
+                    groups[key].count++;
+                    metrics.forEach(m => groups[key][m] += parseFloat(item[m] || item['QTY'] || 0) || 0); // Handle fallback
+                });
+                agg = Object.values(groups).sort((a, b) => b.key.localeCompare(a.key)).reverse();
+            }
+
+            else {
+                agg = DataAggregator.aggregate(data, scale, 'TANGGAL', metrics);
+            }
+
+            const labels = agg.map(a => a.key);
+
+            // 1. Incoming Volume (Full Width)
+            const getCtx = (id) => document.getElementById(id).getContext('2d');
+            const clearChart = (id) => { if (charts[id]) charts[id].destroy(); };
+
+            clearChart('r1');
+            charts.r1 = new Chart(getCtx('chart-r1'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Ton',
+                        data: agg.map(a => (a.QTY_TERIMA + a.QTY) / 1000),
+                        borderColor: '#00f3ff',
+                        backgroundColor: 'rgba(0,243,255,0.1)',
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(0, 243, 255, 0.05)' }, ticks: { font: { size: 8 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 8 }, maxRotation: 45, autoSkip: true } }
+                    }
+                }
+            });
+
+            // 2. MINI CALENDAR & DEPT TABLES
+
+            // Populate Month Select if empty
+            const monthSel = document.getElementById('mini-month-selector');
+            if (monthSel) {
+                const uniqueMonths = [...new Set(data.map(d => {
+                    const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                }))].filter(m => !m.startsWith('2001')).sort().reverse();
+
+                monthSel.innerHTML = ''; // Reset
+                uniqueMonths.forEach(m => {
+                    const dateObj = new Date(m + "-01");
+                    const label = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.innerText = label;
+                    monthSel.appendChild(opt);
+                });
+
+                // Set Default
+                if (currentMonths.raw !== 'ALL') monthSel.value = currentMonths.raw;
+                else if (uniqueMonths.length > 0) monthSel.selectedIndex = 0;
+            }
+
+            renderMiniCalendar(null, data);
+            renderDeptTables(null); // Init Tables
+            renderDeptTrend(null, null); // Init Dept Trend
+            renderDeptComparison(); // Init Dept Comparison (Row 4)
+        }
+
+        // --- CALENDAR LOGIC ---
+        function isWeekend(day, month, year) {
+            const date = new Date(year, month, day);
+            const d = date.getDay();
+            return (d === 0 || d === 6); // Sun or Sat
+        }
+
+        function renderMiniCalendar(date, allData) {
+            if (!allData || allData.length === 0) return;
+
+            // 1. Init & Read Dept Slicer
+            const deptSel = document.getElementById('calendar-dept-slicer');
+            if (deptSel && deptSel.options.length <= 1) { // Populate if empty
+                const depts = [...new Set(allData.map(d => {
+                    const raw = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                    return String(raw).toUpperCase();
+                }))].sort();
+                depts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.innerText = d;
+                    deptSel.appendChild(opt);
+                });
+            }
+            const deptFilter = deptSel ? deptSel.value : 'ALL';
+
+            // 2. Filter Data
+            let filteredData = allData;
+            if (deptFilter !== 'ALL') {
+                filteredData = allData.filter(d => {
+                    const raw = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                    return String(raw).toUpperCase() === deptFilter;
+                });
+            }
+
+            // 3. Date Logic
+            let year, month;
+            const selValue = document.getElementById('mini-month-selector').value;
+
+            if (selValue && selValue !== 'ALL') {
+                const parts = selValue.split('-');
+                year = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1;
+            } else {
+                const now = new Date();
+                year = now.getFullYear();
+                month = now.getMonth();
+            }
+
+            const grid = document.getElementById('raw-calendar');
+            grid.innerHTML = '';
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+
+            // 4. Map Data (Using filteredData)
+            const dayMap = {};
+            filteredData.forEach(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                if (dt.getFullYear() === year && dt.getMonth() === month) {
+                    dayMap[dt.getDate()] = (dayMap[dt.getDate()] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+                }
+            });
+
+            for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-day';
+                if (isWeekend(i, month, year)) cell.classList.add('holiday');
+
+                let innerHTML = `<span style="opacity:0.5; font-size:0.6rem; margin-bottom:2px;">${i}</span>`;
+
+                if (dayMap[i]) {
+                    cell.classList.add('has-data');
+                    innerHTML += `<span class="val-badge">${dayMap[i].toFixed(0)}</span>`;
+                    cell.title = `Total: ${dayMap[i].toFixed(1)} Ton`;
+                    cell.onclick = () => {
+                        const wasSelected = cell.classList.contains('selected');
+                        document.querySelectorAll('.cal-day').forEach(c => c.classList.remove('selected'));
+                        if (!wasSelected) {
+                            cell.classList.add('selected');
+                            const selectedDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                            renderDeptTables(selectedDateStr);
+                            renderDeptDetailByDate(selectedDateStr);
+                        } else {
+                            renderDeptTables(null);
+                            document.getElementById('dept-detail-body').innerHTML = '<tr><td colspan="2" style="text-align:center; color:#64748b;">Click a Bar to see details</td></tr>';
+                        }
+                    };
+                } else {
+                    cell.style.opacity = '0.5';
+                    innerHTML += `<span style="font-size:0.7rem;">-</span>`;
+                }
+                cell.innerHTML = innerHTML;
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- NEW DEPT ANALYTICS LOGIC ---
+
+        // Main orchestrator for Dept Tables (called by Slicer & Calendar Click)
+        function renderDeptTables(selectedDateStr = null) {
+            const allData = window.cachedRawData;
+            if (!allData) return;
+
+            // 1. Filter Data (By Date or Month)
+            let sourceData;
+            let rangeLabel;
+
+            if (selectedDateStr) {
+                sourceData = allData.filter(d => {
+                    const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                    return iso === selectedDateStr;
+                });
+                rangeLabel = selectedDateStr;
+            } else {
+                const selValue = document.getElementById('mini-month-selector') ? document.getElementById('mini-month-selector').value : null;
+                if (selValue && selValue !== 'ALL') {
+                    const parts = selValue.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    sourceData = allData.filter(d => {
+                        const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                        return dt.getFullYear() === year && dt.getMonth() === month;
+                    });
+                    rangeLabel = new Date(year, month, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                } else {
+                    sourceData = allData;
+                    rangeLabel = "ALL TIME";
+                }
+            }
+
+            // Clean UNKNOWN
+            sourceData = sourceData.filter(d => {
+                const raw = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return raw !== "UNKNOWN" && raw !== "";
+            });
+
+            // 2. Aggregate by DEPT
+            const deptMap = {};
+            sourceData.forEach(d => {
+                const rawM = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                const m = String(rawM).toUpperCase();
+                deptMap[m] = (deptMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+            });
+
+            // 3. Render Middle Chart (Summary)
+            if (charts.deptSummary) charts.deptSummary.destroy();
+
+            const deptList = Object.entries(deptMap).sort((a, b) => b[1] - a[1]);
+            const labels = deptList.map(d => d[0]);
+            const data = deptList.map(d => d[1]);
+
+            const ctx = document.getElementById('dept-summary-chart').getContext('2d');
+
+            charts.deptSummary = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ton',
+                        data: data,
+                        backgroundColor: '#bc13fe', // Neon Purple
+                        borderColor: '#00f3ff',     // Neon Blue border
+                        borderWidth: 1,
+                        barPercentage: 0.6,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { label: (ctx) => ctx.raw.toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' Ton' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(0, 243, 255, 0.1)' },
+                            ticks: { color: '#94a3b8', font: { size: 9 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#fff', font: { family: 'Orbitron', weight: 'bold', size: 10 } }
+                        }
+                    },
+                    onClick: (e) => {
+                        const points = charts.deptSummary.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+                        if (points.length) {
+                            const firstPoint = points[0];
+                            const label = charts.deptSummary.data.labels[firstPoint.index];
+                            renderDeptDetail(label, sourceData);
+                        }
+                    }
+                }
+            });
+
+            // Clear Detail Table initially
+            document.querySelector('.chart-title span i:nth-child(1)').innerText = `📝 MATERIAL DETAILS`;
+            document.getElementById('dept-detail-body').innerHTML = `<tr><td colspan="2" style="text-align:center; color:#64748b;">Click a Bar to see details</td></tr>`;
+        }
+
+        function renderDeptDetail(deptName, currentSourceData) {
+            const tbody = document.getElementById('dept-detail-body');
+            const data = currentSourceData.filter(d => {
+                const rawM = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                return String(rawM).toUpperCase() === deptName;
+            });
+
+            // Aggregate Materials for this Dept
+            const matMap = {};
+            data.forEach(d => {
+                const rawMat = d.NAMA_MATERIAL || d.Material || "Unknown";
+                const m = normalizeMaterial(rawMat); // Use existing normalizer
+                matMap[m] = (matMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+            });
+
+            const matList = Object.entries(matMap).sort((a, b) => b[1] - a[1]);
+
+            tbody.innerHTML = '';
+            if (matList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#64748b;">No Details</td></tr>`;
+                return;
+            }
+
+            matList.forEach(([mat, total]) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="color:#94a3b8; font-size:0.8rem;">${mat}</td>
+                    <td style="color:#fbbf24; font-weight:700; text-align:right;">${total.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelector('.chart-title span i:nth-child(1)').innerText = `📝 ${deptName} DETAILS`;
+        }
+
+        // --- NEW DEPT TREND LOGIC (ROW 3) ---
+
+        function renderDeptDetailByDate(dateStr) {
+            const allData = window.cachedRawData; if (!allData) return;
+            const data = allData.filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}` === dateStr;
+            });
+            const matMap = {};
+            data.forEach(d => { const m = normalizeMaterial(d.NAMA_MATERIAL || d.Material || "Unknown"); matMap[m] = (matMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000); });
+            const sorted = Object.entries(matMap).sort((a, b) => b[1] - a[1]);
+            const tbody = document.getElementById('dept-detail-body');
+            tbody.innerHTML = '';
+            if (sorted.length > 0) {
+                sorted.forEach(([mat, total]) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td style="color:#94a3b8; font-size:0.8rem;">${mat}</td><td style="color:#fbbf24; font-weight:700; text-align:right;">${total.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</td>`;
+                    tbody.appendChild(tr);
+                });
+                document.querySelector('.chart-title span i:nth-child(1)').innerText = `📝 DAILY DETAILS`;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#64748b;">No Activity</td></tr>`;
+            }
+        }
+
+        function renderDeptTrend(forceDept = null, forceScale = null) {
+            const allData = window.cachedRawData;
+            if (!allData || allData.length === 0) return;
+
+            // 1. Get Selections
+            const deptSel = document.getElementById('trend-dept-slicer');
+            const scaleSel = document.getElementById('trend-period-slicer');
+
+            // Populate Dept Slicer if empty
+            if (deptSel.options.length <= 1) { // Only "ALL" exists
+                const depts = [...new Set(allData.map(d => {
+                    const raw = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                    return String(raw).toUpperCase();
+                }))].sort();
+
+                depts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.innerText = d;
+                    deptSel.appendChild(opt);
+                });
+            }
+
+            const deptFilter = forceDept || deptSel.value;
+            const scale = forceScale || scaleSel.value; // D, W, M
+
+            // 2. Filter by Dept
+            let filteredData = allData.filter(d => {
+                const raw = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return raw !== "UNKNOWN" && raw !== "";
+            });
+
+            if (deptFilter !== 'ALL') {
+                filteredData = allData.filter(d => {
+                    const raw = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                    return String(raw).toUpperCase() === deptFilter;
+                });
+            }
+
+            // 3. Aggregate by Scale (Reuse renderLogAnalytics logic or similar)
+            const groups = {};
+            const metrics = ['QTY_TERIMA', 'QTY']; // Fields to sum
+
+            filteredData.forEach(item => {
+                const date = DataAggregator.parseDate(item.TANGGAL || item.Tgl);
+                let key;
+
+                if (scale === 'W') {
+                    const d = new Date(date); d.setHours(0, 0, 0, 0);
+                    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                    const weekNo = Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
+                    key = `W${weekNo}-${d.getFullYear()}`;
+                } else if (scale === 'M') {
+                    // Use first day of month for sorting/grouping key, but format as "Month Year" for display
+                    // We use a comparable key for sorting first: YYYY-MM
+                    key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                } else { // DAILY
+                    key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                }
+
+                if (!groups[key]) {
+                    groups[key] = { key, count: 0, sortDate: date.getTime() };
+                    metrics.forEach(m => groups[key][m] = 0);
+                }
+                groups[key].count++;
+                metrics.forEach(m => groups[key][m] += parseFloat(item[m] || item['QTY'] || 0) || 0);
+            });
+
+            const agg = Object.values(groups).sort((a, b) => a.sortDate - b.sortDate); // Chronological Sort
+
+            // Construct Labels
+            const labels = agg.map(a => {
+                if (scale === 'M') {
+                    // Convert YYYY-MM back to Date object for formatting
+                    const [y, m] = a.key.split('-');
+                    const d = new Date(parseInt(y), parseInt(m) - 1, 1);
+                    return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                }
+                return a.key;
+            });
+            const values = agg.map(a => (a.QTY_TERIMA + a.QTY) / 1000);
+
+            // 4. Render Chart
+            const getCtx = (id) => document.getElementById(id).getContext('2d');
+            if (charts.deptTrend) charts.deptTrend.destroy();
+
+            const borderColor = deptFilter === 'ALL' ? '#00f3ff' : '#bc13fe'; // Blue for All, Purple for Dept
+            const bgColor = deptFilter === 'ALL' ? 'rgba(0,243,255,0.1)' : 'rgba(188, 19, 254, 0.1)';
+
+            charts.deptTrend = new Chart(getCtx('chart-dept-trend'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Ton',
+                        data: values,
+                        borderColor: borderColor,
+                        backgroundColor: bgColor,
+                        fill: true,
+                        pointRadius: scale === 'D' ? 0 : 3, // Points for W/M
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(0, 243, 255, 0.05)' },
+                            ticks: { font: { size: 9 }, color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 8 },
+                                maxRotation: 45,
+                                autoSkip: true,
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false } // Custom HTML Header used
+                    }
+                }
+            });
+        }
+
+        // --- DEPT COMPARISON LOGIC (ROW 4) ---
+
+        function renderDeptComparison(forceMonth = null) {
+            const allData = window.cachedRawData;
+            if (!allData || allData.length === 0) return;
+
+            // 1. Get/Populate Month Slicer
+            const monthSel = document.getElementById('comp-month-selector');
+
+            if (monthSel.options.length === 0) {
+                const uniqueMonths = [...new Set(allData.map(d => {
+                    const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                }))].filter(m => !m.startsWith('2001')).sort().reverse();
+
+                uniqueMonths.forEach(m => {
+                    const dateObj = new Date(m + "-01");
+                    const label = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); // Localized
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.innerText = label;
+                    monthSel.appendChild(opt);
+                });
+
+                // Select first by default if available
+                if (uniqueMonths.length > 0) monthSel.selectedIndex = 0;
+            }
+
+            const selectedMonth = forceMonth || monthSel.value;
+            if (!selectedMonth) return;
+
+            // 2. Filter Data by Month AND Clean "UNKNOWN"
+            const [year, month] = selectedMonth.split('-').map(Number);
+
+            const filteredData = allData.filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                const isMatch = dt.getFullYear() === year && dt.getMonth() === (month - 1);
+
+                // CLEAN DATA: Remove UNKNOWN
+                const rawDept = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                const isValidOne = rawDept !== "UNKNOWN" && rawDept !== "";
+
+                return isMatch && isValidOne;
+            });
+
+            // 3. Aggregate by Dept
+            const deptMap = {};
+            filteredData.forEach(d => {
+                const rawM = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                const m = String(rawM).toUpperCase();
+                deptMap[m] = (deptMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+            });
+
+            // Sort Descending
+            const sorted = Object.entries(deptMap).sort((a, b) => b[1] - a[1]);
+            const labels = sorted.map(s => s[0]);
+            const values = sorted.map(s => s[1]);
+
+            // 4. Render Chart
+            const getCtx = (id) => document.getElementById(id).getContext('2d');
+            if (charts.deptComp) charts.deptComp.destroy();
+
+            // Gradient for Sexy Look
+            const ctxComp = getCtx('chart-dept-comparison');
+            const gradient = ctxComp.createLinearGradient(0, 0, 400, 0);
+            gradient.addColorStop(0, '#00f3ff'); // Blue
+            gradient.addColorStop(0.5, '#bc13fe'); // Purple
+            gradient.addColorStop(1, '#fbbf24'); // Amber
+
+            charts.deptComp = new Chart(ctxComp, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ton',
+                        data: values,
+                        backgroundColor: gradient,
+                        borderColor: 'transparent',
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        hoverBackgroundColor: '#fff'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal Bar for better comp
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { label: (ctx) => ctx.raw.toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' Ton' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.02)' },
+                            ticks: { color: '#e2e8f0', font: { size: 10, weight: 'bold' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { display: false } // Minimalist
+                        }
+                    },
+                    onClick: (e) => {
+                        const points = charts.deptComp.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+                        if (points.length) {
+                            const idx = points[0].index;
+                            const dept = labels[idx];
+                            showComparisonDetail(dept, selectedMonth);
+                        }
+                    }
+                }
+            });
+
+            // 5. Render Detail List (Right Column)
+            renderDeptComparisonList(sorted, selectedMonth);
+        }
+
+        function renderDeptComparisonList(sortedData, monthKey) {
+            const tbody = document.getElementById('comp-detail-body');
+            tbody.innerHTML = '';
+
+            if (sortedData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #64748b; padding: 20px;">No Data / All Unknown</td></tr>`;
+                return;
+            }
+
+            sortedData.forEach(([dept, val]) => {
+                const tr = document.createElement('tr');
+                tr.className = 'clickable-row'; // Enable CSS interactions
+                tr.onclick = () => showComparisonDetail(dept, monthKey); // Click to modal
+
+                tr.innerHTML = `
+                    <td style="color: #00f3ff; font-weight: 700; font-size: 0.9rem;">${dept}</td>
+                    <td style="text-align: right; color: #fff; font-family: 'Rajdhani'; font-size: 1rem;">${val.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function showComparisonDetail(deptName, monthKey) {
+            const allData = window.cachedRawData;
+            const [year, month] = monthKey.split('-').map(Number);
+
+            // Filter specific Data
+            const detailData = allData.filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                const isMatch = dt.getFullYear() === year && dt.getMonth() === (month - 1);
+                const rawDept = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return isMatch && rawDept === deptName;
+            });
+
+            // Aggregate by Material
+            const matMap = {};
+            detailData.forEach(d => {
+                const rawMat = d.NAMA_MATERIAL || d.Material || "Unknown";
+                const m = normalizeMaterial(rawMat);
+                matMap[m] = (matMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+            });
+
+            const matList = Object.entries(matMap).sort((a, b) => b[1] - a[1]);
+
+            // Populate Modal
+            let html = `
+                <div style="padding: 20px;">
+                <h3 style="color:#fbbf24; margin-bottom:15px; border-bottom:1px solid rgba(251, 191, 36, 0.3); padding-bottom:10px;">
+                    ${deptName} <span style="font-size:0.8em; color:#94a3b8;">(${monthKey})</span>
+                </h3>
+                <div class="table-wrapper" style="max-height: 400px; overflow-y:auto;">
+                <table class="scifi-table"><thead>
+                    <tr><th>MATERIAL</th><th style="text-align:right;">TOTAL (TON)</th></tr>
+                </thead><tbody>`;
+
+            matList.forEach(([mat, qty]) => {
+                html += `<tr>
+                    <td style="color: #cbd5e1;">${mat}</td>
+                    <td style="text-align:right; font-weight:bold; color:#00f3ff;">${qty.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table></div></div>`;
+
+            const modal = document.getElementById('detail-modal');
+            const content = modal.querySelector('.modal-content');
+
+            content.innerHTML = `<span class="close-btn" onclick="document.getElementById('detail-modal').style.display='none'">&times;</span>` + html;
+            modal.style.display = 'flex';
+        }
+
+        function toggleFocusMode() {
+            const isFocus = document.body.classList.toggle('focus-mode');
+            const btn = document.getElementById('btn-focus-toggle');
+            const icon = document.getElementById('focus-icon');
+            const text = document.getElementById('focus-text');
+
+            if (isFocus) {
+                btn.classList.add('active');
+                icon.innerText = "🔍";
+                text.innerText = "EXIT FOCUS";
+            }
+
+            else {
+                btn.classList.remove('active');
+                icon.innerText = "🖥️";
+                text.innerText = "FULL SCREEN";
+            }
+
+            // Force charts to resize to new container width/height
+            setTimeout(() => {
+                if (cachedResponse) {
+                    renderProcessAnalytics(cachedResponse.proc);
+                    renderLogAnalytics(cachedResponse.log);
+                }
+            }
+
+                , 100);
+        }
+
+        // --- MODAL LOGIC ---
+        // Helper to calculate age in days
+        function calculateAge(dateStr) {
+            if (!dateStr) return "-";
+            const date = new Date(dateStr);
+            if (isNaN(date)) return dateStr;
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays === 0 ? "Hari Ini" : diffDays + " Hari";
+        }
+
+        function showHasilDetail() {
+            if (!cachedResponse || !cachedResponse.fifo) return;
+            const data = cachedResponse.fifo;
+
+            const html = `<table class="scifi-table"><thead><tr><th>UMUR</th><th>ENDING STOCK</th><th>LOKASI</th><th>STATUS</th></tr></thead><tbody>${data.map(row => `<tr><td style="color:#94a3b8;">${calculateAge(row.tanggal)
+                }</td><td style="color:#00f3ff; font-weight:700;">${(parseFloat(row.ending) || 0).toLocaleString('id-ID')
+                }</td><td>${toTitleCase(row.lokasi)
+                }</td><td>${toTitleCase(row.status)
+                }</td></tr>`).join('')
+                }</tbody></table>`;
+            openModal("RINCIAN HASIL AYAK (END-STOCK)", html);
+        }
+
+        function showBahanDetail() {
+            if (!cachedResponse || !cachedResponse.log) return;
+            const pending = cachedResponse.log.filter(row => String(row.STATUS_PROSES || "").toUpperCase() !== "DONE");
+
+            const html = pending.length > 0 ? `<table class="scifi-table"><thead><tr><th>UMUR</th><th>MATERIAL</th><th>QTY PENDING</th><th>STATUS</th></tr></thead><tbody>${pending.map(row => `<tr><td style="color:#94a3b8;">${calculateAge(row.TANGGAL || row.Tgl)
+                }</td><td style="color:#00f3ff;">${normalizeMaterial(row.NAMA_MATERIAL || row.Material || "")
+                }</td><td style="font-weight:700;">${(parseFloat(row.QTY_TERIMA || row.QTY || 0)).toLocaleString('id-ID')
+                }</td><td style="color:#fbbf24;">${toTitleCase(row.STATUS_PROSES || row.Status || "-")
+                }</td></tr>`).join('')
+                }</tbody></table>` : `<div style="padding:40px; text-align:center; color:#64748b;">No pending material found. All processed.</div>`;
+
+            openModal("RINCIAN BAHAN AYAK (PENDING)", html);
+        }
+
+        function openModal(title, content) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = content;
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function (event) {
+            const modal = document.getElementById('detail-modal');
+
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetchBinSweepingData();
+                renderDashboard(response);
+            }
+
+            catch (err) {
+                console.error("Stream Failed:", err);
+            }
+        });
+
+        window.onload = () => {
+            try {
+                // Main data fetch is already in DOMContentLoaded, 
+                // but we ensure overlay hides once everything is ready.
+            }
+
+            catch (err) {
+                console.error("Init failed:", err);
+            }
+
+            finally {
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) overlay.classList.add('hidden');
+                }
+
+                    , 1200);
+            }
+        }
+
+            ;
+
+        // OVERRIDE: Update Mini Calendar to support Daily Details Click
+        renderMiniCalendar = function (date, allData) {
+            if (!allData || allData.length === 0) return;
+
+            // 1. Init & Read Dept Slicer
+            const deptSel = document.getElementById('calendar-dept-slicer');
+            if (deptSel && deptSel.options.length <= 1) { // Populate if empty
+                const depts = [...new Set(allData.map(d => {
+                    const raw = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                    return String(raw).toUpperCase();
+                }))].sort();
+                depts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.innerText = d;
+                    deptSel.appendChild(opt);
+                });
+            }
+            const deptFilter = deptSel ? deptSel.value : 'ALL';
+
+            // 2. Filter Data
+            let filteredData = allData;
+            if (deptFilter !== 'ALL') {
+                filteredData = allData.filter(d => {
+                    const raw = d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN";
+                    return String(raw).toUpperCase() === deptFilter;
+                });
+            }
+
+            // 3. Date Logic
+            let year, month;
+            const selValue = document.getElementById('mini-month-selector').value;
+
+            if (selValue && selValue !== 'ALL') {
+                const parts = selValue.split('-');
+                year = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1;
+            } else {
+                const now = new Date();
+                year = now.getFullYear();
+                month = now.getMonth();
+            }
+
+            const grid = document.getElementById('raw-calendar');
+            grid.innerHTML = '';
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+
+            // 4. Map Data (Using filteredData)
+            const dayMap = {};
+            filteredData.forEach(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                if (dt.getFullYear() === year && dt.getMonth() === month) {
+                    dayMap[dt.getDate()] = (dayMap[dt.getDate()] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+                }
+            });
+
+            for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-day';
+                if (isWeekend(i, month, year)) cell.classList.add('holiday');
+
+                let innerHTML = `<span style="opacity:0.5; font-size:0.6rem; margin-bottom:2px;">${i}</span>`;
+
+                if (dayMap[i]) {
+                    cell.classList.add('has-data');
+                    innerHTML += `<span class="val-badge">${dayMap[i].toFixed(0)}</span>`;
+                    cell.title = `Total: ${dayMap[i].toFixed(1)} Ton`;
+                    cell.onclick = () => {
+                        const wasSelected = cell.classList.contains('selected');
+                        document.querySelectorAll('.cal-day').forEach(c => c.classList.remove('selected'));
+                        if (!wasSelected) {
+                            cell.classList.add('selected');
+                            const selectedDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                            renderDeptTables(selectedDateStr);
+                            if (typeof renderDeptDetailByDate === 'function') {
+                                renderDeptDetailByDate(selectedDateStr);
+                            }
+                        } else {
+                            renderDeptTables(null);
+                            document.getElementById('dept-detail-body').innerHTML = '<tr><td colspan="2" style="text-align:center; color:#64748b;">Click a Bar to see details</td></tr>';
+                        }
+                    };
+                } else {
+                    cell.style.opacity = '0.5';
+                    innerHTML += `<span style="font-size:0.7rem;">-</span>`;
+                }
+                cell.innerHTML = innerHTML;
+                grid.appendChild(cell);
+            }
+        };
+    </script>
+
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - RM Staffel Analys</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        /* Navbar Tweaks */
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+        }
+
+        /* PERIOD SLICER - GLOBAL */
+        .period-slicer-container {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.05), rgba(147, 51, 234, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .period-slicer-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00f3ff, #9333ea, #ec4899, #00f3ff);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(10px);
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .period-slicer-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #00f3ff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .period-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: rgba(0, 243, 255, 0.8);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .apply-period-btn {
+            background: linear-gradient(135deg, #00f3ff, #9333ea);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .apply-period-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .apply-period-btn:hover::before {
+            left: 100%;
+        }
+
+        .apply-period-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.4);
+        }
+
+        /* CHART CONTAINER */
+        .chart-container {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.6));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00f3ff, #9333ea, #ec4899, #00f3ff);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            filter: blur(10px);
+            transition: opacity 0.4s ease;
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+        }
+
+        .chart-container:hover::after {
+            opacity: 0.4;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #00f3ff, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .view-mode-selector {
+            display: flex;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .view-mode-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .view-mode-btn.active {
+            background: linear-gradient(135deg, #00f3ff, #9333ea);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        .view-mode-btn:hover:not(.active) {
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+        }
+
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 25px;
+        }
+
+        /* INSIGHT PANEL */
+        .insight-panel {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.05), rgba(147, 51, 234, 0.05));
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .insight-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #00f3ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insight-content {
+            color: #e2e8f0;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .insight-metric {
+            display: inline-block;
+            background: rgba(0, 243, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 6px;
+            color: #00f3ff;
+            font-weight: 700;
+            margin: 0 4px;
+        }
+
+        .insight-trend-up {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .insight-trend-down {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .insight-neutral {
+            color: #fbbf24;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body style="background-color: #050505; color: #fff;">
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">LOADING ANALYS DATA...</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL KEMBALI DIHAPUS -->
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT SECTION -->
+    <section id="main-content" style="padding:50px 60px;">
+        <div class="section-header"
+            style="margin-bottom:40px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-family:'Orbitron'; font-size:2rem; color:#fff;">RM STAFFEL ANALYS</h2>
+                <div style="color:#64748b;">Advanced team performance analytics and insights</div>
+            </div>
+        </div>
+
+        <!-- GLOBAL PERIOD SLICER -->
+        <div class="period-slicer-container">
+            <div class="period-slicer-title">
+                📅 SELECT PERIOD
+            </div>
+            <div class="period-inputs">
+                <div class="input-group">
+                    <label>Start Date</label>
+                    <input type="date" id="start-date" />
+                </div>
+                <div class="input-group">
+                    <label>End Date</label>
+                    <input type="date" id="end-date" />
+                </div>
+                <div class="input-group" style="display:flex; align-items:flex-end;">
+                    <button class="apply-period-btn" onclick="applyPeriodFilter()">
+                        🔍 Apply Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIM BADRUN CHART -->
+        <div class="chart-container" id="chart-badrun-container">
+            <div class="chart-header">
+                <div class="chart-title">🔧 TIM BADRUN PERFORMANCE</div>
+                <div class="view-mode-selector">
+                    <button class="view-mode-btn active" onclick="changeViewMode('badrun', 'daily')">Daily</button>
+                    <button class="view-mode-btn" onclick="changeViewMode('badrun', 'weekly')">Weekly</button>
+                    <button class="view-mode-btn" onclick="changeViewMode('badrun', 'monthly')">Monthly</button>
+                </div>
+            </div>
+            <div class="chart-canvas-wrapper">
+                <canvas id="chart-badrun"></canvas>
+            </div>
+            <div class="insight-panel" id="insight-badrun">
+                <div class="insight-title">💡 AI INSIGHTS</div>
+                <div class="insight-content" id="insight-content-badrun">
+                    Click on any data point to see detailed analysis...
+                </div>
+            </div>
+        </div>
+
+        <!-- TIM KARTONO CHART -->
+        <div class="chart-container" id="chart-kartono-container">
+            <div class="chart-header">
+                <div class="chart-title">🔧 TIM KARTONO PERFORMANCE</div>
+                <div class="view-mode-selector">
+                    <button class="view-mode-btn active" onclick="changeViewMode('kartono', 'daily')">Daily</button>
+                    <button class="view-mode-btn" onclick="changeViewMode('kartono', 'weekly')">Weekly</button>
+                    <button class="view-mode-btn" onclick="changeViewMode('kartono', 'monthly')">Monthly</button>
+                </div>
+            </div>
+            <div class="chart-canvas-wrapper">
+                <canvas id="chart-kartono"></canvas>
+            </div>
+            <div class="insight-panel" id="insight-kartono">
+                <div class="insight-title">💡 AI INSIGHTS</div>
+                <div class="insight-content" id="insight-content-kartono">
+                    Click on any data point to see detailed analysis...
+                </div>
+            </div>
+        </div>
+
+        <!-- TIM KULHAR CHART -->
+        <div class="chart-container" id="chart-kulhar-container">
+            <div class="chart-header">
+                <div class="chart-title">🔧 TIM KULHAR PERFORMANCE</div>
+                <div class="view-mode-selector">
+                    <button class="view-mode-btn active" onclick="changeViewMode('kulhar', 'daily')">Daily</button>
+                    <button class="view-mode-btn" onclick="changeViewMode('kulhar', 'weekly')">Weekly</button>
+                    <button class="view-mode-btn" onclick="changeViewMode('kulhar', 'monthly')">Monthly</button>
+                </div>
+            </div>
+            <div class="chart-canvas-wrapper">
+                <canvas id="chart-kulhar"></canvas>
+            </div>
+            <div class="insight-panel" id="insight-kulhar">
+                <div class="insight-title">💡 AI INSIGHTS</div>
+                <div class="insight-content" id="insight-content-kulhar">
+                    Click on any data point to see detailed analysis...
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <script src="js/rm-staffel-analys.js"></script>
+</body>
+
+</html>

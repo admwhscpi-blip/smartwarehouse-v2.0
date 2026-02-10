@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - About & Layout</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/style-main.css">
+    <link rel="stylesheet" href="homepage-style.css">
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-rental-detail.css">
+    <link rel="stylesheet" href="css/style-rm-detail.css">
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+
+    <style>
+        body {
+            background-color: #050510;
+            color: #fff;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        .about-container {
+            padding: 30px;
+            min-height: calc(100vh - 80px);
+            /* Ensure explicit height */
+            position: relative;
+            background: #050510;
+            /* Force bg */
+        }
+
+        /* FIX: Defined wrapper styles in case they are missing globally */
+        .sim-luxury-wrapper {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            display: block !important;
+            /* Force Show */
+            opacity: 1 !important;
+            /* Force Opacity */
+        }
+
+        .lux-header {
+            margin-bottom: 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .lux-title {
+            font-family: 'Orbitron';
+            color: #fff;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .lux-subtitle {
+            font-family: 'Rajdhani';
+            color: #00f3ff;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        /* Force Map Container Visibility */
+        #layout-map-container {
+            display: block !important;
+            visibility: visible !important;
+            height: 700px !important;
+            /* Force explicit height */
+            background-color: #0b0d14;
+            /* Slightly lighter than black */
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-actions">
+            <button class="btn-cta-secondary" id="btn-fullscreen"
+                style="padding: 10px 20px !important; font-size: 0.85rem !important;">
+                <i class="fas fa-expand"></i> FULL SCREEN
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="about-container">
+        <!-- DEBUG MESSAGE (Hidden by default, proves HTML loaded) -->
+        <!-- Map Container -->
+        <div id="view-layout" style="width:100%;">
+            <div style="color:#666; text-align:center; padding:50px;">
+                Loading Site Masterplan... If this persists, JS failed.
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app-config.js"></script>
+    <script src="js/app-rm-detail.js"></script>
+    <script src="js/app-rental-f.js"></script>
+    <script src="js/app-layout.js"></script>
+
+    <script>
+        console.log("ABOUT PAGE: JS START");
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("ABOUT PAGE: DOM Loaded");
+
+            setTimeout(() => {
+                const el = document.getElementById('view-layout');
+                if (el) {
+                    console.log("Found #view-layout, initializing Service...");
+                    if (window.LayoutService) {
+                        try {
+                            LayoutService.init();
+                            console.log("LayoutService.init() called.");
+                        } catch (e) {
+                            console.error("LayoutService Error:", e);
+                            el.innerHTML = '<h2 style="color:red">Error initializing Map: ' + e.message + '</h2>';
+                        }
+                    } else {
+                        console.error("LayoutService NOT defined.");
+                        el.innerHTML = '<h2 style="color:red">Error: LayoutService Missing</h2>';
+                    }
+                } else {
+                    console.error("#view-layout NOT FOUND");
+                }
+            }, 100); // Slight delay to ensure scripts parsed
+
+            // FULLSCREEN TOGGLE LOGIC
+            const fsBtn = document.getElementById('btn-fullscreen');
+            if (fsBtn) {
+                fsBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                        });
+                        fsBtn.innerHTML = '<i class="fas fa-compress"></i> EXIT FULL SCREEN';
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                            fsBtn.innerHTML = '<i class="fas fa-expand"></i> FULL SCREEN';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

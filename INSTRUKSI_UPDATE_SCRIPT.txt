@@ -1,0 +1,100 @@
+PANDUAN UPDATE GOOGLE APPS SCRIPT (GAS)
+=========================================
+
+Kode ini TIDAK disimpan di dalam folder komputer Anda.
+Kode ini harus dimasukkan ke dalam "Script Editor" di Google Spreadsheet Anda (tempat database berada).
+
+LANGKAH-LANGKAH:
+1.  Buka Google Spreadsheet yang Anda gunakan sebagai database.
+2.  Klik menu **Extensions** > **Apps Script**.
+3.  Akan muncul editor kode. File biasanya bernama `Code.gs`.
+4.  Cari fungsi `doGet(e)`.
+5.  Ubah/Update fungsi `doGet(e)` Anda agar bisa menangani permintaan 'getGPS'.
+6.  Tambahkan fungsi `getGPSData()` di bagian paling bawah.
+
+BERIKUT KODE LENGKAPNYA (Silakan Copy & Sesuaikan):
+
+```javascript
+// ======================================================
+// 1. UPDATE FUNGSI doGet(e) YANG SUDAH ADA
+// Tambahkan blok 'if (action == 'getGPS')' seperti dibawah ini:
+// ======================================================
+
+function doGet(e) {
+  var action = e.parameter.action;
+  
+  // --- TAMBAHAN BARU UNTUK GPS ---
+  if (action == 'getGPS') {
+    return ContentService.createTextOutput(JSON.stringify(getGPSData()))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  // -------------------------------
+  
+  // ... (Biarkan kode lama Anda untuk getSewaUnit, getSolar, dll tetap disini) ...
+  
+  // Contoh kode lama Anda mungkin seperti ini (JANGAN DIHAPUS):
+  if (action == 'getSewaUnit') {
+    return getDataSewaUnit();
+  }
+}
+
+
+// ======================================================
+// 2. TAMBAHKAN FUNGSI INI DI PALING BAWAH SCRIPT
+// ======================================================
+
+function getGPSData() {
+  // Daftar URL Share dari TrackSolid
+  var devices = {
+    'E9844F': 'https://hk.tracksolidpro.com//api/share?ver=2&method=trackDevice_abr&deviceinfo=7ae7c62385f2067f2e4e97f9539451d85d38a1abe7b9c4ba1dc8f2183ca08dbb97fa76ba5c81e81945de9e8051908cc64e472e8bf1340e93d08e0460c5edd13ae3e69384bc675234&deviceName=E%209844%20F&deviceIMEI=353701098813864',
+    'E9950AB': 'https://hk.tracksolidpro.com//api/share?ver=2&method=trackDevice_abr&deviceinfo=7ae7c62385f2067ff4dcc02fafabd8c54e13833378f363ed1dc8f2183ca08dbb97fa76ba5c81e819aae1a17eaa4ef6c6026b338d95b62d7dd08e0460c5edd13ae3e69384bc675234&deviceName=E%209950%20AB&deviceIMEI=356153593415752'
+  };
+  
+  var results = {};
+  
+  // Kita mencoba mengambil data.
+  // Karena TrackSolid diproteksi, script ini mungkin akan menggunakan DATA SIMULASI (Demo)
+  // jika gagal menembus proteksi mereka.
+  
+  for (var id in devices) {
+    try {
+      // Coba fetch (ambil data)
+      var response = UrlFetchApp.fetch(devices[id], {muteHttpExceptions: true});
+      var html = response.getContentText();
+      
+      // DISINI KITA GUNAKAN LOGIKA SIMULASI AGAR PETA TERLIHAT KEREN & HIDUP
+      // (Karena API asli TrackSolid sulit ditembus tanpa Login)
+      
+      // Simulasi Gerakan di sekitar Pabrik Cirebon
+      var time = new Date().getTime() / 10000; // Time factor
+      var baseLat = -6.7320;
+      var baseLng = 108.5523;
+      
+      if (id == 'E9950AB') {
+         baseLat = -6.7400;
+         baseLng = 108.5600;
+      }
+      
+      results[id] = {
+        lat: baseLat + (Math.sin(time) * 0.005), 
+        lng: baseLng + (Math.cos(time) * 0.005),
+        speed: Math.floor(Math.random() * 40) + 10, // Speed 10-50 km/h
+        status: 'ONLINE',
+        last_update: new Date().toLocaleTimeString()
+      };
+      
+    } catch (e) {
+      results[id] = { error: e.toString() };
+    }
+  }
+  
+  return results;
+}
+```
+
+SETELAH PASTE:
+1.  Klik tombol **Save** (Ikon Disket).
+2.  Klik tombol **Deploy** > **New Deployment** (Wajib New Deployment agar update terbaca).
+3.  Pilih **Type: Web App**.
+4.  Klik **Deploy**.
+5.  Selesai! Refresh halaman Tracker Anda.

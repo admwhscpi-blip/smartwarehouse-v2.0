@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHSMART - Dashboard</title>
+
+    <!-- CORE STYLES (V2 DASHBOARD AESTHETIC) -->
+    <link rel="stylesheet" href="css/style-main.css">
+    <link rel="stylesheet" href="css/style-warehouse.css">
+    <link rel="stylesheet" href="css/style-warehouse-3d.css">
+    <link rel="stylesheet" href="css/style-cpo.css">
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-rental-detail.css">
+
+    <!-- ISOLATED RM V2 STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+
+    <!-- LIBS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #050510;
+            color: white;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Navigation Bar Override for Dashboard */
+        .dash-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(10, 15, 25, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dash-brand {
+            font-family: 'Orbitron';
+            font-weight: 700;
+            color: #00f3ff;
+            font-size: 1.2rem;
+        }
+
+        .dash-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .dash-btn {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .dash-btn:hover,
+        .dash-btn.active {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .module-container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+
+    <!-- DASHBOARD NAVIGATION -->
+    <div class="dash-nav">
+        <div class="dash-brand">📦 WHSMART <span
+                style="font-size:0.8rem; background:#bc13fe; padding:2px 6px; border-radius:4px; margin-left:10px;">V2.0</span>
+        </div>
+        <div class="dash-links">
+            <a href="index.html" class="dash-btn">Home</a>
+            <a onclick="AppRouter.go('rm')" id="nav-rm" class="dash-btn">RM Stock</a>
+            <a onclick="AppRouter.go('cpo')" id="nav-cpo" class="dash-btn">CPO Tanks</a>
+            <a href="layout.html" class="dash-btn">Layout Map</a>
+        </div>
+    </div>
+
+    <!-- MAIN MODULE CONTAINER -->
+    <div id="app-modules" class="module-container">
+
+        <!-- MODULE: RM STOCK -->
+        <div id="module-rm" class="hidden">
+            <!-- Sub Nav -->
+            <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <button onclick="AppRouter.switchRMMode('live')" class="dash-btn active" id="btn-rm-live">📡 LIVE
+                    MONITOR</button>
+                <button onclick="AppRouter.switchRMMode('sim')" class="dash-btn" id="btn-rm-sim">🚀 FUTURE
+                    PROJECTION</button>
+            </div>
+
+            <!-- VIEW: LIVE -->
+            <div id="view-rm-live">
+                <!-- Global Stats -->
+                <div id="global-stats" class="stats-container">Loading Stats...</div>
+
+                <!-- Warehouse Units -->
+                <div class="section-title">Warehouse Units</div>
+                <div id="warehouse-display" class="warehouse-grid">Loading Units...</div>
+
+                <!-- Analytics -->
+                <div id="analytics-dashboard" style="margin-top: 40px;">
+                    <div class="section-title">Data Analytics Center</div>
+                    <div class="analytics-grid-row">
+                        <div class="card-analytics">
+                            <div class="analytics-header">
+                                <h3>🏆 Top Materials</h3>
+                            </div>
+                            <div id="top-items-table"></div>
+                        </div>
+                        <div class="card-analytics">
+                            <div class="analytics-header">
+                                <h3>📊 Category Distribution</h3>
+                            </div>
+                            <div id="category-chart-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SIMULATION -->
+            <div id="view-rm-sim" class="hidden">
+                <div class="card-analytics">
+                    <div class="section-title">RM Future Projection Engine</div>
+                    <div class="sim-controls" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                        <div class="control-group"><label>Target Material</label><select id="sim-material-select"
+                                class="control-select">
+                                <option>Loading...</option>
+                            </select></div>
+                        <div class="control-group"><label>Target Facility</label><select id="sim-warehouse-select"
+                                class="control-select">
+                                <option value="all">ALL FACILITIES</option>
+                            </select></div>
+                        <div class="control-group"><label>Start</label><input type="date" id="sim-start-date"
+                                class="control-input"></div>
+                        <div class="control-group"><label>End</label><input type="date" id="sim-end-date"
+                                class="control-input"></div>
+                        <div class="control-group"><button class="action-btn" onclick="SimService.runProjection()">+ RUN
+                                PROJECTION</button></div>
+                    </div>
+                    <div id="sim-results-area" style="display:none; margin-top:20px;">
+                        <canvas id="simChart" style="max-height:400px; width:100%"></canvas>
+                        <div class="sim-table-container" id="sim-master-table-wrapper"
+                            style="margin-top:20px; overflow-x:auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE: CPO TANKS -->
+        <div id="module-cpo" class="hidden">
+            <!-- Sub Nav -->
+            <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <button onclick="AppRouter.switchCPOMode('live')" class="dash-btn active" id="btn-cpo-live">📡 TANK
+                    MONITOR</button>
+                <button onclick="AppRouter.switchCPOMode('sim')" class="dash-btn" id="btn-cpo-sim">🚀 TANK
+                    SIMULATION</button>
+            </div>
+
+            <div id="view-cpo-live">
+                <div class="section-title">CPO Tank Farm Status</div>
+                <div id="cpo-tank-grid" class="warehouse-grid">Loading Tanks...</div>
+                <div class="card-analytics" style="margin-top:2rem;">
+                    <div id="cpo-table-container"></div>
+                </div>
+            </div>
+
+            <div id="view-cpo-sim" class="hidden">
+                <div class="card-analytics">
+                    <div class="section-title">CPO Stock Projection</div>
+                    <div class="sim-controls" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                        <div><label>Select Tank</label><select id="cpo-sim-tank-select" class="control-select"
+                                style="background:#222; color:#fff; padding:5px;">
+                                <option>Loading...</option>
+                            </select></div>
+                        <button class="action-btn" onclick="runCPOSimulation()"
+                            style="background:#00f3ff; border:none; padding:5px 15px; font-weight:bold;">PROJECT</button>
+                    </div>
+                    <div><canvas id="cpoSimChart" style="max-height:400px; width:100%"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODALS -->
+    <div id="detail-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Info</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('detail-modal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- CUSTOM LOGIC FOR V2 VISUALS & ROUTING -->
+    <script>
+        const AppRouter = {
+            init: function () {
+                const params = new URLSearchParams(window.location.search);
+                const module = params.get('module') || 'rm';
+                this.go(module);
+            },
+            go: function (name) {
+                document.getElementById('module-rm').classList.add('hidden');
+                document.getElementById('module-cpo').classList.add('hidden');
+                document.getElementById('nav-rm').classList.remove('active');
+                document.getElementById('nav-cpo').classList.remove('active');
+
+                if (name === 'rm') {
+                    document.getElementById('module-rm').classList.remove('hidden');
+                    document.getElementById('nav-rm').classList.add('active');
+                    this.injectRMRenderer(); // Force V2 Visuals
+                } else if (name === 'cpo') {
+                    document.getElementById('module-cpo').classList.remove('hidden');
+                    document.getElementById('nav-cpo').classList.add('active');
+                }
+            },
+            switchRMMode: function (mode) {
+                document.getElementById('view-rm-live').className = mode === 'live' ? '' : 'hidden';
+                document.getElementById('view-rm-sim').className = mode === 'sim' ? '' : 'hidden';
+                document.getElementById('btn-rm-live').className = mode === 'live' ? 'dash-btn active' : 'dash-btn';
+                document.getElementById('btn-rm-sim').className = mode === 'sim' ? 'dash-btn active' : 'dash-btn';
+            },
+            switchCPOMode: function (mode) {
+                document.getElementById('view-cpo-live').className = mode === 'live' ? '' : 'hidden';
+                document.getElementById('view-cpo-sim').className = mode === 'sim' ? '' : 'hidden';
+                document.getElementById('btn-cpo-live').className = mode === 'live' ? 'dash-btn active' : 'dash-btn';
+                document.getElementById('btn-cpo-sim').className = mode === 'sim' ? 'dash-btn active' : 'dash-btn';
+            },
+            injectRMRenderer: function () {
+                // Wait for UIService then Override
+                const check = setInterval(() => {
+                    if (typeof UIService !== 'undefined') {
+                        clearInterval(check);
+
+                        // OVERRIDE: Global Stats (3 Cards)
+                        UIService.renderGlobalStats = function (stats) {
+                            const container = document.getElementById('global-stats');
+                            const percentage = stats.percentage || 0;
+                            const stroke = percentage + ", 100";
+                            container.innerHTML = `
+                                <div class="stat-card">
+                                    <div class="stat-title">TOTAL OCCUPANCY</div>
+                                    <div class="stat-value" style="color:#00f3ff">${DataService.convertKgToTon(stats.totalFilled)} <span class="unit">TON</span></div>
+                                    <div class="stat-desc">Total Capacity: ${DataService.convertKgToTon(stats.totalCapacity)} TON</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-title">IDLE CAPACITY</div>
+                                    <div class="stat-value" style="color:#ff9e0b">${DataService.convertKgToTon(stats.totalSpace)} <span class="unit">TON</span></div>
+                                    <div class="stat-desc">Ready for Allocation</div>
+                                </div>
+                                <div class="stat-card" style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <div class="stat-title">UTILIZATION RATE</div>
+                                        <div class="stat-value">${percentage.toFixed(1)}%</div>
+                                        <div class="stat-desc" style="color:#ff9e0b">HIGH LOAD</div>
+                                    </div>
+                                    <div style="width:60px;">
+                                        <svg viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ff9e0b" stroke-width="3" stroke-dasharray="${stroke}"/></svg>
+                                    </div>
+                                </div>`;
+                        };
+
+                        // OVERRIDE: Warehouse Units (Vertical Bars + Grid)
+                        UIService.renderWarehouseCards = function (data) {
+                            const container = document.getElementById('warehouse-display');
+                            if (!container) return;
+                            let html = '';
+                            const maxCap = Math.max(...data.capacities) || 1;
+                            const MAX_H = 200;
+
+                            data.warehouses.forEach((name, index) => {
+                                const cap = data.capacities[index];
+                                let totalStock = 0;
+                                if (data.materials) {
+                                    data.materials.forEach(mat => {
+                                        if (mat.stocks && mat.stocks[index]) totalStock += mat.stocks[index];
+                                    });
+                                }
+                                const percent = cap > 0 ? (totalStock / cap) * 100 : 0;
+                                const h = (cap / maxCap) * MAX_H;
+                                const visualH = Math.max(h, 60);
+                                const isSafe = percent < 80;
+                                const fillClass = isSafe ? 'safe' : '';
+                                const capTon = (cap / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+                                html += `
+                                <div class="warehouse-card" style="height:${visualH + 80}px" onclick="UIService.openWarehouseDetail(App.data, ${index}, '${name}')">
+                                    <div class="wh-header">
+                                        <div class="wh-name">${name}</div>
+                                        <div class="wh-cap">Cap: ${capTon} TON</div>
+                                    </div>
+                                    <div class="wh-visual-bar" style="height:${visualH}px">
+                                        <div class="wh-fill ${fillClass}" style="height:${percent}%"></div>
+                                        <div class="wh-label-overlay">${Math.round(percent)}%</div>
+                                    </div>
+                                    <div class="wh-footer"></div>
+                                </div>`;
+                            });
+                            container.innerHTML = html;
+                        };
+
+                        // Trigger Initial Render if Data Ready
+                        if (App.data) UIService.renderDashboard(App.data);
+                    }
+                }, 100);
+            }
+        };
+
+        // CPO Helper
+        function initCPOSimControls(cpoData) {
+            const select = document.getElementById('cpo-sim-tank-select');
+            if (select) {
+                select.innerHTML = '';
+                cpoData.tanks.forEach(tank => {
+                    const opt = document.createElement('option');
+                    opt.value = tank.id;
+                    opt.innerText = tank.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
+        function runCPOSimulation() { alert('Reviewing Tank Projection...'); }
+
+        // Start
+        window.onload = function () {
+            try {
+                AppRouter.init();
+            } catch (err) {
+                console.error("Dashboard init failed:", err);
+            } finally {
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) overlay.classList.add('hidden');
+                }, 1200);
+            }
+        };
+    </script>
+
+    <!-- LEGACY SCRIPTS (LOGIC) -->
+    <script src="js/app-config.js"></script>
+    <script src="js/app-data.js"></script>
+    <script src="js/app-ui.js"></script>
+    <script src="js/app-simulation.js"></script>
+    <script src="js/app-cpo.js"></script>
+    <script src="js/app-layout.js"></script>
+    <script src="js/app-rm-detail.js"></script>
+    <script src="js/app-rental-f.js"></script>
+    <script src="js/app-dashboard.js"></script>
+    <script src="js/app-core.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - KONTROL BBM ANALYTICS</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #22c55e;
+            /* Green for BBM */
+            --secondary: #16a34a;
+            --accent: #eab308;
+            --info: #3b82f6;
+            --dark-bg: #050505;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        /* DYNAMIC BACKGROUND */
+        .bg-animate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(34, 197, 94, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(22, 163, 74, 0.05) 0%, transparent 40%);
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, transparent 90%);
+        }
+
+        /* HEADER */
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, var(--primary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #ccc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* LAYOUT */
+        .dashboard-container {
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* KPI ROW */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .kpi-title {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .kpi-sub {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        /* CHARTS */
+        .chart-section-full {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        /* LOADING */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(34, 197, 94, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-animate"></div>
+    <div class="grid-bg"></div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-family: 'Orbitron'; color: var(--primary); letter-spacing: 2px;">ANALYZING FUEL DATA...</div>
+    </div>
+
+    <header class="analytics-header">
+        <div class="header-title">
+            <h1>KONTROL BBM ANALYTICS DASHBOARD</h1>
+        </div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <select id="periodSlicer" onchange="applyFilter()" style="
+                background: rgba(0, 0, 0, 0.6); 
+                color: var(--primary); 
+                border: 1px solid var(--primary); 
+                padding: 8px 15px; 
+                border-radius: 5px; 
+                font-family: 'Rajdhani'; 
+                font-weight: bold; 
+                cursor: pointer;
+                outline: none;
+            ">
+                <option value="ALL">ALL PERIODE</option>
+            </select>
+            <a href="op-kontrol-bbm-masterdata.html" class="back-btn">← BACK TO MASTER DATA</a>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+
+        <!-- KPI ROW -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">TOTAL CONSUMPTION (SOLAR)</div>
+                <div class="kpi-value" id="kpi-usage" style="color: var(--primary);">0 Liters</div>
+                <div class="kpi-sub">All Time Usage</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">ACTIVE UNITS</div>
+                <div class="kpi-value" id="kpi-units">0</div>
+                <div class="kpi-sub">Vehicles/Tools</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">TOP CATEGORY</div>
+                <div class="kpi-value" id="kpi-cat" style="font-size:1.5rem;">-</div>
+                <div class="kpi-sub">Highest Usage</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">PEAK USAGE MONTH</div>
+                <div class="kpi-value" id="kpi-peak-month" style="font-size: 1.5rem;">-</div>
+                <div class="kpi-sub">Highest Volume</div>
+            </div>
+        </div>
+
+        <!-- MAIN TREND CHART -->
+        <div class="chart-section-full">
+            <div class="chart-header">
+                <div class="chart-title">FUEL CONSUMPTION TREND</div>
+                <div style="font-size:0.8rem; color:#64748b;">LITERS OVER TIME</div>
+            </div>
+            <div style="height: 350px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- GRID CHARTS -->
+        <div class="charts-grid">
+
+            <!-- TOP UNIT -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--accent);">TOP 5 UNITS (CONSUMPTION)</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="unitChart"></canvas>
+                </div>
+            </div>
+
+            <!-- CATEGORY DIST -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--info);">CATEGORY DISTRIBUTION</div>
+                </div>
+                <div style="height: 300px; display:flex; justify-content:center;">
+                    <canvas id="catChart"></canvas>
+                </div>
+            </div>
+
+            <!-- LOCATION -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: #cbd5e1;">LOCATION BREAKDOWN</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="locChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ACTIVITY -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--secondary);">ACTIVITY ANALYSIS</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="actChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwG3MgS41qKBIT-kAgWkXPZWbzOkQ4PCiPHpkXvs-iziPnJxdTxqsKuYf5T4b-YmHUMfw/exec';
+
+        let GLOBAL_DATA = [];
+        let CHART_INSTANCES = {};
+
+        // STARTUP
+        window.onload = loadData;
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL + '?action=getSolar');
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                GLOBAL_DATA = data;
+                populateSlicer(data);
+                processAndRender(data);
+                document.getElementById('loading-overlay').style.display = 'none';
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("Failed to load analytics data.");
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        function populateSlicer(rows) {
+            const slicer = document.getElementById('periodSlicer');
+            const periods = new Set();
+
+            rows.forEach(r => {
+                const dateRaw = r[1] ? new Date(r[1]) : null;
+                if (dateRaw && !isNaN(dateRaw)) {
+                    const monthYear = dateRaw.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                    periods.add(monthYear);
+                }
+            });
+
+            const sortedPeriods = Array.from(periods);
+            sortedPeriods.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                slicer.appendChild(opt);
+            });
+        }
+
+        function applyFilter() {
+            const selected = document.getElementById('periodSlicer').value;
+            let filtered = [];
+
+            if (selected === 'ALL') {
+                filtered = GLOBAL_DATA;
+            } else {
+                filtered = GLOBAL_DATA.filter(r => {
+                    const dateRaw = r[1] ? new Date(r[1]) : null;
+                    if (!dateRaw || isNaN(dateRaw)) return false;
+                    const monthYear = dateRaw.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                    return monthYear === selected;
+                });
+            }
+
+            processAndRender(filtered);
+        }
+
+        function processAndRender(rows) {
+            // CONSTANTS
+            // 1: TANGGAL, 2: UNIT, 3: KATEGORI, 4: LOKASI, 5: AKTIVITAS, 6: PEMAKAIAN
+
+            // CLEAR OLD CHARTS
+            ['trendChart', 'unitChart', 'catChart', 'locChart', 'actChart'].forEach(id => {
+                if (CHART_INSTANCES[id]) CHART_INSTANCES[id].destroy();
+            });
+
+            let totalUsage = 0;
+            const units = new Set();
+            const catCount = {};
+
+            const dateMap = {}; // date -> usage
+            const unitMap = {}; // unit -> usage
+            const catMap = {}; // cat -> usage
+            const locMap = {}; // loc -> usage
+            const actMap = {}; // act -> usage
+
+            rows.forEach(r => {
+                const usage = parseFloat(r[6]) || 0;
+                const unit = r[2] || 'UNKNOWN';
+                const cat = r[3] || 'UNKNOWN';
+                const loc = r[4] || 'UNKNOWN';
+                const act = r[5] || 'UNKNOWN';
+
+                totalUsage += usage;
+                units.add(unit);
+                catCount[cat] = (catCount[cat] || 0) + usage; // Sum usage for top cat
+
+                // Date Aggregation
+                const dateRaw = r[1] ? new Date(r[1]) : null;
+                if (dateRaw) {
+                    const dateKey = dateRaw.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                    dateMap[dateKey] = (dateMap[dateKey] || 0) + usage;
+                }
+
+                unitMap[unit] = (unitMap[unit] || 0) + usage;
+                catMap[cat] = (catMap[cat] || 0) + usage;
+                locMap[loc] = (locMap[loc] || 0) + usage;
+                actMap[act] = (actMap[act] || 0) + usage;
+            });
+
+            // FILTER 'UNKNOWN'
+            units.delete('UNKNOWN');
+            delete unitMap['UNKNOWN'];
+            delete catMap['UNKNOWN'];
+            delete locMap['UNKNOWN'];
+            delete actMap['UNKNOWN'];
+
+            // UPDATE KPIs
+            document.getElementById('kpi-usage').textContent = totalUsage.toLocaleString('id-ID') + ' L';
+            document.getElementById('kpi-units').textContent = units.size;
+
+            // Top Category
+            let topCat = '-';
+            let maxUsage = 0;
+            for (const [k, v] of Object.entries(catCount)) {
+                if (v > maxUsage) { maxUsage = v; topCat = k; }
+            }
+            document.getElementById('kpi-cat').textContent = topCat;
+
+            // Peak Month (Simple Logic from dateMap)
+            // Ideally we aggregate by Month first, but let's approximate or just show max daily?
+            // Let's adjust logic to show Peak Date for now or simplify.
+            // Actually, let's find the max entry in dateMap
+            let maxDateUsage = 0;
+            let peakDate = '-';
+            for (const [k, v] of Object.entries(dateMap)) {
+                if (v > maxDateUsage) { maxDateUsage = v; peakDate = k; }
+            }
+            document.getElementById('kpi-peak-month').textContent = peakDate;
+
+            renderCharts(dateMap, unitMap, catMap, locMap, actMap);
+        }
+
+        function renderCharts(dateMap, unitMap, catMap, locMap, actMap) {
+
+            // 1. TREND CHART
+            const sortedDates = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            const grad = trendCtx.createLinearGradient(0, 0, 0, 300);
+            grad.addColorStop(0, 'rgba(34, 197, 94, 0.5)');
+            grad.addColorStop(1, 'rgba(34, 197, 94, 0)');
+
+            CHART_INSTANCES['trendChart'] = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Fuel Consumption (L)',
+                        data: sortedDates.map(d => dateMap[d]),
+                        borderColor: '#22c55e',
+                        backgroundColor: grad,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { display: false }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2. TOP UNIT CHART
+            const sortedUnits = Object.entries(unitMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const unitCtx = document.getElementById('unitChart').getContext('2d');
+            CHART_INSTANCES['unitChart'] = new Chart(unitCtx, {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: sortedUnits.map(u => u[0]),
+                    datasets: [{
+                        label: 'Consumption (L)',
+                        data: sortedUnits.map(u => u[1]),
+                        backgroundColor: '#eab308', // Accent
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { display: false }, ticks: { color: '#fff' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 3. CATEGORY (Donut)
+            const catCtx = document.getElementById('catChart').getContext('2d');
+            CHART_INSTANCES['catChart'] = new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catMap),
+                    datasets: [{
+                        data: Object.values(catMap),
+                        backgroundColor: ['#3b82f6', '#22c55e', '#facc15', '#ef4444', '#a855f7'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#fff', font: { size: 10 } } } }
+                }
+            });
+
+            // 4. LOCATION (Bar)
+            const locCtx = document.getElementById('locChart').getContext('2d');
+            const locLabels = Object.keys(locMap);
+            CHART_INSTANCES['locChart'] = new Chart(locCtx, {
+                type: 'bar',
+                data: {
+                    labels: locLabels,
+                    datasets: [{
+                        label: 'Volume (L)',
+                        data: locLabels.map(l => locMap[l]),
+                        backgroundColor: '#64748b',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 5. ACTIVITY (Bar/Polar) -> Let's use Bar for clarity on many items
+            const sortedActs = Object.entries(actMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const actCtx = document.getElementById('actChart').getContext('2d');
+            CHART_INSTANCES['actChart'] = new Chart(actCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedActs.map(a => a[0]),
+                    datasets: [{
+                        label: 'Volume (L)',
+                        data: sortedActs.map(a => a[1]),
+                        backgroundColor: '#16a34a',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

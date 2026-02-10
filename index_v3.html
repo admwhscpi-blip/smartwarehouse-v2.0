@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHSMART - Industrial Dashboard</title>
+
+    <link rel="stylesheet" href="css/style_v3.css">
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+
+    <link rel="stylesheet" href="css/style-main.css">
+    <link rel="stylesheet" href="css/style-warehouse.css">
+    <link rel="stylesheet" href="css/style-warehouse-3d.css">
+    <link rel="stylesheet" href="css/style-cpo.css">
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-rental-detail.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app-rental-f.js"></script>
+
+    <style>
+        #global-stats {
+            display: grid !important;
+        }
+
+        #view-layout {
+            min-height: 80vh;
+            background: #000;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mesh-background"></div>
+    <div class="grid-overlay"></div>
+    <div id="main-nav" style="display:none !important;"></div>
+
+    <div class="nav-container">
+        <div class="nav-pill">
+            <div class="nav-brand">
+                <div class="brand-logo">📦</div>
+                <div class="brand-title">WHSMART</div>
+            </div>
+            <div class="nav-menu">
+                <a onclick="AppV3.goHome()" class="nav-btn active">Home</a>
+                <a onclick="AppV3.goModule('rm')" class="nav-btn">RM Stock</a>
+                <a onclick="AppV3.goModule('cpo')" class="nav-btn">CPO Tanks</a>
+                <a onclick="AppV3.goModule('layout')" class="nav-btn">Layout Map</a>
+                <a href="#" class="nav-btn">About</a>
+            </div>
+            <button class="action-btn">Contact Us</button>
+        </div>
+    </div>
+
+    <div id="v3-landing">
+        <div class="hero-wrapper">
+            <div class="version-tag">🏭 Smart Warehouse System V3.0</div>
+            <div class="hero-heading">
+                Industrial Intelligence for<br>
+                <span>Stock & Logistics</span>
+            </div>
+            <div class="hero-sub">
+                Real-time inventory tracking, tank farm monitoring, and digital twin layout visualization for Cirebon
+                Feedmill.
+            </div>
+            <div
+                style="background:rgba(255,255,255,0.05); padding:8px; border-radius:50px; display:inline-flex; width:450px; border:1px solid rgba(255,255,255,0.1);">
+                <span style="padding:10px 20px; color:#aaa; font-size:0.9rem;">System Status: ✅ All Gateways
+                    Operational</span>
+            </div>
+        </div>
+        <div class="deck-grid">
+            <div class="ind-card" onclick="AppV3.goModule('rm')">
+                <div class="card-top">
+                    <div>
+                        <div class="metric-label">Total Stock Item</div>
+                        <div class="metric-val">24,500 <span style="font-size:1rem; color:#6366f1">Tons</span></div>
+                    </div>
+                </div>
+                <div style="margin-top:10px; font-size:0.8rem; color:#4ade80;">↗ Intake Active</div>
+            </div>
+            <div class="ind-card" onclick="AppV3.goModule('cpo')">
+                <div class="card-top">
+                    <div>
+                        <div class="metric-label">Incoming Goods</div>
+                        <div class="metric-val">3 Trucks <span style="font-size:1rem; color:#3b82f6">Live</span></div>
+                    </div>
+                </div>
+                <div style="margin-top:20px; font-size:0.8rem; color:#3b82f6;">• Gate 3 Unloading</div>
+            </div>
+            <div class="ind-card" onclick="AppV3.goModule('layout')">
+                <div class="card-top">
+                    <div>
+                        <div class="metric-label">Available Pallets</div>
+                        <div class="metric-val">1,250 <span style="font-size:1rem; color:#06b6d4">Units</span></div>
+                    </div>
+                </div>
+                <div style="margin-top:10px; font-size:0.8rem; color:#06b6d4;">↗ Gudang F Optimized</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULES -->
+    <div id="app-modules" style="display:none; padding-top:20px; padding-bottom:100px;">
+
+        <!-- MODULE: RM STOCK (RESTORED V2 DESIGN) -->
+        <div id="module-rm" style="display:none;">
+            <div style="text-align:center; margin-bottom:30px;">
+                <div style="background:rgba(255,255,255,0.05); border-radius:50px; display:inline-flex; padding:5px;">
+                    <button class="nav-btn active" onclick="switchView('dashboard', this)">📡 LIVE MONITOR</button>
+                    <button class="nav-btn" onclick="switchView('simulation', this)">🚀 FUTURE PROJECTION</button>
+                </div>
+            </div>
+
+            <!-- VIEW: DASHBOARD (RM) -->
+            <div id="view-dashboard" style="display:block;">
+                <div
+                    style="margin-bottom:30px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-family:'Orbitron'; font-size:1.5rem; color:#00f3ff; font-weight:700;">SMART
+                        WAREHOUSE <span
+                            style="background:#bc13fe; color:white; padding:2px 6px; font-size:0.8rem; border-radius:4px;">V2.0</span>
+                    </div>
+                    <div style="font-family:'Rajdhani'; color:#94a3b8;">LIVE SATELLITE MONITORING SYSTEM</div>
+                </div>
+
+                <div id="global-stats" class="stats-container"></div>
+
+                <div class="section-title">Warehouse Units</div>
+                <div id="rm-loader" style="color:#aaa; text-align:center; padding:20px;">🔄 Retrieving Live Stock
+                    Data...</div>
+
+                <div id="warehouse-display" class="warehouse-grid"></div>
+
+                <div id="analytics-dashboard" style="display:none; margin-top: 3rem;">
+                    <div class="section-title">Data Analytics Center</div>
+                    <div class="analytics-grid-row">
+                        <div class="card-analytics">
+                            <div class="analytics-header">
+                                <h3>🏆 Top Materials</h3>
+                            </div>
+                            <div id="top-items-table"></div>
+                        </div>
+                        <div class="card-analytics">
+                            <div class="analytics-header">
+                                <h3>📊 Category Distribution</h3>
+                            </div>
+                            <div id="category-chart-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="card-analytics" style="margin-top:20px;">
+                        <div class="analytics-header">
+                            <h3>🔍 Material Tracing System</h3>
+                            <div style="font-size:0.8rem; color:#666">Global inventory lookup & positioning</div>
+                        </div>
+                        <div
+                            style="margin-top:15px; background:rgba(0,0,0,0.3); border-radius:30px; padding:5px 20px; border:1px solid #333">
+                            <input type="text" id="material-search" placeholder="Enter Item Identifier (e.g. LYSINE)..."
+                                class="control-input"
+                                style="width:100%; box-sizing:border-box; background:transparent!important; border:none!important;">
+                        </div>
+                        <div id="search-results" style="margin-top:10px; color:#fff;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-simulation" style="display:none;">
+                <div class="card-analytics">
+                    <div class="section-title">RM Future Projection Engine</div>
+                    <div class="sim-controls" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                        <div class="control-group"><label>Target Material</label><select id="sim-material-select"
+                                class="control-select">
+                                <option>Loading...</option>
+                            </select></div>
+                        <div class="control-group"><label>Target Facility</label><select id="sim-warehouse-select"
+                                class="control-select">
+                                <option value="all">ALL FACILITIES</option>
+                            </select></div>
+                        <div class="control-group"><label>Start</label><input type="date" id="sim-start-date"
+                                class="control-input" onclick="this.showPicker()"></div>
+                        <div class="control-group"><label>End</label><input type="date" id="sim-end-date"
+                                class="control-input" onclick="this.showPicker()"></div>
+                        <div class="control-group"><button class="action-btn" onclick="SimService.runProjection()">+
+                                RUN</button></div>
+                    </div>
+                    <div id="sim-results-area" style="display:none; margin-top:20px;">
+                        <canvas id="simChart" style="max-height:400px;"></canvas>
+                        <div class="sim-table-container" id="sim-master-table-wrapper"
+                            style="margin-top:20px; overflow-x:auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE: CPO -->
+        <div id="module-cpo" style="display:none;">
+            <div style="text-align:center; margin-bottom:30px;">
+                <div style="background:rgba(255,255,255,0.05); border-radius:50px; display:inline-flex; padding:5px;">
+                    <button class="nav-btn active" onclick="switchCPO('dashboard', this)">📡 TANK MONITOR</button>
+                    <button class="nav-btn" onclick="switchCPO('simulation', this)">🚀 TANK SIMULATION</button>
+                </div>
+            </div>
+            <div id="view-cpo-dashboard">
+                <div class="section-title" style="color:#fff;">CPO Tank Farm Status</div>
+                <div id="cpo-loader" style="color:#aaa; text-align:center; padding:20px;">🔄 Connecting...</div>
+                <div id="cpo-tank-grid" class="warehouse-grid"></div>
+                <div class="card-analytics" style="margin-top:2rem;">
+                    <div id="cpo-table-container"></div>
+                </div>
+            </div>
+            <div id="view-cpo-simulation" style="display:none;">
+                <div class="card-analytics">
+                    <div class="section-title">CPO Tank Projection</div>
+                    <div class="sim-controls" id="cpo-sim-controls"
+                        style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                        <div class="control-group"><label>Tank</label><select id="cpo-sim-tank-select"
+                                class="control-select">
+                                <option>Loading...</option>
+                            </select></div>
+                        <div class="control-group"><button class="action-btn" onclick="runCPOSimulation()">+
+                                PROJECT</button></div>
+                    </div>
+                    <div style="padding:20px;"><canvas id="cpoSimChart" style="max-height:400px;"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-layout" style="display:none;"></div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="detail-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Info</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('detail-modal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script>
+        const AppV3 = {
+            goModule: function (name) {
+                document.getElementById('v3-landing').style.display = 'none';
+                document.getElementById('app-modules').style.display = 'block';
+                document.getElementById('module-rm').style.display = 'none';
+                document.getElementById('module-cpo').style.display = 'none';
+                document.getElementById('view-layout').style.display = 'none';
+
+                if (name === 'rm') {
+                    document.getElementById('module-rm').style.display = 'block';
+                    switchView('dashboard');
+                    navActive(1);
+                    tryRenderRM();
+                }
+                if (name === 'cpo') {
+                    document.getElementById('module-cpo').style.display = 'block';
+                    switchCPO('dashboard');
+                    navActive(2);
+                    tryRenderCPO();
+                }
+                if (name === 'layout') {
+                    document.getElementById('view-layout').style.display = 'block';
+                    navActive(3);
+                    if (typeof LayoutService !== 'undefined') LayoutService.init();
+                    if (typeof RentalFService !== 'undefined') RentalFService.open();
+                }
+            },
+            goHome: function () {
+                document.getElementById('v3-landing').style.display = 'block';
+                document.getElementById('app-modules').style.display = 'none';
+                navActive(0);
+            }
+        };
+
+        function navActive(index) {
+            document.querySelectorAll('.nav-pill .nav-btn').forEach((b, i) => {
+                i === index ? b.classList.add('active') : b.classList.remove('active');
+            });
+        }
+
+        // --- OVERRIDE RENDERING LOGIC FOR V2 ---
+        function tryRenderRM() {
+            const loader = document.getElementById('rm-loader');
+            if (loader) loader.style.display = 'block';
+
+            waitForData(() => {
+                if (loader) loader.style.display = 'none';
+                if (App.data && typeof UIService !== 'undefined') {
+
+                    // 1. OVERRIDE GLOBAL STATS
+                    UIService.renderGlobalStats = function (stats) {
+                        const container = document.getElementById('global-stats');
+                        const percentage = stats.percentage || 0;
+                        let circleColor = '#ff9e0b';
+                        let stroke = percentage + ", 100";
+
+                        container.innerHTML = `
+                             <div class="stat-card">
+                                 <div class="stat-title">TOTAL OCCUPANCY</div>
+                                 <div class="stat-value" style="color:#00f3ff">${DataService.convertKgToTon(stats.totalFilled)} <span class="unit">TON</span></div>
+                                 <div class="stat-desc">Total Capacity: ${DataService.convertKgToTon(stats.totalCapacity)} TON</div>
+                             </div>
+                             <div class="stat-card">
+                                 <div class="stat-title">IDLE CAPACITY</div>
+                                 <div class="stat-value" style="color:#ff9e0b">${DataService.convertKgToTon(stats.totalSpace)} <span class="unit">TON</span></div>
+                                 <div class="stat-desc">Ready for Allocation</div>
+                             </div>
+                             <div class="stat-card" style="display:flex; justify-content:space-between; align-items:center;">
+                                 <div>
+                                     <div class="stat-title">UTILIZATION RATE</div>
+                                     <div class="stat-value">${percentage.toFixed(1)}%</div>
+                                     <div class="stat-desc" style="color:#ff9e0b">HIGH LOAD</div>
+                                 </div>
+                                 <div style="width:60px;">
+                                     <svg viewBox="0 0 36 36">
+                                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3" />
+                                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${circleColor}" stroke-width="3" stroke-dasharray="${stroke}" />
+                                     </svg>
+                                 </div>
+                             </div>
+                         `;
+                    };
+
+                    // 2. OVERRIDE WAREHOUSE CARDS (CORRECTED LOGIC)
+                    UIService.renderWarehouseCards = function (data) {
+                        const container = document.getElementById('warehouse-display');
+                        if (!container) return;
+                        let html = '';
+
+                        // Scale setup
+                        const maxCap = Math.max(...data.capacities) || 1;
+                        const MAX_H = 200; // max visual height
+
+                        // Correct Iteration over names
+                        data.warehouses.forEach((name, index) => {
+                            const cap = data.capacities[index];
+
+                            // Iterate all materials to find stock for this warehouse index
+                            let totalStock = 0;
+                            if (data.materials) {
+                                data.materials.forEach(mat => {
+                                    if (mat.stocks && mat.stocks[index]) totalStock += mat.stocks[index];
+                                });
+                            }
+
+                            const percent = cap > 0 ? (totalStock / cap) * 100 : 0;
+                            // Visual Calculation
+                            const h = (cap / maxCap) * MAX_H;
+                            const visualH = Math.max(h, 60);
+
+                            const isSafe = percent < 80;
+                            const fillClass = isSafe ? 'safe' : '';
+                            const capTon = (cap / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+                            html += `
+                            <div class="warehouse-card" style="height:${visualH + 80}px" onclick="UIService.openWarehouseDetail(App.data, ${index}, '${name}')">
+                                <div class="wh-header">
+                                    <div class="wh-name">${name}</div>
+                                    <div class="wh-cap">Cap: ${capTon} TON</div>
+                                </div>
+                                <div class="wh-visual-bar" style="height:${visualH}px">
+                                    <div class="wh-fill ${fillClass}" style="height:${percent}%"></div>
+                                    <div class="wh-label-overlay">${Math.round(percent)}%</div>
+                                </div>
+                                <div class="wh-footer"></div>
+                            </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    };
+
+                    // 3. OVERRIDE ANALYTICS (Purple Accent + Specific Table)
+                    UIService.renderAnalytics = function (analytics) {
+                        const tableContainer = document.getElementById('top-items-table');
+                        const maxVal = analytics.top10[0] ? analytics.top10[0].totalTon : 1;
+                        let html = `<table><thead><tr><th>RANK</th><th>MATERIAL</th><th>TOTAL STOK (TON)</th><th>VISUAL</th></tr></thead><tbody>`;
+
+                        analytics.top10.forEach((item, index) => {
+                            const percent = (item.totalTon / maxVal) * 100;
+                            html += `<tr>
+                                <td><div class="rank-badge" style="background:${index === 0 ? '#00f3ff' : (index === 1 ? '#fff' : '#ff9e0b')}; color:#000">${index + 1}</div></td>
+                                <td>${item.name}</td>
+                                <td style="font-weight:700">${item.totalTon.toLocaleString('id-ID')}</td>
+                                <td><div class="bar-container"><div class="bar-fill" style="width:${percent}%"></div></div></td>
+                             </tr>`;
+                        });
+                        html += '</tbody></table>';
+                        tableContainer.innerHTML = html;
+                        // Listeners
+                        UIService.setupSearchListener();
+                    };
+
+                    UIService.renderDashboard(App.data);
+                    if (typeof SimService !== 'undefined') SimService.init(App.data);
+                }
+            });
+        }
+
+        function tryRenderCPO() {
+            const loader = document.getElementById('cpo-loader');
+            if (loader) loader.style.display = 'block';
+            waitForData(() => {
+                if (loader) loader.style.display = 'none';
+                if (App.data && App.data.cpo) {
+                    CPOService.renderDashboard(App.data.cpo);
+                    initCPOSimControls(App.data.cpo);
+                }
+            });
+        }
+
+        function initCPOSimControls(cpoData) {
+            const select = document.getElementById('cpo-sim-tank-select');
+            if (select) {
+                select.innerHTML = '';
+                cpoData.tanks.forEach(tank => {
+                    const opt = document.createElement('option');
+                    opt.value = tank.id;
+                    opt.innerText = tank.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        function runCPOSimulation() { alert('Simulation Started'); }
+        function waitForData(callback) {
+            if (App.data) { callback(); return; }
+            let attempts = 0;
+            const interval = setInterval(() => {
+                attempts++;
+                if (App.data) { clearInterval(interval); callback(); }
+                if (attempts > 40) clearInterval(interval);
+            }, 250);
+        }
+
+        window.showView = AppV3.goModule;
+        window.switchView = function (view, btn) {
+            document.getElementById('view-dashboard').style.display = view === 'dashboard' ? 'block' : 'none';
+            document.getElementById('view-simulation').style.display = view === 'simulation' ? 'block' : 'none';
+            if (btn) { btn.parentElement.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+        };
+        window.switchCPO = function (view, btn) {
+            document.getElementById('view-cpo-dashboard').style.display = view === 'dashboard' ? 'block' : 'none';
+            document.getElementById('view-cpo-simulation').style.display = view === 'simulation' ? 'block' : 'none';
+            if (btn) { btn.parentElement.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+        };
+    </script>
+
+    <script src="js/app-config.js"></script>
+    <script src="js/app-data.js"></script>
+    <script src="js/app-ui.js"></script>
+    <script src="js/app-simulation.js"></script>
+    <script src="js/app-cpo.js"></script>
+    <script src="js/app-layout.js"></script>
+    <script src="js/app-rm-detail.js"></script>
+    <script src="js/app-rental-f.js"></script>
+    <script src="js/app-dashboard.js"></script>
+    <script src="js/app-core.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - RM PALLET CYCLE LOG</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHARTS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        /* LOCAL OVERRIDES */
+        body {
+            background-color: #020617;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* STANDARD BRANDING - MATCHING HOMEPAGE */
+        .navbar-brand-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: cyber-glow 4s infinite alternate;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes blue-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.6), 0 0 25px rgba(59, 130, 246, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 25px rgba(0, 243, 255, 0.9), 0 0 45px rgba(59, 130, 246, 0.7);
+            }
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes cyber-glow {
+            0% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+
+            50% {
+                text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+                filter: brightness(1.2);
+            }
+
+            100% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+        }
+
+        .module-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .module-title::before {
+            content: '•';
+            color: #00f3ff;
+            text-shadow: 0 0 10px #00f3ff;
+        }
+
+        .container-fluid {
+            padding: 20px 40px;
+        }
+
+        /* FILTERS */
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Rajdhani';
+        }
+
+        /* TABLE */
+        .table-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            border-radius: 12px;
+            padding: 2px;
+            /* Inner border */
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid rgba(0, 243, 255, 0.2);
+        }
+
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Inter';
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        tr:hover td {
+            background: rgba(0, 243, 255, 0.05);
+            color: #fff;
+        }
+
+        /* STATUS BADGES */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-ok {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-diff {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        /* LOADING */
+        .loading-state {
+            text-align: center;
+            padding: 50px;
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* MINIMAP STYLES */
+        .minimap-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            grid-template-areas:
+                "origin . rm"
+                "origin . prod";
+            gap: 20px;
+            align-items: center;
+            padding: 40px 60px;
+            margin-bottom: 30px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            min-height: 450px;
+        }
+
+        .minimap-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .dash-flow-out {
+            stroke-dasharray: 20, 20;
+            stroke-linecap: round;
+            stroke: #fffb00;
+            /* Ultra-Neon Yellow */
+            animation: dashMove 0.8s linear infinite, electricFlicker 2s infinite alternate;
+            filter: drop-shadow(0 0 5px #fffb00) drop-shadow(0 0 15px #facc15) drop-shadow(0 0 30px #facc15);
+        }
+
+        @keyframes electricFlicker {
+            0% {
+                opacity: 1;
+                stroke-width: 8;
+            }
+
+            10% {
+                opacity: 0.8;
+                stroke-width: 7;
+            }
+
+            20% {
+                opacity: 1;
+                stroke-width: 9;
+            }
+
+            25% {
+                opacity: 0.5;
+                stroke-width: 6;
+            }
+
+            30% {
+                opacity: 1;
+                stroke-width: 8;
+            }
+
+            70% {
+                opacity: 0.9;
+                stroke-width: 8;
+            }
+
+            100% {
+                opacity: 1;
+                stroke-width: 10;
+            }
+        }
+
+        @keyframes dashMove {
+            to {
+                stroke-dashoffset: -40;
+            }
+        }
+
+        .map-node {
+            position: relative;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 12px;
+            z-index: 1;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: 0.3s;
+        }
+
+        .node-left {
+            border-left: 3px solid #00f3ff;
+            height: fit-content;
+        }
+
+        .node-right {
+            border-right: 3px solid #facc15;
+        }
+
+        .node-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .node-title {
+            font-family: 'Orbitron';
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron';
+            font-size: 1.8rem;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+
+        .text-cyan {
+            color: #00f3ff;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        .text-yellow {
+            color: #facc15;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+        }
+
+        .text-red {
+            color: #ef4444;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .center-stats {
+            text-align: center;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .live-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CUSTOM HEADER -->
+    <header class="module-header">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="module-title">RM PALLET CYCLE LOG</div>
+
+        <div style="display:flex; gap:15px; align-items:center;">
+            <div id="sys-status" style="font-size:0.7rem; color:#00ff9d; font-family:monospace; letter-spacing:1px;">
+                SYSTEM ONLINE</div>
+        </div>
+    </header>
+
+    <!-- MINIMAP SECTION (VISUAL FLOW) -->
+    <div class="minimap-container">
+
+        <!-- SVG CONNECTOR LINES (SINGLE THICK YELLOW CYCLE) -->
+        <svg class="minimap-svg" width="100%" height="100%" viewBox="0 0 1000 400" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="grad-yellow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#facc15;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#facc15;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- STRAIGHT LINE TO RM (Top) -->
+            <path d="M 280 150 L 720 100" stroke="url(#grad-yellow)" stroke-width="8" fill="none"
+                class="dash-flow-out" />
+
+            <!-- STRAIGHT LINE TO PROD (Bottom) -->
+            <path d="M 280 250 L 720 300" stroke="url(#grad-yellow)" stroke-width="8" fill="none"
+                class="dash-flow-out" />
+        </svg>
+
+        <!-- NODE: FG WAREHOUSE (ORIGIN) -->
+        <div class="map-node node-left" style="grid-area: origin; padding-bottom: 30px;">
+            <div class="node-icon">🏭</div>
+            <div class="node-title">FG WAREHOUSE</div>
+            <div class="node-stat">
+                <div class="stat-label">PALLET STOCK</div>
+                <div class="stat-value text-cyan">UNLIMITED</div>
+            </div>
+
+            <div class="node-stat mt-4"
+                style="border-top: 2px solid rgba(239, 68, 68, 0.4); padding-top: 20px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                <div class="stat-label" style="color: #ef4444; font-weight: bold;">TOTAL OUTSTANDING</div>
+                <div class="stat-value text-red" id="stat-outstanding-global" style="font-size: 2.5rem;">0</div>
+                <div class="live-badge" style="margin-top: 10px;">NET BALANCE</div>
+            </div>
+        </div>
+
+        <!-- NODE: RM DESTINATION -->
+        <div class="map-node node-right" style="grid-area: rm;">
+            <div class="node-icon" style="font-size: 1.5rem;">🏗️</div>
+            <div class="node-title" style="font-size: 0.9rem; margin-bottom: 5px;">DESTINATION: RM</div>
+            <div class="node-stat">
+                <div class="stat-label">BELUM BALIKIN</div>
+                <div class="stat-value text-yellow" style="font-size: 1.5rem;" id="stat-rm-outstanding">0</div>
+            </div>
+            <div class="node-stat mt-1" style="border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;">
+                <div class="stat-label">TOTAL RECEIVED</div>
+                <div class="stat-value" style="font-size: 0.9rem; color: #94a3b8;" id="stat-rm-total-out">0</div>
+            </div>
+        </div>
+
+        <!-- NODE: PROD DESTINATION -->
+        <div class="map-node node-right" style="grid-area: prod;">
+            <div class="node-icon" style="font-size: 1.5rem;">⚙️</div>
+            <div class="node-title" style="font-size: 0.9rem; margin-bottom: 5px;">DESTINATION: PROD</div>
+            <div class="node-stat">
+                <div class="stat-label">BELUM BALIKIN</div>
+                <div class="stat-value text-yellow" style="font-size: 1.5rem;" id="stat-prod-outstanding">0</div>
+            </div>
+            <div class="node-stat mt-1" style="border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;">
+                <div class="stat-label">TOTAL RECEIVED</div>
+                <div class="stat-value" style="font-size: 0.9rem; color: #94a3b8;" id="stat-prod-total-out">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+
+        <!-- SUMMARY CARDS & FILTERS -->
+        <div class="filter-bar">
+            <input type="text" id="search-input" class="filter-input" placeholder="Search Remarks/Origin..."
+                style="width: 300px;">
+            <select id="filter-shift" class="filter-input">
+                <option value="ALL">ALL SHIFTS</option>
+                <option value="1">SHIFT 1</option>
+                <option value="2">SHIFT 2</option>
+                <option value="3">SHIFT 3</option>
+            </select>
+            <button onclick="fetchData()" class="btn-cta-secondary" style="padding: 8px 20px;">REFRESH DATA</button>
+        </div>
+
+        <!-- MAIN TABLE -->
+        <div class="table-container">
+            <div id="loading" class="loading-state">CONNECTING TO SATELLITE...</div>
+            <div class="table-scroll" style="overflow-x: auto;">
+                <table id="pallet-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>TANGGAL</th>
+                            <th>SHIFT</th>
+                            <th>JENIS BARANG</th>
+                            <th>ORIGIN</th>
+                            <th>DESTINATION</th>
+                            <th style="text-align: center;">OUT</th>
+                            <th style="text-align: center;">RETURN</th>
+                            <th style="text-align: center;">SELISIH</th>
+                            <th>STATUS</th>
+                            <th>REMARKS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- DATA -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // UPDATED API URL (V3)
+        const API_URL = "https://script.google.com/macros/s/AKfycbxmWGAznszPiIMi8jeLP9uqUt_nEwgm7WeE-X_lU_Ziv9s-EECzENsedt0S00znidEY/exec";
+
+        let rawData = [];
+
+        async function fetchData() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            document.getElementById('pallet-table').style.display = 'none';
+
+            try {
+                // Fetch with redirect:follow
+                const response = await fetch(`${API_URL}?action=getPalletData`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                const text = await response.text();
+                if (text.trim().startsWith('<')) {
+                    throw new Error("ACCESS DENIED. Check Apps Script Permissions.");
+                }
+
+                try {
+                    rawData = JSON.parse(text);
+                } catch (e) {
+                    throw new Error("Invalid JSON.");
+                }
+
+                // 1. SORT DATA (Newest Date First)
+                // Assuming format is sortable or valid date string
+                rawData.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+                // 2. CALCULATE MINIMAP STATS
+                calculateStats(rawData);
+
+                // 3. RENDER TABLE
+                renderTable(rawData);
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                loading.innerHTML = `<span style="color: #ef4444">CONNECTION FAILED: ${error.message}</span>`;
+            }
+        }
+
+        function calculateStats(data) {
+            let rmTotalOut = 0;
+            let prodTotalOut = 0;
+            let rmDiff = 0;
+            let prodDiff = 0;
+            let globalDiff = 0;
+
+            data.forEach(row => {
+                const dest = (row.destination || "").toUpperCase();
+                const pOut = Number(row.pallet_out) || 0;
+                const pDiff = Number(row.selisih) || 0;
+
+                if (dest.includes("RM")) {
+                    rmTotalOut += pOut;
+                    rmDiff += pDiff;
+                } else if (dest.includes("PROD") || dest.includes("PRODUCTION")) {
+                    prodTotalOut += pOut;
+                    prodDiff += pDiff;
+                }
+                globalDiff += pDiff;
+            });
+
+            // Update DOM with Animation
+            animateCount('stat-rm-outstanding', rmDiff);
+            animateCount('stat-rm-total-out', rmTotalOut);
+            animateCount('stat-prod-outstanding', prodDiff);
+            animateCount('stat-prod-total-out', prodTotalOut);
+            animateCount('stat-outstanding-global', globalDiff);
+        }
+
+        function animateCount(id, target) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const start = 0;
+            const duration = 1500;
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                // Ease out quart
+                const ease = 1 - Math.pow(1 - progress, 4);
+
+                const value = Math.floor(ease * (target - start) + start);
+                el.innerText = value.toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                let dateStr = row.tanggal;
+                try {
+                    const d = new Date(row.tanggal);
+                    if (!isNaN(d)) dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                } catch (e) { }
+
+                let statusClass = row.status === 'OK' || row.selisih === 0 ? 'status-ok' : 'status-diff';
+                let statusText = row.status || (row.selisih === 0 ? 'MATCH' : 'DIFF');
+
+                // Styling logic
+                const outStyle = row.pallet_out > 0 ? 'color: #facc15; font-weight:bold; text-shadow:0 0 5px rgba(250, 204, 21, 0.5);' : 'color: #64748b;';
+                const returnStyle = row.pallet_return > 0 ? 'color: #00f3ff; font-weight:bold; text-shadow:0 0 5px rgba(0, 243, 255, 0.5);' : 'color: #64748b;';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="color: #fff; font-weight: 600;">${dateStr}</td>
+                    <td><span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">${row.shift}</span></td>
+                    <td style="color: #cbd5e1;">${row.jenis_barang}</td>
+                    <td>${row.origin}</td>
+                    <td>${row.destination}</td>
+                    <td style="text-align: center; ${outStyle}">${row.pallet_out}</td>
+                    <td style="text-align: center; ${returnStyle}">${row.pallet_return}</td>
+                    <td style="text-align: center; font-weight: bold; color: ${row.selisih !== 0 ? '#ef4444' : '#10b981'};">${row.selisih}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td style="font-size: 0.8rem; color: #94a3b8;">${row.remarks}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('pallet-table').style.display = 'table';
+        }
+
+        // Init
+        window.onload = fetchData;
+    </script>
+
+</body>
+
+</html>

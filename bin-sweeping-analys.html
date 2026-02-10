@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - Bin Sweeping Analystic</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        .sweeping-container {
+            padding: 40px 20px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .table-wrapper {
+            max-height: 600px;
+            overflow: auto;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .scifi-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .scifi-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 15px;
+            text-align: left;
+            background: rgba(0, 243, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .scifi-table td {
+            padding: 8px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+        }
+
+        .tab-btn.active {
+            background: #00f3ff !important;
+            color: #000 !important;
+            border-color: #00f3ff;
+        }
+
+        .chart-card {
+            background: rgba(10, 15, 25, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 4px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+        }
+
+        .chart-title {
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            font-size: 0.75rem;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+
+        .analytics-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card.wide {
+            grid-column: span 2;
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+
+        .month-filter {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            padding: 4px 10px;
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            border-radius: 4px;
+        }
+
+        .scale-selector {
+            display: flex;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px;
+            border: 1px solid #00f3ff;
+        }
+
+        .scale-btn {
+            padding: 4px 10px;
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            background: transparent;
+            color: #00f3ff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .scale-btn.active {
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        /* MINI CALENDAR */
+        .scifi-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .cal-day.has-data {
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            border: 1px solid #00f3ff44;
+            cursor: pointer;
+        }
+
+        .cal-day.selected {
+            background: #fbbf24 !important;
+            color: #000 !important;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clickable-row:hover {
+            background: rgba(251, 191, 36, 0.1) !important;
+        }
+
+        .mini-month-select {
+            background: #000;
+            color: #00f3ff;
+            border: 1px solid #00f3ff;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            border-radius: 4px;
+        }
+
+        /* HUD Glowing Corners */
+        .chart-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid #00f3ff;
+            border-left: 2px solid #00f3ff;
+        }
+
+        .chart-card-corner-tr {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid #00f3ff;
+            border-right: 2px solid #00f3ff;
+        }
+
+        .chart-card-corner-bl {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid #00f3ff;
+            border-left: 2px solid #00f3ff;
+        }
+
+        .chart-card-corner-br {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid #00f3ff;
+            border-right: 2px solid #00f3ff;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid #00f3ff44;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL DIHAPUS -->
+        </div>
+    </nav>
+
+    <div class="sweeping-container">
+        <!-- TABS -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button onclick="switchTable('proc')" id="btn-tab-proc" class="tab-btn active">📈 Process Log</button>
+            <button onclick="switchTable('fifo')" id="btn-tab-fifo" class="tab-btn">🚚 Fifo Monitor</button>
+            <button onclick="switchTable('raw')" id="btn-tab-raw" class="tab-btn">📋 Raw Data Log</button>
+        </div>
+
+        <!-- PROCESS LOG SECTION -->
+        <div id="section-proc" style="display:none;">
+            <div class="analytics-header">
+                <div style="font-family:'Orbitron'; font-size: 0.8rem; color:#00f3ff;">Process Performance Engine</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <select id="filter-proc-month" class="month-filter"
+                        onchange="changeFilter('proc', this.value)"></select>
+                    <div class="scale-selector">
+                        <button class="scale-btn active" onclick="changeScale('proc', 'D', this)">D</button>
+                        <button class="scale-btn" onclick="changeScale('proc', 'W', this)">W</button>
+                        <button class="scale-btn" onclick="changeScale('proc', 'M', this)">M</button>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-deck">
+                <!-- Row 1 -->
+                <div class="chart-card wide">
+                    <div class="chart-title"><span><i>📈</i>PRODUCTION TREND</span></div>
+                    <div class="chart-container"><canvas id="chart-p1"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>🎯</i>ACCURACY MIX</span></div>
+                    <div class="chart-container"><canvas id="chart-p2"></canvas></div>
+                </div>
+                <!-- Row 2 -->
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>⚙️</i>YIELD RATIO</span></div>
+                    <div class="chart-container"><canvas id="chart-p3"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>⚠️</i>NS FLUCTUATION</span></div>
+                    <div class="chart-container"><canvas id="chart-p4"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>🚮</i>WASTE VOLUME</span></div>
+                    <div class="chart-container"><canvas id="chart-p5"></canvas></div>
+                </div>
+                <!-- Row 3 -->
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>🚚</i>USAGE STATUS</span></div>
+                    <div class="chart-container"><canvas id="chart-p6"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>📊</i>CUMULATIVE YTD</span></div>
+                    <div class="chart-container"><canvas id="chart-p7"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>⚡</i>GR SYSTEM ACTIVITY</span></div>
+                    <div class="chart-container"><canvas id="chart-p8"></canvas></div>
+                </div>
+                <!-- Row 4 -->
+                <div class="chart-card wide">
+                    <div class="chart-title"><span><i>✨</i>ACHIEVEMENT VARIANCE</span></div>
+                    <div class="chart-container"><canvas id="chart-p9"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title"><span><i>📦</i>ENDING STOCK</span></div>
+                    <div class="chart-container"><canvas id="chart-p10"></canvas></div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="scifi-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Beginning</th>
+                            <th>915</th>
+                            <th>919</th>
+                            <th>Usage</th>
+                            <th>Ending</th>
+                            <th>NS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proc-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- FIFO MONITOR SECTION -->
+        <div id="section-fifo" style="display:none;">
+            <div class="table-wrapper">
+                <table class="scifi-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Stock</th>
+                            <th>Proses</th>
+                            <th>Usage</th>
+                            <th>Ending</th>
+                            <th>Lokasi</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fifo-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RAW DATA SECTION -->
+        <div id="section-raw" style="display:none;">
+            <div class="analytics-deck">
+                <div class="chart-card wide" style="grid-column: 1 / -1;">
+                    <div class="chart-title">INCOMING VOLUME TREND</div>
+                    <div class="chart-container"><canvas id="chart-r1"></canvas></div>
+                </div>
+
+                <!-- Interaction Row -->
+                <div
+                    style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; height: 350px;">
+                    <div class="chart-card">
+                        <div class="chart-title" style="display:flex; justify-content:space-between;">
+                            <span>MONTHLY ACTIVITY</span>
+                            <select id="calendar-dept-slicer" class="mini-month-select"
+                                onchange="renderMiniCalendar(null, window.cachedRawData)"></select>
+                        </div>
+                        <div class="chart-container">
+                            <select id="mini-month-selector" class="mini-month-select"
+                                onchange="renderMiniCalendar(null, window.cachedRawData); renderDeptTables();"
+                                style="width: 100%; margin-bottom: 10px;"></select>
+                            <div id="raw-calendar" class="scifi-calendar-grid"></div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>DEPT SUMMARY</span>
+                        </div>
+                        <div class="chart-container"><canvas id="dept-summary-chart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">MATERIAL DETAILS</div>
+                        <div class="chart-container" style="overflow-y:auto;">
+                            <table class="scifi-table" id="dept-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>MATERIAL</th>
+                                        <th>TON</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dept-detail-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dept Trend (Full Width) -->
+                <div class="chart-card wide" style="grid-column: 1 / -1; height: 320px;">
+                    <div class="chart-title"
+                        style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>DEPT TREND</span>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="trend-dept-slicer" class="mini-month-select"
+                                style="width: auto; height: 24px; font-size: 0.8rem;" onchange="renderDeptTrend()">
+                                <option value="ALL">ALL DEPARTMENTS</option>
+                            </select>
+                            <select id="trend-period-slicer" class="mini-month-select"
+                                style="width: auto; height: 24px; font-size: 0.8rem;" onchange="renderDeptTrend()">
+                                <option value="D">DAILY</option>
+                                <option value="W">WEEKLY</option>
+                                <option value="M">MONTHLY</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-dept-trend"></canvas></div>
+                </div>
+
+                <!-- Dept Comparison -->
+                <div class="chart-card wide">
+                    <div class="chart-title" style="display:flex; justify-content:space-between;">
+                        <span>DEPT COMPARISON</span>
+                        <select id="comp-month-selector" class="mini-month-select"
+                            onchange="renderDeptComparison()"></select>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-dept-comparison"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">DETAILS</div>
+                    <div class="chart-container" style="overflow-y:auto;">
+                        <table class="scifi-table">
+                            <tbody id="comp-detail-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="scifi-table" id="sweeping-table">
+                    <thead id="table-head"></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">DETAIL</h3><button class="modal-close"
+                    onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/app-config.js"></script>
+    <script>
+        let cachedResponse = null;
+        let charts = {};
+        let currentScales = { proc: 'D', raw: 'D' };
+        let currentMonths = { proc: 'ALL', raw: 'ALL' };
+
+        const DataAggregator = {
+            parseDate: (d) => {
+                if (!d) return new Date();
+                if (typeof d === 'string' && d.includes('/')) {
+                    const [day, month, year] = d.split('/').map(Number);
+                    return new Date(year, month - 1, day);
+                }
+                return new Date(d);
+            },
+            slicer: (data, scale) => {
+                if (scale === 'D') return data.slice(0, 20);
+                if (scale === 'W') return data.slice(0, 15);
+                if (scale === 'M') return data.slice(0, 12);
+                if (scale === 'Y') return data.slice(0, 5);
+                return data;
+            },
+            aggregate: (data, scale, dateField, metrics) => {
+                const groups = {};
+                data.forEach(item => {
+                    const date = DataAggregator.parseDate(item[dateField]);
+                    let key;
+                    if (scale === 'W') {
+                        const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        const weekNo = Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
+                        key = `W${weekNo}-${d.getFullYear()}`;
+                    } else if (scale === 'M') {
+                        key = date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+                    } else if (scale === 'Y') {
+                        key = date.getFullYear().toString();
+                    } else {
+                        key = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                    }
+                    if (!groups[key]) { groups[key] = { key, count: 0 }; metrics.forEach(m => groups[key][m] = 0); }
+                    groups[key].count++;
+                    metrics.forEach(m => groups[key][m] += parseFloat(item[m]) || 0);
+                });
+                let result = Object.values(groups).sort((a, b) => b.key.localeCompare(a.key));
+                result = DataAggregator.slicer(result, scale);
+                return result.reverse();
+            }
+        };
+
+        function changeScale(type, scale, btn) {
+            currentScales[type] = scale; btn.parentElement.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+            if (type === 'proc' && cachedResponse) renderProcessAnalytics(cachedResponse.proc);
+            if (type === 'raw' && cachedResponse) renderLogAnalytics(cachedResponse.log);
+        }
+
+        function changeFilter(type, value) {
+            currentMonths[type] = value;
+            if (type === 'proc' && cachedResponse) renderProcessAnalytics(cachedResponse.proc);
+            if (type === 'raw' && cachedResponse) renderLogAnalytics(cachedResponse.log);
+        }
+
+        function getAvailableMonths(data, dateField) {
+            const months = new Set();
+            data.forEach(item => {
+                const d = DataAggregator.parseDate(item[dateField]);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                months.add(key);
+            });
+            return Array.from(months).sort().reverse();
+        }
+
+        function populateMonthFilter(elId, monthKeys) {
+            const sel = document.getElementById(elId);
+            sel.innerHTML = '<option value="ALL">ALL PERIODS</option>';
+            monthKeys.forEach(key => {
+                const [y, m] = key.split('-');
+                const label = new Date(y, m - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                const opt = document.createElement('option');
+                opt.value = key; opt.innerText = label;
+                sel.appendChild(opt);
+            });
+        }
+
+        function switchTable(type) {
+            ['proc', 'fifo', 'raw'].forEach(s => {
+                document.getElementById('section-' + s).style.display = (s === type ? 'block' : 'none');
+                document.getElementById('btn-tab-' + s).classList.toggle('active', s === type);
+            });
+            if (type === 'proc' && cachedResponse) renderProcessAnalytics(cachedResponse.proc);
+            if (type === 'raw' && cachedResponse) renderLogAnalytics(cachedResponse.log);
+        }
+
+        function toTitleCase(s) { return s ? s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : "-"; }
+        function normalizeMaterial(m) {
+            if (!m) return "-";
+            let n = String(m).trim().toUpperCase();
+            if (n === "SAPPUAN FG") n = "SAPUAN FG";
+            if (n === "SAPUAN") n = "SAPUAN FG";
+            return toTitleCase(n);
+        }
+
+        async function fetchBinSweepingData() {
+            const url = CONFIG.BIN_SWEEPING_API_URL;
+            return new Promise(res => {
+                const cb = 'cb' + Math.random().toString(36).substr(2);
+                window[cb] = d => { delete window[cb]; res(d); };
+                const s = document.createElement('script');
+                s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cb;
+                document.body.appendChild(s);
+            });
+        }
+
+        function renderDashboard(res) {
+            // GLOBAL ERROR CLEANING
+            const cleanProc = (res.proc || []).filter(d => {
+                const dt = DataAggregator.parseDate(d.tanggal || d.TANGGAL);
+                const dept = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return dt.getFullYear() !== 2001 && dept !== "UNKNOWN";
+            });
+            const cleanLog = (res.log || []).filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl || d.tanggal);
+                const dept = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return dt.getFullYear() !== 2001 && dept !== "UNKNOWN" && dept !== "";
+            });
+            const cleanFifo = (res.fifo || []).filter(d => {
+                const dt = DataAggregator.parseDate(d.tanggal || d.TANGGAL);
+                return dt.getFullYear() !== 2001;
+            });
+
+            cachedResponse = { proc: cleanProc, log: cleanLog, fifo: cleanFifo };
+
+            const monthKeysProc = getAvailableMonths(cleanProc, 'tanggal');
+            populateMonthFilter('filter-proc-month', monthKeysProc);
+
+            switchTable('proc');
+
+            renderProcessTable(cleanProc);
+            renderFifoTable(cleanFifo);
+            renderLogTable(cleanLog);
+
+            renderProcessAnalytics(cleanProc);
+            renderLogAnalytics(cleanLog);
+        }
+
+        function renderProcessTable(data) {
+            const tbody = document.getElementById('proc-body');
+            tbody.innerHTML = data.map(r => `<tr><td>${r.tanggal}</td><td>${r.beginning}</td><td>${r.hasil_915}</td><td>${r.hasil_919}</td><td>${r.usage}</td><td>${r.ending}</td><td>${r.ns}</td></tr>`).join('');
+        }
+
+        function renderFifoTable(data) {
+            const tbody = document.getElementById('fifo-body');
+            tbody.innerHTML = data.map(r => `<tr><td>${r.tanggal}</td><td>${r.stock}</td><td>${r.proses}</td><td>${r.usage}</td><td>${r.ending}</td><td>${r.lokasi}</td><td>${r.status}</td></tr>`).join('');
+        }
+
+        function renderLogTable(data) {
+            const tbody = document.getElementById('table-body');
+            const thead = document.getElementById('table-head');
+            if (data.length) {
+                const keys = Object.keys(data[0]);
+                thead.innerHTML = `<tr>${keys.map(k => `<th>${toTitleCase(k)}</th>`).join('')}</tr>`;
+                tbody.innerHTML = data.map(r => `<tr>${keys.map(k => `<td>${r[k] || ""}</td>`).join('')}</tr>`).join('');
+            }
+        }
+
+        function renderProcessAnalytics(data) {
+            if (!data || data.length === 0) return;
+
+            let filteredData = data;
+            const monthFilter = currentMonths.proc;
+            if (monthFilter !== 'ALL') {
+                filteredData = data.filter(d => {
+                    const date = DataAggregator.parseDate(d.tanggal);
+                    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` === monthFilter;
+                });
+            }
+
+            const scale = currentScales.proc;
+            const metrics = ['hasil_915', 'hasil_919', 'beginning', 'usage', 'ending', 'sampah', 'target', 'ns', 'gr_915', 'gr_919'];
+            let agg;
+
+            if (monthFilter !== 'ALL') {
+                const groups = {};
+                filteredData.forEach(item => {
+                    const date = DataAggregator.parseDate(item.tanggal);
+                    let key;
+                    if (scale === 'W') {
+                        const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        key = `W${Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7)}-${d.getFullYear()}`;
+                    } else if (scale === 'M') {
+                        key = date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+                    } else {
+                        key = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                    }
+                    if (!groups[key]) { groups[key] = { key, count: 0 }; metrics.forEach(m => groups[key][m] = 0); }
+                    groups[key].count++;
+                    metrics.forEach(m => groups[key][m] += parseFloat(item[m]) || 0);
+                });
+                agg = Object.values(groups).sort((a, b) => b.key.localeCompare(a.key)).reverse();
+            } else {
+                agg = DataAggregator.aggregate(data, scale, 'tanggal', metrics);
+            }
+
+            const labels = agg.map(a => a.key);
+            const getCtx = (id) => document.getElementById(id).getContext('2d');
+            const clearChart = (id) => { if (charts[id]) charts[id].destroy(); };
+            const getGrad = (ctx, hex) => {
+                const g = ctx.createLinearGradient(0, 0, 0, 200);
+                g.addColorStop(0, hex + '66'); g.addColorStop(1, hex + '00');
+                return g;
+            };
+
+            const hudScale = {
+                y: { grid: { color: 'rgba(0, 243, 255, 0.05)' }, ticks: { font: { size: 8 } } },
+                x: { grid: { display: false }, ticks: { font: { size: 8 }, maxRotation: 45, autoSkip: true } }
+            };
+
+            // 1. Production Trend
+            clearChart('p1');
+            const ctx1 = getCtx('chart-p1');
+            charts.p1 = new Chart(ctx1, {
+                type: 'line', data: {
+                    labels, datasets: [
+                        { label: '915', data: agg.map(a => a.hasil_915), borderColor: '#00f3ff', backgroundColor: getGrad(ctx1, '#00f3ff'), fill: true, borderWidth: 2, pointRadius: 0 },
+                        { label: '919', data: agg.map(a => a.hasil_919), borderColor: '#fbbf24', backgroundColor: getGrad(ctx1, '#fbbf24'), fill: true, borderWidth: 2, pointRadius: 0 }
+                    ]
+                }, options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 2. Accuracy Mix
+            clearChart('p2');
+            const totalActual = agg.reduce((s, a) => s + (a.hasil_915 + a.hasil_919), 0);
+            const totalTarget = agg.reduce((s, a) => s + a.target, 0);
+            charts.p2 = new Chart(getCtx('chart-p2'), {
+                type: 'doughnut', data: { labels: ['Actual', 'Remaining'], datasets: [{ data: [totalActual, Math.max(0, totalTarget - totalActual)], backgroundColor: ['#00f3ff', 'rgba(255,255,255,0.05)'], borderColor: '#0a0f19', borderWidth: 4 }] },
+                options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8 } } } }
+            });
+
+            // 3. Yield Ratio
+            clearChart('p3');
+            charts.p3 = new Chart(getCtx('chart-p3'), {
+                type: 'bar', data: { labels, datasets: [{ label: 'Eff %', data: agg.map(a => a.beginning > 0 ? ((a.hasil_915 + a.hasil_919) / a.beginning * 100).toFixed(1) : 0), backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 4. NS Fluctuation
+            clearChart('p4');
+            charts.p4 = new Chart(getCtx('chart-p4'), {
+                type: 'line', data: { labels, datasets: [{ label: 'NS', data: agg.map(a => a.ns), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)', fill: true, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 5. Waste Volume
+            clearChart('p5');
+            charts.p5 = new Chart(getCtx('chart-p5'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Waste', data: agg.map(a => a.sampah), borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.1)', fill: true, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 6. Usage Status
+            clearChart('p6');
+            charts.p6 = new Chart(getCtx('chart-p6'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Usage', data: agg.map(a => a.usage), borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.05)', fill: true, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 7. Cumulative YTD
+            clearChart('p7');
+            let cum = 0;
+            const p7data = agg.map(a => { cum += (a.hasil_915 + a.hasil_919); return cum; });
+            charts.p7 = new Chart(getCtx('chart-p7'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Total', data: p7data, borderColor: '#8b5cf6', fill: true, backgroundColor: '#8b5cf622', stepped: true }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 8. GR System Activity
+            clearChart('p8');
+            charts.p8 = new Chart(getCtx('chart-p8'), {
+                type: 'bar', data: {
+                    labels, datasets: [
+                        { label: '915', data: agg.map(a => a.gr_915), backgroundColor: '#00f3ff88' },
+                        { label: '919', data: agg.map(a => a.gr_919), backgroundColor: '#fbbf2488' }
+                    ]
+                }, options: { responsive: true, maintainAspectRatio: false, scales: { ...hudScale, x: { stacked: true }, y: { stacked: true } } }
+            });
+
+            // 9. Achievement Variance
+            clearChart('p9');
+            charts.p9 = new Chart(getCtx('chart-p9'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Var', data: agg.map(a => (a.hasil_915 + a.hasil_919) - a.target), borderColor: '#10b981', borderDash: [5, 5], pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+
+            // 10. Ending Stock
+            clearChart('p10');
+            charts.p10 = new Chart(getCtx('chart-p10'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Stock', data: agg.map(a => a.ending), borderColor: '#00f3ff', borderDash: [2, 2], pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: hudScale }
+            });
+        }
+
+        function renderLogAnalytics(data) {
+            if (!data || data.length === 0) return;
+            window.cachedRawData = data;
+
+            let filteredData = data;
+            const monthFilter = currentMonths.raw;
+            if (monthFilter !== 'ALL') {
+                filteredData = data.filter(d => {
+                    const date = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` === monthFilter;
+                });
+            }
+
+            const scale = currentScales.raw;
+            const metrics = ['QTY_TERIMA', 'QTY'];
+            let agg;
+
+            if (monthFilter !== 'ALL') {
+                const groups = {};
+                filteredData.forEach(item => {
+                    const date = DataAggregator.parseDate(item.TANGGAL || item.Tgl);
+                    let key;
+                    if (scale === 'W') {
+                        const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                        key = `W${Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7)}-${d.getFullYear()}`;
+                    } else if (scale === 'M') {
+                        key = date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+                    } else {
+                        key = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                    }
+                    if (!groups[key]) { groups[key] = { key, count: 0 }; metrics.forEach(m => groups[key][m] = 0); }
+                    groups[key].count++;
+                    metrics.forEach(m => groups[key][m] += parseFloat(item[m] || item['QTY'] || 0) || 0);
+                });
+                agg = Object.values(groups).sort((a, b) => b.key.localeCompare(a.key)).reverse();
+            } else {
+                agg = DataAggregator.aggregate(data, scale, 'TANGGAL', metrics);
+            }
+
+            const labels = agg.map(a => a.key);
+            const getCtx = (id) => document.getElementById(id).getContext('2d');
+            if (charts.r1) charts.r1.destroy();
+            charts.r1 = new Chart(getCtx('chart-r1'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{ label: 'Ton', data: agg.map(a => (a.QTY_TERIMA + a.QTY) / 1000), borderColor: '#00f3ff', backgroundColor: 'rgba(0,243,255,0.1)', fill: true, pointRadius: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(0, 243, 255, 0.05)' }, ticks: { font: { size: 8 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 8 }, maxRotation: 45, autoSkip: true } }
+                    }
+                }
+            });
+
+            const monthSel = document.getElementById('mini-month-selector');
+            if (monthSel) {
+                const uniqueMonths = [...new Set(data.map(d => {
+                    const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                }))].filter(m => !m.startsWith('2001')).sort().reverse();
+                monthSel.innerHTML = '';
+                uniqueMonths.forEach(m => {
+                    const dateObj = new Date(m + "-01");
+                    const label = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                    const opt = document.createElement('option');
+                    opt.value = m; opt.innerText = label;
+                    monthSel.appendChild(opt);
+                });
+                if (currentMonths.raw !== 'ALL') monthSel.value = currentMonths.raw;
+                else if (uniqueMonths.length > 0) monthSel.selectedIndex = 0;
+            }
+
+            renderMiniCalendar(null, data);
+            renderDeptTables(null);
+            renderDeptTrend(null, null);
+            renderDeptComparison();
+        }
+
+        function isWeekend(day, month, year) {
+            const date = new Date(year, month, day);
+            const d = date.getDay();
+            return (d === 0 || d === 6);
+        }
+
+        function renderMiniCalendar(date, allData) {
+            if (!allData || allData.length === 0) return;
+            const deptSel = document.getElementById('calendar-dept-slicer');
+            if (deptSel && deptSel.options.length <= 1) {
+                const depts = [...new Set(allData.map(d => String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase()))].sort();
+                depts.forEach(d => { const opt = document.createElement('option'); opt.value = d; opt.innerText = d; deptSel.appendChild(opt); });
+            }
+            const deptFilter = deptSel ? deptSel.value : 'ALL';
+            let year, month;
+            const selValue = document.getElementById('mini-month-selector').value;
+            if (selValue && selValue !== 'ALL') {
+                const parts = selValue.split('-'); year = parseInt(parts[0]); month = parseInt(parts[1]) - 1;
+            } else { const now = new Date(); year = now.getFullYear(); month = now.getMonth(); }
+
+            const grid = document.getElementById('raw-calendar');
+            grid.innerHTML = '';
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+            const dayMap = {};
+            allData.filter(d => deptFilter === 'ALL' || String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase() === deptFilter).forEach(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                if (dt.getFullYear() === year && dt.getMonth() === month) {
+                    dayMap[dt.getDate()] = (dayMap[dt.getDate()] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000);
+                }
+            });
+            for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+            for (let i = 1; i <= daysInMonth; i++) {
+                const cell = document.createElement('div'); cell.className = 'cal-day';
+                if (isWeekend(i, month, year)) cell.classList.add('holiday');
+                let inner = `<span style="opacity:0.5; font-size:0.6rem; margin-bottom:2px;">${i}</span>`;
+                if (dayMap[i]) {
+                    cell.classList.add('has-data'); inner += `<span class="val-badge">${dayMap[i].toFixed(0)}</span>`;
+                    cell.onclick = () => {
+                        const wasSel = cell.classList.contains('selected');
+                        document.querySelectorAll('.cal-day').forEach(c => c.classList.remove('selected'));
+                        if (!wasSel) {
+                            cell.classList.add('selected');
+                            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                            renderDeptTables(dateStr);
+                            renderDeptDetailByDate(dateStr);
+                        } else {
+                            renderDeptTables(null);
+                            document.getElementById('dept-detail-body').innerHTML = '<tr><td colspan="2" style="text-align:center; color:#64748b;">Click a Bar to see details</td></tr>';
+                        }
+                    };
+                } else { cell.style.opacity = '0.5'; inner += `<span style="font-size:0.7rem;">-</span>`; }
+                cell.innerHTML = inner; grid.appendChild(cell);
+            }
+        }
+
+        function renderDeptTables(selectedDateStr = null) {
+            const allData = window.cachedRawData; if (!allData) return;
+            let sourceData;
+            if (selectedDateStr) {
+                sourceData = allData.filter(d => {
+                    const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}` === selectedDateStr;
+                });
+            } else {
+                const sel = document.getElementById('mini-month-selector').value;
+                if (sel && sel !== 'ALL') {
+                    const [y, m] = sel.split('-').map(Number);
+                    sourceData = allData.filter(d => { const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl); return dt.getFullYear() === y && dt.getMonth() === m - 1; });
+                } else { sourceData = allData; }
+            }
+            sourceData = sourceData.filter(d => { const r = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase(); return r !== "UNKNOWN" && r !== ""; });
+            const deptMap = {};
+            sourceData.forEach(d => { const m = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase(); deptMap[m] = (deptMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000); });
+
+            if (charts.deptSummary) charts.deptSummary.destroy();
+            const sorted = Object.entries(deptMap).sort((a, b) => b[1] - a[1]);
+            const ctx = document.getElementById('dept-summary-chart').getContext('2d');
+            charts.deptSummary = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: sorted.map(s => s[0]), datasets: [{ label: 'Ton', data: sorted.map(s => s[1]), backgroundColor: '#bc13fe', borderColor: '#00f3ff', borderWidth: 1, borderRadius: 4, barPercentage: 0.6 }] },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.raw.toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' Ton' } } },
+                    scales: {
+                        x: { grid: { color: 'rgba(0, 243, 255, 0.1)' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+                        y: { grid: { display: false }, ticks: { color: '#fff', font: { family: 'Orbitron', weight: 'bold', size: 10 } } }
+                    },
+                    onClick: (e) => {
+                        const pts = charts.deptSummary.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+                        if (pts.length) renderDeptDetail(sorted[pts[0].index][0], sourceData);
+                    }
+                }
+            });
+            document.getElementById('dept-detail-body').innerHTML = '<tr><td colspan="2" style="text-align:center; color:#64748b;">Click a Bar to see details</td></tr>';
+        }
+
+        function renderDeptDetail(deptName, sourceData) {
+            const data = sourceData.filter(d => String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase() === deptName);
+            const matMap = {};
+            data.forEach(d => { const m = normalizeMaterial(d.NAMA_MATERIAL || d.Material || "Unknown"); matMap[m] = (matMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000); });
+            const sorted = Object.entries(matMap).sort((a, b) => b[1] - a[1]);
+            document.getElementById('dept-detail-body').innerHTML = sorted.map(([m, q]) => `<tr><td style="color:#94a3b8; font-size:0.8rem;">${m}</td><td style="color:#fbbf24; font-weight:700; text-align:right;">${q.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</td></tr>`).join('');
+        }
+
+        function renderDeptDetailByDate(dateStr) {
+            const allData = window.cachedRawData; if (!allData) return;
+            const data = allData.filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}` === dateStr;
+            });
+            const matMap = {};
+            data.forEach(d => { const m = normalizeMaterial(d.NAMA_MATERIAL || d.Material || "Unknown"); matMap[m] = (matMap[m] || 0) + ((parseFloat(d.QTY_TERIMA || d.QTY || 0)) / 1000); });
+            const sorted = Object.entries(matMap).sort((a, b) => b[1] - a[1]);
+            if (sorted.length > 0) {
+                document.getElementById('dept-detail-body').innerHTML = sorted.map(([m, q]) => `<tr><td style="color:#94a3b8; font-size:0.8rem;">${m}</td><td style="color:#fbbf24; font-weight:700; text-align:right;">${q.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</td></tr>`).join('');
+            }
+        }
+
+        function renderDeptTrend(forceDept = null, forceScale = null) {
+            const allData = window.cachedRawData; if (!allData || allData.length === 0) return;
+            const deptSel = document.getElementById('trend-dept-slicer');
+            const scaleSel = document.getElementById('trend-period-slicer');
+            if (deptSel.options.length <= 1) {
+                const depts = [...new Set(allData.map(d => String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase()))].sort();
+                depts.forEach(d => { const opt = document.createElement('option'); opt.value = d; opt.innerText = d; deptSel.appendChild(opt); });
+            }
+            const deptFilter = forceDept || deptSel.value;
+            const scale = forceScale || scaleSel.value;
+            let filteredData = allData.filter(d => { const r = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase(); return r !== "UNKNOWN" && r !== ""; });
+            if (deptFilter !== 'ALL') {
+                filteredData = allData.filter(d => String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase() === deptFilter);
+            }
+            const groups = {}; const metrics = ['QTY_TERIMA', 'QTY'];
+            filteredData.forEach(item => {
+                const date = DataAggregator.parseDate(item.TANGGAL || item.Tgl);
+                let key;
+                if (scale === 'W') {
+                    const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                    key = `W${Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7)}-${d.getFullYear()}`;
+                } else if (scale === 'M') {
+                    key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                } else {
+                    key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                }
+                if (!groups[key]) { groups[key] = { key, count: 0, sortDate: date.getTime() }; metrics.forEach(m => groups[key][m] = 0); }
+                groups[key].count++; metrics.forEach(m => groups[key][m] += parseFloat(item[m] || item['QTY'] || 0) || 0);
+            });
+            const agg = Object.values(groups).sort((a, b) => a.sortDate - b.sortDate);
+            const labels = agg.map(a => {
+                if (scale === 'M') { const [y, m] = a.key.split('-'); return new Date(y, m - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); }
+                return a.key;
+            });
+            const values = agg.map(a => (a.QTY_TERIMA + a.QTY) / 1000);
+            if (charts.deptTrend) charts.deptTrend.destroy();
+            const borderColor = deptFilter === 'ALL' ? '#00f3ff' : '#bc13fe';
+            charts.deptTrend = new Chart(document.getElementById('chart-dept-trend').getContext('2d'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Ton', data: values, borderColor, backgroundColor: 'rgba(0,243,255,0.1)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(0,243,255,0.05)' }, ticks: { font: { size: 9 }, color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: '#94a3b8', maxRotation: 45, autoSkip: true } } } }
+            });
+        }
+
+        function renderDeptComparison() {
+            const allData = window.cachedRawData; if (!allData) return;
+            const monthSel = document.getElementById('comp-month-selector');
+            if (monthSel.options.length === 0) {
+                const uniqueMonths = [...new Set(allData.map(d => {
+                    const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                }))].filter(m => !m.startsWith('2001')).sort().reverse();
+                uniqueMonths.forEach(m => {
+                    const opt = document.createElement('option'); opt.value = m; opt.innerText = new Date(m + "-01").toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                    monthSel.appendChild(opt);
+                });
+                if (uniqueMonths.length > 0) monthSel.selectedIndex = 0;
+            }
+            const sel = monthSel.value; if (!sel) return;
+            const [y, m] = sel.split('-').map(Number);
+            const filtered = allData.filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                const raw = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase();
+                return dt.getFullYear() === y && dt.getMonth() === m - 1 && raw !== "UNKNOWN" && raw !== "";
+            });
+            const deptMap = {};
+            filtered.forEach(d => { const m = String(d.DEPT || d.Dept || d.ASAL || d.Asal || "UNKNOWN").toUpperCase(); deptMap[m] = (deptMap[m] || 0) + (parseFloat(d.QTY_TERIMA || d.QTY || 0) / 1000); });
+            const sorted = Object.entries(deptMap).sort((a, b) => b[1] - a[1]);
+            const ctx = document.getElementById('chart-dept-comparison').getContext('2d');
+            if (charts.deptComp) charts.deptComp.destroy();
+            const grad = ctx.createLinearGradient(0, 0, 400, 0); grad.addColorStop(0, '#00f3ff'); grad.addColorStop(1, '#fbbf24');
+            charts.deptComp = new Chart(ctx, {
+                type: 'bar', data: { labels: sorted.map(s => s[0]), datasets: [{ label: 'Ton', data: sorted.map(s => s[1]), backgroundColor: grad }] },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    onClick: (e) => {
+                        const pts = charts.deptComp.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+                        if (pts.length) showComparisonDetail(sorted[pts[0].index][0], sel);
+                    }
+                }
+            });
+            const tbody = document.getElementById('comp-detail-body');
+            tbody.innerHTML = sorted.map(([d, v]) => `<tr class="clickable-row" onclick="showComparisonDetail('${d}', '${sel}')"><td style="color:#00f3ff; font-weight:700;">${d}</td><td style="text-align:right; color:#fff;">${v.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</td></tr>`).join('');
+        }
+
+        function showComparisonDetail(deptName, monthKey) {
+            const allData = window.cachedRawData; const [y, m] = monthKey.split('-').map(Number);
+            const data = allData.filter(d => {
+                const dt = DataAggregator.parseDate(d.TANGGAL || d.Tgl);
+                return dt.getFullYear() === y && dt.getMonth() === m - 1 && String(d.DEPT || d.Dept || d.ASAL || d.Asal || "").toUpperCase() === deptName;
+            });
+            const matMap = {};
+            data.forEach(d => { const m = normalizeMaterial(d.NAMA_MATERIAL || d.Material || "Unknown"); matMap[m] = (matMap[m] || 0) + (parseFloat(d.QTY_TERIMA || d.QTY || 0) / 1000); });
+            const sorted = Object.entries(matMap).sort((a, b) => b[1] - a[1]);
+            let html = `<div style="padding:20px;"><h3 style="color:#fbbf24; border-bottom:1px solid #fbbf2444;">${deptName} (${monthKey})</h3><table class="scifi-table"><thead><tr><th>MATERIAL</th><th style="text-align:right;">TON</th></tr></thead><tbody>`;
+            sorted.forEach(([mat, qty]) => { html += `<tr><td style="color:#cbd5e1;">${mat}</td><td style="text-align:right; font-weight:bold; color:#00f3ff;">${qty.toLocaleString('id-ID', { maximumFractionDigits: 1 })}</td></tr>`; });
+            html += `</tbody></table></div>`;
+            document.getElementById('modal-title').innerText = "MATERIAL BREAKDOWN";
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
+
+        function changeScale(type, scale, btn) {
+            currentScales[type] = scale; btn.parentElement.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+            if (type === 'proc') renderProcessAnalytics(cachedResponse.proc); else renderLogAnalytics(cachedResponse.log);
+        }
+
+        function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetchBinSweepingData();
+            renderDashboard(res);
+            document.getElementById('loading-overlay').style.display = 'none';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - EKSPEDISI ANALYS</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="homepage-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            padding-top: 80px;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .analys-container {
+            padding: 30px 40px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            padding-bottom: 20px;
+        }
+
+        .header-left h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: #00f3ff;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+
+        .header-left p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .refresh-btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .refresh-btn:hover {
+            background: #00f3ff;
+            color: #000;
+        }
+
+        /* GRID LAYOUT */
+        .analys-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: auto;
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .chart-card:hover {
+            border-color: rgba(0, 243, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chart-card.col-12 {
+            grid-column: span 12;
+        }
+
+        .chart-card.col-8 {
+            grid-column: span 8;
+        }
+
+        .chart-card.col-6 {
+            grid-column: span 6;
+        }
+
+        .chart-card.col-4 {
+            grid-column: span 4;
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chart-title span {
+            color: #00f3ff;
+        }
+
+        .metric-value {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 250px !important;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050505;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 243, 255, 0.1);
+            border-top: 3px solid #00f3ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-family: 'Orbitron'; color: #00f3ff; letter-spacing: 2px;">ANALYZING LOGISTICS DATA...</div>
+    </div>
+
+    <nav class="navbar" id="main-nav"></nav>
+
+    <div class="analys-container">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1>EKSPEDISI ANALYSTIC</h1>
+                <p id="data-status">Mengambil data dari Truck Langsir...</p>
+            </div>
+            <div class="controls">
+                <button class="refresh-btn" onclick="initDashboard()">🔄 REFRESH ANALYTIC</button>
+            </div>
+        </div>
+
+        <div class="analys-grid">
+            <!-- VELOCITY TREND -->
+            <div class="chart-card col-8">
+                <div class="chart-title">LOGISTICS VELOCITY TREND <span>Qty & Ritase</span></div>
+                <canvas id="velocityChart"></canvas>
+            </div>
+
+            <!-- DRIVER PERFORMANCE -->
+            <div class="chart-card col-4">
+                <div class="chart-title">TOP 10 DRIVERS <span>Total Ritase</span></div>
+                <canvas id="driverChart"></canvas>
+            </div>
+
+            <!-- PROFITABILITY -->
+            <div class="chart-card col-12">
+                <div class="chart-title">PROFITABILITY RADAR <span>Laba / Rugi Bersih Trend</span></div>
+                <canvas id="profitChart" style="height: 300px !important;"></canvas>
+            </div>
+
+            <!-- COST ALLOCATION -->
+            <div class="chart-card col-6">
+                <div class="chart-title">COST ALLOCATION <span>Biaya Structure</span></div>
+                <canvas id="costChart"></canvas>
+            </div>
+
+            <!-- NODE ANALYSIS -->
+            <div class="chart-card col-6">
+                <div class="chart-title">SOURCE NODE UTILIZATION <span>Gudang Distribution</span></div>
+                <canvas id="nodeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyfKCEvc0XXfY86XXESUvthGfO_U6frronAtWVhOMeVXOhQIm5u9JCqZPAadqAMW15j/exec';
+        let charts = {};
+
+        async function initDashboard() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            try {
+                const response = await fetch(API_URL + '?action=getEkspedisi');
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                processAndRender(data);
+                document.getElementById('data-status').textContent = 'Analisa diperbarui: ' + new Date().toLocaleString('id-ID');
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('data-status').textContent = 'Gagal memuat data: ' + error.message;
+            } finally {
+                setTimeout(() => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                }, 800);
+            }
+        }
+
+        function processAndRender(rows) {
+            // Mapping: row[1]=Tanggal, row[2]=Ritase, row[3]=Sumber, row[4]=Qty, row[6]=Nama, row[7]=Biaya, row[20]=LabaRugi
+
+            const dateMap = {}; // Trend
+            const driverMap = {}; // drivers
+            const costMap = {
+                'Kuli Muat': 0,
+                'Kuli Bongkar': 0,
+                'Sopir': 0,
+                'Solar': 0,
+                'Samsi': 0,
+                'Preventif': 0
+            };
+            const nodeMap = {};
+
+            rows.forEach(row => {
+                const date = row[1] || 'Unknown';
+                const ritase = parseFloat(row[2]) || 0;
+                const qty = parseFloat(row[4]) || 0;
+                const driver = row[6] || 'N/A';
+                const node = row[3] || 'N/A';
+                const lr = parseFloat(row[20]) || 0;
+
+                // Trend
+                if (!dateMap[date]) dateMap[date] = { ritase: 0, qty: 0, lr: 0 };
+                dateMap[date].ritase += ritase;
+                dateMap[date].qty += qty;
+                dateMap[date].lr += lr;
+
+                // Drivers
+                if (!driverMap[driver]) driverMap[driver] = 0;
+                driverMap[driver] += ritase;
+
+                // Nodes
+                if (!nodeMap[node]) nodeMap[node] = 0;
+                nodeMap[node] += qty;
+
+                // Costs Structure indices: muat[10], bongkar[14], sopir[15], solar[16], samsimuat[17], samsibongkar[18], prev[19]
+                costMap['Kuli Muat'] += parseFloat(row[10]) || 0;
+                costMap['Kuli Bongkar'] += parseFloat(row[14]) || 0;
+                costMap['Sopir'] += parseFloat(row[15]) || 0;
+                costMap['Solar'] += parseFloat(row[16]) || 0;
+                costMap['Samsi'] += (parseFloat(row[17]) || 0) + (parseFloat(row[18]) || 0);
+                costMap['Preventif'] += parseFloat(row[19]) || 0;
+            });
+
+            const sortedDates = Object.keys(dateMap).sort();
+            const sortedDrivers = Object.entries(driverMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            renderVelocityChart(sortedDates, dateMap);
+            renderDriverChart(sortedDrivers);
+            renderProfitChart(sortedDates, dateMap);
+            renderCostChart(costMap);
+            renderNodeChart(nodeMap);
+        }
+
+        function renderVelocityChart(labels, data) {
+            const ctx = document.getElementById('velocityChart').getContext('2d');
+            if (charts.velocity) charts.velocity.destroy();
+            charts.velocity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Quantity',
+                            data: labels.map(d => data[d].qty),
+                            borderColor: '#00f3ff',
+                            backgroundColor: 'rgba(0, 243, 255, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Ritase',
+                            data: labels.map(d => data[d].ritase),
+                            borderColor: '#facc15',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Orbitron', size: 10 } } } },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' }
+                        },
+                        y1: {
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#facc15' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDriverChart(drivers) {
+            const ctx = document.getElementById('driverChart').getContext('2d');
+            if (charts.driver) charts.driver.destroy();
+            charts.driver = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: drivers.map(d => d[0]),
+                    datasets: [{
+                        label: 'Ritase',
+                        data: drivers.map(d => d[1]),
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { ticks: { color: '#cbd5e1', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderProfitChart(labels, data) {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            if (charts.profit) charts.profit.destroy();
+            charts.profit = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Laba / Rugi',
+                        data: labels.map(d => data[d].lr),
+                        borderColor: '#10b981',
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+                            if (!chartArea) return null;
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, 'rgba(244, 63, 94, 0.2)');
+                            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+                            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: (val) => 'Rp ' + new Intl.NumberFormat('id-ID').format(val)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCostChart(costs) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            if (charts.cost) charts.cost.destroy();
+            charts.cost = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(costs),
+                    datasets: [{
+                        data: Object.values(costs),
+                        backgroundColor: [
+                            '#00f3ff', '#3b82f6', '#8b5cf6', '#f43f5e', '#fbbf24', '#10b981'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#050505'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderNodeChart(nodes) {
+            const ctx = document.getElementById('nodeChart').getContext('2d');
+            if (charts.node) charts.node.destroy();
+            charts.node = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(nodes),
+                    datasets: [{
+                        label: 'Qty Distribution',
+                        data: Object.values(nodes),
+                        borderColor: '#facc15',
+                        backgroundColor: 'rgba(250, 204, 21, 0.2)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#64748b' },
+                            ticks: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        initDashboard();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - ANALISA LOADER MASTER DATA</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            padding-top: 80px;
+        }
+
+        .master-data-container {
+            padding: 40px 60px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #3b82f6, #0ea5e9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .update-info {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .refresh-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #3b82f6;
+            color: #000;
+        }
+
+        /* TABLE STYLES */
+        .table-wrapper {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 70vh;
+        }
+
+        .master-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .master-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 10px;
+            text-align: left;
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .master-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #cbd5e1;
+        }
+
+        .master-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .loading-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(59, 130, 246, 0.1);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .metric {
+            text-align: right;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL DIHAPUS -->
+        </div>
+    </nav>
+
+    <div class="master-data-container">
+        <div class="section-header">
+            <div>
+                <h1 class="header-title">ANALISA LOADER - MASTER DATA</h1>
+                <div class="update-info" id="last-update">Menghubungkan ke database...</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="refresh-btn" onclick="window.location.href='op-analisa-loader-analys.html'"
+                    style="border-color: #3b82f6; color: #3b82f6; background: rgba(59, 130, 246, 0.1);">📊 ANALYSA
+                    DATA</button>
+                <button class="refresh-btn" onclick="fetchData()">🔄 REFRESH DATA</button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>BULAN</th>
+                        <th>LOADER</th>
+                        <th>TOTAL OPERASI HARI</th>
+                        <th>HM AWAL</th>
+                        <th>HM AKHIR</th>
+                        <th>HM TOTAL (F-E)</th>
+                        <th>TOTAL BBM (LITER)</th>
+                        <th>TOTAL OUTPUT KG/M</th>
+                        <th>EFISIENSI KERJA (KG/JAM)</th>
+                        <th>KONSUMSI BBM (KG/LITER)</th>
+                        <th>ISTIRAHAT (JAM)</th>
+                        <th>DOWNTIME (JAM)</th>
+                        <th>UTILISASI (%)</th>
+                        <th>PENGGUNAAN</th>
+                        <th>KETERANGAN/CATATAN</th>
+                    </tr>
+                </thead>
+                <tbody id="data-body">
+                    <!-- Data will be injected here -->
+                </tbody>
+            </table>
+            <div id="loading" class="loading-inner">
+                <div class="spinner"></div>
+                <span>MEMUAT DATA ANALISA LOADER...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwG3MgS41qKBIT-kAgWkXPZWbzOkQ4PCiPHpkXvs-iziPnJxdTxqsKuYf5T4b-YmHUMfw/exec';
+
+
+        async function fetchData() {
+            const body = document.getElementById('data-body');
+            const loading = document.getElementById('loading');
+            const updateInfo = document.getElementById('last-update');
+
+            loading.style.display = 'flex';
+            body.innerHTML = '';
+
+            try {
+                const response = await fetch(API_URL + '?action=getLoader');
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                renderData(data);
+                updateInfo.textContent = 'Terakhir diperbarui: ' + new Date().toLocaleString('id-ID');
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                updateInfo.textContent = 'Gagal memuat data: ' + error.message;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderData(rows) {
+            const body = document.getElementById('data-body');
+
+            rows.forEach(row => {
+                // Mapping: B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, M=12, N=13, O=14, P=15, Q=16
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row[1] || '-'}</td>
+                    <td>${row[2] || '-'}</td>
+                    <td>${row[3] || '-'}</td>
+                    <td>${row[4] || '-'}</td>
+                    <td>${row[5] || '-'}</td>
+                    <td class="metric">${formatNumber(row[6])}</td>
+                    <td class="metric">${formatNumber(row[7])}</td>
+                    <td class="metric">${formatNumber(row[8])}</td>
+                    <td class="metric">${formatNumber(row[9])}</td>
+                    <td class="metric">${formatNumber(row[10])}</td>
+                    <td>${row[12] || 0}</td>
+                    <td>${row[13] || 0}</td>
+                    <td class="metric">${row[14] || 0}%</td>
+                    <td>${row[15] || '-'}</td>
+                    <td>${row[16] || '-'}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function formatNumber(val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return val;
+            return new Intl.NumberFormat('id-ID').format(num);
+        }
+
+        // Initialize
+        fetchData();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANALYTIC HISTORY // RM-SMART V2.0</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+    <link rel="stylesheet" href="css/sim_2050.css">
+    <link rel="stylesheet" href="css/analytic_hud.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="fullscreen-mode">
+    <div class="hud-viewport" style="display:flex;">
+        <div class="scanline"></div>
+
+        <!-- HUD HEADER -->
+        <div class="hud-header">
+            <div style="display:flex; align-items:center; gap:20px;">
+                <div class="fire-logo-small"></div>
+                <div class="hud-title">ANALYTIC HISTORY // LOG-PRO V.2</div>
+            </div>
+            <div style="display:flex; gap:20px; align-items:center;">
+                <div id="hud-clock" style="font-family:'Orbitron'; color:#00f3ff; font-size:1rem; letter-spacing:2px;">
+                    00:00:00</div>
+                <button class="btn-hud-primary btn-hud-exit" onclick="window.location.href='rm-simulation.html'">EXIT
+                    DASHBOARD</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD CONTENT -->
+        <div class="hud-content">
+            <!-- TOP STATS ROW -->
+            <div id="top-stats-grid" class="insight-grid" style="grid-column: span 3; margin-bottom:0;">
+                <!-- Dynamically Injected -->
+            </div>
+
+            <!-- MAIN CHART: TOTAL STOCK HISTORY -->
+            <div class="hud-card" style="grid-column: span 2; grid-row: span 2;">
+                <div class="hud-card-header">
+                    <span>GLOBAL STOCK MOVEMENT // PERPETUAL TRACKER</span>
+                    <div class="hud-slicers">
+                        <button onclick="HistoryApp.setSlicer('daily')" id="sl-daily" class="btn-sl active">D</button>
+                        <button onclick="HistoryApp.setSlicer('weekly')" id="sl-weekly" class="btn-sl">W</button>
+                        <button onclick="HistoryApp.setSlicer('monthly')" id="sl-monthly" class="btn-sl">M</button>
+                        <button onclick="HistoryApp.setSlicer('yearly')" id="sl-yearly" class="btn-sl">Y</button>
+                    </div>
+                </div>
+                <div class="hud-card-body" style="height:400px;">
+                    <canvas id="mainHistoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- SIDE ANALYTICS: TOP TREND / DOMINATION -->
+            <div class="hud-card">
+                <div class="hud-card-header">STOCK DOMINATION // TOP TREND</div>
+                <div class="hud-card-body">
+                    <canvas id="dominationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- FAST MOVING VS SLOW MOVING -->
+            <div class="hud-card">
+                <div class="hud-card-header">VOLATILITY INDEX // FAST & SLOW MOVING</div>
+                <div class="hud-card-body" style="display:flex; flex-direction:column; gap:15px;">
+                    <div class="vol-section">
+                        <div class="vol-label" style="color:#0aff0a;">▲ FAST MOVING (HIGHEST VOLATILITY)</div>
+                        <div id="fast-moving-list" class="vol-list"></div>
+                    </div>
+                    <div class="vol-section">
+                        <div class="vol-label" style="color:#64748b;">● SLOW MOVING (STABLE)</div>
+                        <div id="slow-moving-list" class="vol-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MATERIAL SELECTOR & SPECIFIC CHART -->
+            <div class="hud-card" style="grid-column: span 3;">
+                <div class="hud-card-header" style="justify-content:flex-start; gap:30px;">
+                    <span>SPECIFIC MATERIAL ANALYTICS</span>
+                    <div id="material-selector-chips" style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <!-- Checkboxes / Tiles -->
+                    </div>
+                </div>
+                <div class="hud-card-body" style="height:350px;">
+                    <canvas id="materialSpecificChart"></canvas>
+                </div>
+            </div>
+
+            <!-- CATEGORY COMBINATION (PLACEHOLDER) -->
+            <div class="hud-card" style="grid-column: span 3;">
+                <div class="hud-card-header">CATEGORY COMBINATION // CLUSTER ANALYTICS</div>
+                <div class="hud-card-body" style="display:grid; grid-template-columns: 1fr 2fr; gap:20px;">
+                    <div id="category-list" style="border-right:1px solid rgba(255,255,255,0.1); padding-right:10px;">
+                        <!-- Category list -->
+                    </div>
+                    <div style="height:250px;">
+                        <canvas id="categoryHistoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/app-config.js"></script>
+    <script src="js/app-data.js"></script>
+    <script src="js/analytic-history.js"></script>
+</body>
+
+</html>

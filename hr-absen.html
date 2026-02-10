@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE - KONTROL ABSEN</title>
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- STYLES -->
+    <link rel="stylesheet" href="homepage-style.css">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-yellow: #ffcc00;
+            --glass-bg: rgba(0, 243, 255, 0.05);
+            --glass-border: rgba(0, 243, 255, 0.2);
+            --bg-dark: #0a0a0b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Dashboard Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(10, 10, 11, 0.9);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin: -20px -20px 20px -20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-text {
+            font-family: 'Orbitron';
+            font-weight: 700;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-smart {
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            font-size: 1.2rem;
+        }
+
+        .brand-v2 {
+            background: #fff;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 900;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            color: #fff;
+            padding: 8px 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .nav-link.active {
+            border-color: var(--neon-purple);
+            background: rgba(188, 19, 254, 0.1);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.3);
+        }
+
+        .nav-link:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Controls */
+        .header-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px 15px 10px 35px;
+            border-radius: 8px;
+            font-family: 'Rajdhani';
+            width: 250px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-blue);
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Rajdhani';
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Main Grid */
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        /* Sidebar Stats */
+        .stats-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--neon-blue);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .stat-card h3 {
+            font-family: 'Rajdhani';
+            color: #888;
+            margin: 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-family: 'Orbitron';
+            font-size: 1.5rem;
+            margin: 10px 0 5px 0;
+            color: #fff;
+        }
+
+        /* Table Section */
+        .table-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            overflow: auto;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--neon-blue);
+            font-family: 'Orbitron';
+            padding: 15px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--glass-border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .employee-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .emp-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .emp-nik {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .attendance-cell {
+            padding: 8px;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.7rem;
+        }
+
+        .time-in {
+            color: #00ff88;
+        }
+
+        .time-out {
+            color: #0088ff;
+        }
+
+        .status-off {
+            color: #ff3e3e;
+            font-family: 'Rajdhani';
+            font-weight: 700;
+        }
+
+        /* Loading Overlay */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 243, 255, 0.1);
+            border-top: 3px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--neon-blue);
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link:hover {
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div class="loader"></div>
+        <p style="margin-top: 20px; font-family: 'Rajdhani'; color: var(--neon-blue);">INITIALIZING SYSTEM...</p>
+    </div>
+
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#" class="nav-link active">MASTER DATA</a>
+                <a href="hr-absen-analys.html" class="nav-link">ANALYSA</a>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="SEARCH NIK OR NAME...">
+            </div>
+            <select id="monthSelect">
+                <!-- Options will be populated -->
+            </select>
+            <a href="homepage-v1.html" class="nav-link" style="border-color: #ff3e3e; color: #ff3e3e;">EXIT</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="stats-panel">
+            <div class="stat-card">
+                <h3>Total Employees</h3>
+                <div class="value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--neon-yellow);">
+                <h3>Sheet Active</h3>
+                <div class="value" id="stat-month" style="font-size: 1.1rem; color: var(--neon-yellow);">NONE</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #00ff88;">
+                <h3>Avg. Attendance</h3>
+                <div class="value" id="stat-avg" style="color: #00ff88;">0%</div>
+            </div>
+            <div style="margin-top: auto;">
+                <p style="font-family: 'Rajdhani'; font-size: 0.8rem; color: #444;">
+                    SYSTEM STATUS: OK<br>
+                    DATA FEED: LIVE CONNECTED
+                </p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="attendanceTable">
+                <thead>
+                    <tr id="tableHeader">
+                        <th>EMPLOYEE</th>
+                        <!-- Dates 1-31 will be added -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Rows will be populated -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvwvSlwDJ-MoH9Q8gINpYjTcXS_G1HTiGb7c_1Xw4bsKg3IVSj2fF3DvF-A8l8iVJQ/exec';
+        let rawData = {};
+        let currentSheet = '';
+
+        async function init() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                rawData = await response.json();
+
+                populateMonthSelect();
+                setupEventListeners();
+
+                // Auto-select current month/year
+                const now = new Date();
+                const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+                const currentMonthName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+                const select = document.getElementById('monthSelect');
+
+                const months = Object.keys(rawData);
+                if (months.length > 0) {
+                    const match = months.find(m => m.toUpperCase() === currentMonthName);
+                    if (match) {
+                        select.value = match;
+                        currentSheet = match;
+                    } else {
+                        currentSheet = months[0];
+                    }
+                    renderDashboard();
+                }
+
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Gagal memuat data dari Google Sheets!');
+            }
+        }
+
+        function populateMonthSelect() {
+            const select = document.getElementById('monthSelect');
+            const months = Object.keys(rawData);
+
+            months.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m;
+                option.textContent = m;
+                select.appendChild(option);
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('monthSelect').addEventListener('change', (e) => {
+                currentSheet = e.target.value;
+                renderDashboard();
+            });
+
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderTable(e.target.value);
+            });
+        }
+
+        function renderDashboard() {
+            const data = rawData[currentSheet];
+            document.getElementById('stat-total').textContent = data.employees.length;
+            document.getElementById('stat-month').textContent = currentSheet;
+
+            // Render table headers for 1-31
+            const header = document.getElementById('tableHeader');
+            header.innerHTML = '<th>EMPLOYEE</th>';
+            for (let i = 1; i <= 31; i++) {
+                const th = document.createElement('th');
+                th.textContent = i;
+                th.className = 'attendance-cell';
+                header.appendChild(th);
+            }
+
+            renderTable();
+        }
+
+        function renderTable(searchTerm = '') {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const employees = rawData[currentSheet].employees;
+            const search = searchTerm.toLowerCase();
+
+            employees.forEach(emp => {
+                if (search && !emp.nama.toLowerCase().includes(search) && !emp.nik.includes(search)) return;
+
+                const tr = document.createElement('tr');
+
+                // Employee Column
+                const tdInfo = document.createElement('td');
+                tdInfo.innerHTML = `
+                    <div class="employee-info">
+                        <span class="emp-name">${emp.nama}</span>
+                        <span class="emp-nik">NIK: ${emp.nik}</span>
+                    </div>
+                `;
+                tr.appendChild(tdInfo);
+
+                // Date Columns 1-31
+                for (let d = 1; d <= 31; d++) {
+                    const td = document.createElement('td');
+                    td.className = 'attendance-cell';
+
+                    const log = emp.daily[d];
+                    if (log) {
+                        const inTime = log.in || '';
+                        const outTime = log.out || '';
+
+                        if (inTime.toLowerCase() === 'off' || inTime.toLowerCase() === 'cuti' || inTime.toLowerCase() === 'sakit') {
+                            td.innerHTML = `<span class="status-off">${inTime.toUpperCase()}</span>`;
+                        } else {
+                            td.innerHTML = `
+                                <div class="time-box">
+                                    <span class="time-in">${inTime}</span>
+                                    <span class="time-out">${outTime}</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        td.innerHTML = `<span style="color: #333">-</span>`;
+                    }
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+
+            updateStats(employees);
+        }
+
+        function updateStats(employees) {
+            let totalPossible = employees.length * 31;
+            let attendances = 0;
+
+            employees.forEach(e => {
+                Object.values(e.daily).forEach(d => {
+                    if (d.in && !['off', 'cuti', 'sakit'].includes(d.in.toLowerCase())) {
+                        attendances++;
+                    }
+                });
+            });
+
+            const avg = totalPossible > 0 ? ((attendances / totalPossible) * 100).toFixed(1) : 0;
+            document.getElementById('stat-avg').textContent = avg + '%';
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

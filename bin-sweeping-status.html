@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - Bin Sweeping Status</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        .sweeping-container {
+            padding: 40px 20px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .placeholder-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .scifi-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .scifi-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 15px;
+            text-align: left;
+            background: rgba(0, 243, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .scifi-table td {
+            padding: 8px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+        }
+
+        .icon-box {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.5));
+        }
+
+        .title {
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-family: 'Rajdhani';
+            color: #94a3b8;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 30px;
+            background: rgba(0, 243, 255, 0.1);
+            color: #00f3ff;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            border: 1px solid #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .interactive-card {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interactive-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 243, 255, 0.5) !important;
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.1);
+        }
+
+        /* MODAL STYLING */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.15);
+            animation: modalSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron';
+            color: #00f3ff;
+            margin: 0;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: right;
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL DIHAPUS -->
+        </div>
+    </nav>
+    <div class="sweeping-container">
+        <!-- TOP SECTION: SPLIT DASHBOARD -->
+        <div id="dashboard-top"
+            style="display:none; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-bottom: 40px; align-items: start;">
+            <!-- LEFT COLUMN: DIAGRAM & SUMMARY -->
+            <div id="dashboard-left">
+                <!-- MACHINE DIAGRAM -->
+                <div
+                    style="text-align: center; margin-bottom: 25px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); padding: 5px;">
+                    <img src="assets/bin_sweeping_diagram.png" alt="Bin Sweeping Diagram"
+                        style="max-width: 100%; height: auto; display: block; margin: 0 auto; filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.1));">
+                </div>
+                <!-- SUMMARY STATS GRID -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="interactive-card" onclick="showHasilDetail()"
+                        style="background: rgba(15,23,42,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="color: #64748b; font-size: 0.65rem; font-family: 'Orbitron'; margin-bottom: 5px;">
+                            HASIL AYAK</div>
+                        <div id="stat-hasil-ayak"
+                            style="color: #fff; font-family: 'Rajdhani'; font-weight: 700; font-size: 1.4rem;">
+                            -</div>
+                    </div>
+                    <div class="interactive-card" onclick="showBahanDetail()"
+                        style="background: rgba(15,23,42,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="color: #64748b; font-size: 0.65rem; font-family: 'Orbitron'; margin-bottom: 5px;">
+                            BAHAN AYAK (TON)</div>
+                        <div id="stat-bahan-ayak"
+                            style="color: #00f3ff; font-family: 'Rajdhani'; font-weight: 700; font-size: 1.4rem;">
+                            - </div>
+                    </div>
+                    <div
+                        style="background: rgba(15,23,42,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 8px; padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="color: #64748b; font-size: 0.65rem; font-family: 'Orbitron'; margin-bottom: 5px;">
+                            NS </div>
+                        <div id="stat-ns"
+                            style="color: #ef4444; font-family: 'Rajdhani'; font-weight: 700; font-size: 1.4rem; line-height: 1;">
+                            - </div>
+                    </div>
+                </div>
+            </div>
+            <!-- RIGHT COLUMN: SPEC TABLES -->
+            <div id="dashboard-right">
+                <!-- TABLE 1: SPESIFIKASI & KONTROL TEKNIS -->
+                <div style="margin-bottom: 20px;">
+                    <div
+                        style="background: #22d3ee; color: #000; font-family: 'Orbitron'; font-weight: 700; font-size: 0.75rem; padding: 8px 15px; border-radius: 4px 4px 0 0; display: inline-block;">
+                        Spesifikasi & Kontrol Teknis</div>
+                    <div
+                        style="background: rgba(15,23,42,0.8); border: 1px solid rgba(34,211,238,0.2); border-radius: 0 8px 8px 8px; overflow: hidden;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'Inter'; font-size: 0.75rem;">
+                            <thead style="background: rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        ITEM KONTROL</th>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-technical"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- TABLE 2: STATUS OPERASIONAL HARIAN -->
+                <div style="margin-bottom: 20px;">
+                    <div
+                        style="background: #fbbf24; color: #000; font-family: 'Orbitron'; font-weight: 700; font-size: 0.75rem; padding: 8px 15px; border-radius: 4px 4px 0 0; display: inline-block;">
+                        Status Operasional Harian</div>
+                    <div
+                        style="background: rgba(15,23,42,0.8); border: 1px solid rgba(251,191,36,0.2); border-radius: 0 8px 8px 8px; overflow: hidden;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'Inter'; font-size: 0.75rem;">
+                            <thead style="background: rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        PARAMETER</th>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        STATUS / KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-operational"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- TABLE 3: USAGE & DOH -->
+                <div>
+                    <div
+                        style="background: #10b981; color: #000; font-family: 'Orbitron'; font-weight: 700; font-size: 0.75rem; padding: 8px 15px; border-radius: 4px 4px 0 0; display: inline-block;">
+                        Usage & DoH</div>
+                    <div
+                        style="background: rgba(15,23,42,0.8); border: 1px solid rgba(16,185,129,0.2); border-radius: 0 8px 8px 8px; overflow: hidden;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'Inter'; font-size: 0.75rem;">
+                            <thead style="background: rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        PARAMETER</th>
+                                    <th
+                                        style="padding: 10px 15px; text-align: left; color: #64748b; font-size: 0.65rem; border-bottom: 1px solid #334155;">
+                                        STATUS / KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-usage"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="placeholder-card" id="main-card">
+            <div class="icon-box">🧹</div>
+            <h1 class="title">Bin Sweeping Status</h1>
+            <p class="subtitle">Operational Monitoring System</p>
+            <div class="status-badge">Phase: Operational</div>
+        </div>
+    </div>
+    <!-- DETAIL MODAL -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">DETAIL DATA</h3><button class="modal-close"
+                    onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Data Table will be injected here -->
+            </div>
+            <div class="modal-footer">SMART WAREHOUSE AI • INTERNAL LOGISTICS SYSTEM </div>
+        </div>
+    </div>
+    <!-- SCRIPTS -->
+    <script src="js/app-config.js"></script>
+    <script>
+        let cachedResponse = null;
+
+        function toTitleCase(str) {
+            if (!str || typeof str !== 'string') return str || "-";
+            return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        function normalizeMaterial(m) {
+            if (!m) return "-";
+            let n = String(m).trim().toUpperCase();
+            if (n === "SAPPUAN FG") n = "SAPUAN FG";
+            if (n === "SAPUAN") n = "SAPUAN FG";
+            return toTitleCase(n);
+        }
+
+        async function fetchBinSweepingData() {
+            const url = CONFIG.BIN_SWEEPING_API_URL;
+            return new Promise((resolve, reject) => {
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                window[callbackName] = function (data) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(data);
+                };
+                const script = document.createElement('script');
+                script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
+        }
+
+        function renderSpecTable(tbodyId, data) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+                let valStyle = "color: #fff; font-weight: 500;";
+                const valStr = String(item.value);
+                if (valStr.includes("ON")) valStyle = "color: #22c55e; font-weight: 700; background: rgba(34,197,94,0.1); padding: 2px 8px; border-radius: 4px; display: inline-block;";
+                tr.innerHTML = `<td style="padding: 10px 15px; color: #94a3b8;">${toTitleCase(item.parameter)}</td>
+                                <td style="padding: 10px 15px;"><span style="${valStyle}">${toTitleCase(item.value)}</span></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function calculateAge(dateStr) {
+            if (!dateStr) return "-";
+            const date = new Date(dateStr);
+            if (isNaN(date)) return dateStr;
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays === 0 ? "Hari Ini" : diffDays + " Hari";
+        }
+
+        function showHasilDetail() {
+            if (!cachedResponse || !cachedResponse.fifo) return;
+            const data = cachedResponse.fifo;
+            const html = `<table class="scifi-table"><thead><tr><th>UMUR</th><th>ENDING STOCK</th><th>LOKASI</th><th>STATUS</th></tr></thead><tbody>${data.map(row => `<tr><td style="color:#94a3b8;">${calculateAge(row.tanggal)}</td><td style="color:#00f3ff; font-weight:700;">${(parseFloat(row.ending) || 0).toLocaleString('id-ID')}</td><td>${toTitleCase(row.lokasi)}</td><td>${toTitleCase(row.status)}</td></tr>`).join('')}</tbody></table>`;
+            openModal("RINCIAN HASIL AYAK (END-STOCK)", html);
+        }
+
+        function showBahanDetail() {
+            if (!cachedResponse || !cachedResponse.log) return;
+            const pending = cachedResponse.log.filter(row => String(row.STATUS_PROSES || "").toUpperCase() !== "DONE");
+            const html = pending.length > 0 ? `<table class="scifi-table"><thead><tr><th>UMUR</th><th>MATERIAL</th><th>QTY PENDING</th><th>STATUS</th></tr></thead><tbody>${pending.map(row => `<tr><td style="color:#94a3b8;">${calculateAge(row.TANGGAL || row.Tgl)}</td><td style="color:#00f3ff;">${normalizeMaterial(row.NAMA_MATERIAL || row.Material || "")}</td><td style="font-weight:700;">${(parseFloat(row.QTY_TERIMA || row.QTY || 0)).toLocaleString('id-ID')}</td><td style="color:#fbbf24;">${toTitleCase(row.STATUS_PROSES || row.Status || "-")}</td></tr>`).join('')}</tbody></table>` : `<div style="padding:40px; text-align:center; color:#64748b;">No pending material found. All processed.</div>`;
+            openModal("RINCIAN BAHAN AYAK (PENDING)", html);
+        }
+
+        function openModal(title, content) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = content;
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').style.display = 'none';
+        }
+
+        function renderDashboard(response) {
+            if (response.status !== "success") return;
+            cachedResponse = response;
+
+            document.getElementById('main-card').style.display = 'none';
+            document.getElementById('dashboard-top').style.display = 'grid';
+
+            // 1. Calculate HASIL AYAK
+            let totalHasil = response.fifo ? response.fifo.reduce((acc, row) => acc + (parseFloat(row.ending) || 0), 0) : 0;
+            document.getElementById('stat-hasil-ayak').innerText = totalHasil.toLocaleString('id-ID');
+
+            // 2. Calculate BAHAN AYAK
+            let totalBahan = response.log ? response.log.reduce((acc, row) => {
+                const status = String(row.STATUS_PROSES || "").toUpperCase();
+                return status !== "DONE" ? acc + (parseFloat(row.QTY_TERIMA || row.QTY || 0) || 0) : acc;
+            }, 0) : 0;
+            document.getElementById('stat-bahan-ayak').innerText = (totalBahan / 1000).toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+
+            // 3. NS & Message
+            document.getElementById('stat-ns').innerText = response.spec.summary.ns || "19";
+
+            // 4. Render Spec Tables
+            renderSpecTable('table-technical', response.spec.technical);
+            renderSpecTable('table-operational', response.spec.operational);
+            renderSpecTable('table-usage', response.spec.usage);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetchBinSweepingData();
+                renderDashboard(response);
+            } catch (err) {
+                console.error("Stream Failed:", err);
+            } finally {
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) overlay.style.display = 'none';
+                }, 1200);
+            }
+        });
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('detail-modal');
+            if (event.target == modal) closeModal();
+        }
+    </script>
+</body>
+
+</html>

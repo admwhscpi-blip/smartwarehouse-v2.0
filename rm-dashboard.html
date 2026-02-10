@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE V2.0 - RM Stock Live</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+
+    <style>
+        /* Navbar Tweaks for this page */
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body style="background-color: #050505; color: #fff;">
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <!-- MENU DIKOSONGKAN SESUAI INSTRUKSI -->
+        </div>
+
+        <div class="nav-actions">
+            <!-- TOMBOL KEMBALI KE HOME DIHAPUS -->
+        </div>
+    </nav>
+
+    <!-- LIVE DASHBOARD SECTION -->
+    <section id="live-dashboard" style="padding:50px 60px;">
+        <div class="section-header"
+            style="margin-bottom:40px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-family:'Orbitron'; font-size:2rem; color:#fff;">LIVE MATERIAL STOCK</h2>
+                <div style="color:#64748b;">Real-time inventory levels across all facilities</div>
+            </div>
+        </div>
+
+        <!-- VIEW 1: STOCK MONITOR -->
+        <div id="view-stock" style="display:block;">
+            <div id="module-rm">
+                <!-- GLOBAL STATS -->
+                <div id="global-stats" class="stats-container"
+                    style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:40px;">
+                    <!-- Filled by JS -->
+                </div>
+
+                <!-- WAREHOUSE GRID -->
+                <div id="warehouse-display" class="warehouse-grid">
+                    <!-- Filled by JS -->
+                </div>
+
+                <!-- ANALYTICS GRID (Top 10 & Donut) -->
+                <div class="analytics-layout-grid"
+                    style="margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <!-- TOP MATERIALS -->
+                    <div class="card-analytics"
+                        style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:20px;">
+                        <h3
+                            style="font-family:'Orbitron'; color:#fff; border-left:3px solid #bc13fe; padding-left:10px; margin-bottom:20px;">
+                            🏆 Top Materials</h3>
+                        <div id="top-items-table"></div>
+                    </div>
+
+                    <!-- CATEGORY DISTRIBUTION -->
+                    <div class="card-analytics"
+                        style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:20px;">
+                        <h3
+                            style="font-family:'Orbitron'; color:#fff; border-left:3px solid #bc13fe; padding-left:10px; margin-bottom:20px;">
+                            📊 Category Distribution</h3>
+                        <div id="category-chart-container"
+                            style="display:flex; justify-content:space-around; align-items:center;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </section>
+
+    <!-- MODAL DETAIL WAREHOUSE -->
+    <div id="warehouse-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center;">
+        <div class="modal-content"
+            style="background:#0a0a0a; width:90%; max-width:800px; max-height:90vh; border:2px solid #00f3ff; border-radius:12px; box-shadow:0 0 50px rgba(0,243,255,0.2); overflow:hidden; display:flex; flex-direction:column;">
+
+            <!-- HEADER -->
+            <div class="modal-header"
+                style="padding:20px 30px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; background:rgba(0,243,255,0.05);">
+                <h2 id="modal-title" style="font-family:'Orbitron'; color:#00f3ff; margin:0; text-transform:uppercase;">
+                    DETAIL GUDANG: -</h2>
+                <button onclick="closeModal()"
+                    style="background:transparent; border:none; color:#fff; font-size:1.5rem; cursor:pointer; font-weight:bold;">&times;</button>
+            </div>
+
+            <!-- BODY (Scrollable) -->
+            <div class="modal-body" style="padding:0; overflow-y:auto; flex:1;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead style="position:sticky; top:0; background:#0f172a; z-index:1;">
+                        <tr>
+                            <th
+                                style="padding:15px 30px; text-align:left; color:#64748b; font-size:0.75rem; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #333;">
+                                Item Name</th>
+                            <th
+                                style="padding:15px 30px; text-align:right; color:#64748b; font-size:0.75rem; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #333;">
+                                Inventory Level (TON)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-list-body">
+                        <!-- Items injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer"
+                style="padding:15px 30px; border-top:1px solid #333; background:#0a0a0a; text-align:right;">
+                <button onclick="closeModal()"
+                    style="padding:8px 24px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; font-family:'Orbitron'; cursor:pointer; transition:all 0.3s;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS FOR DATA LOGIC -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app-config.js"></script>
+    <script src="js/app-data.js"></script>
+
+    <script>
+        // --- DASHBOARD SPECIFIC CONTROLLER ---
+
+        const App = { data: null };
+
+        // --- MODAL LOGIC ---
+        function openDetailModal(warehouseIndex) {
+            const whName = App.data.warehouses[warehouseIndex];
+            const modal = document.getElementById('warehouse-modal');
+            const title = document.getElementById('modal-title');
+            const tbody = document.getElementById('modal-list-body');
+
+            title.innerText = `DETAIL GUDANG: ${whName}`;
+            tbody.innerHTML = ''; // Clear previous
+
+            // Collect items for this warehouse
+            const items = [];
+            App.data.materials.forEach(mat => {
+                const stockVal = mat.stocks[warehouseIndex] || 0;
+                if (stockVal > 0) {
+                    items.push({ name: mat.name, qty: stockVal });
+                }
+            });
+
+            // Sort by quantity desc
+            items.sort((a, b) => b.qty - a.qty);
+
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="padding:30px; text-align:center; color:#666;">No items stored in this facility.</td></tr>';
+            } else {
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                    row.style.transition = 'background 0.2s';
+                    row.onmouseenter = () => row.style.background = 'rgba(0,243,255,0.05)';
+                    row.onmouseleave = () => row.style.background = 'transparent';
+
+                    row.innerHTML = `
+                        <td style="padding:15px 30px; color:#cbd5e1; font-weight:500;">${item.name}</td>
+                        <td style="padding:15px 30px; text-align:right; color:#fff; font-family:'Rajdhani'; font-weight:700; font-size:1.1rem;">${DataService.convertKgToTon(item.qty)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('warehouse-modal').style.display = 'none';
+        }
+
+        // Close on outside click
+        window.onclick = function (event) {
+            const modal = document.getElementById('warehouse-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // 1. DATA FETCHING
+        async function initDashboard() {
+            console.log("Initializing RM Stock Dashboard...");
+            App.data = await DataService.fetchData();
+            if (!App.data) return;
+
+            renderGlobalStats(DataService.processGlobalStats(App.data));
+            renderWarehouseCards(App.data);
+
+            const analytics = DataService.getAnalytics(App.data);
+            renderAnalytics(analytics);
+
+            const categories = DataService.getCategoryStats(App.data);
+            renderCategoryStats(categories);
+        }
+
+        // 2. RENDER FUNCTIONS (PIXEL PERFECT COPIES)
+
+        function renderGlobalStats(stats) {
+            const container = document.getElementById('global-stats');
+
+            // Re-calculate based on manual capacities if possible
+            let totalCap = 0;
+            Object.values(CONFIG.WAREHOUSE_CAPACITIES).forEach(c => totalCap += (c * CONFIG.UNIT_DIVIDER));
+
+            const percentage = totalCap > 0 ? (stats.totalFilled / totalCap) * 100 : stats.percentage;
+            let strokeColor = percentage > 80 ? '#ef4444' : (percentage > 60 ? '#ff9e0b' : '#00f3ff');
+            let stroke = percentage + ", 100";
+
+            container.innerHTML = `
+                 <div class="stat-card" style="background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(10,10,10,0.95)); border:1px solid rgba(255,255,255,0.08); padding:1.5rem; border-left: 3px solid #00f3ff; border-radius:4px;">
+                     <div class="stat-title" style="color:#94a3b8; font-size:0.8rem; font-weight:600; letter-spacing:1px; margin-bottom:5px;">CURRENT RM STOCK</div>
+                     <div class="stat-value" style="color:#00f3ff; font-size:2rem; font-weight:700; font-family:'Rajdhani'">${DataService.convertKgToTon(stats.totalFilled)} <span class="unit" style="font-size:0.8rem; color:#64748b">TON</span></div>
+                     <div class="stat-desc" style="color:#64748b; font-size:0.8rem;">Aggregation from all units</div>
+                 </div>
+                 <div class="stat-card" style="background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(10,10,10,0.95)); border:1px solid rgba(255,255,255,0.08); padding:1.5rem; border-left: 3px solid #ff9e0b; border-radius:4px;">
+                     <div class="stat-title" style="color:#94a3b8; font-size:0.8rem; font-weight:600; letter-spacing:1px; margin-bottom:5px;">IDLE CAPACITY (EST)</div>
+                     <div class="stat-value" style="color:#ff9e0b; font-size:2rem; font-weight:700; font-family:'Rajdhani'">${DataService.convertKgToTon(totalCap - stats.totalFilled)} <span class="unit" style="font-size:0.8rem; color:#64748b">TON</span></div>
+                     <div class="stat-desc" style="color:#64748b; font-size:0.8rem;">Based on hard-limit configuration</div>
+                 </div>
+                 <div class="stat-card" style="background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(10,10,10,0.95)); border:1px solid rgba(255,255,255,0.08); padding:1.5rem; display:flex; justify-content:space-between; align-items:center; border-left: 3px solid ${strokeColor}; border-radius:4px;">
+                     <div>
+                         <div class="stat-title" style="color:#94a3b8; font-size:0.8rem; font-weight:600; letter-spacing:1px; margin-bottom:5px;">UTILIZATION RATE</div>
+                         <div class="stat-value" style="color:#fff; font-size:2rem; font-weight:700; font-family:'Rajdhani'">${percentage.toFixed(1)}%</div>
+                         <div class="stat-desc" style="color:${strokeColor}; font-weight:bold; font-size:0.8rem;">${percentage > 80 ? 'CRITICAL LOAD' : (percentage > 60 ? 'HIGH LOAD' : 'OPTIMAL')}</div>
+                     </div>
+                     <div style="width:70px; height:70px;">
+                         <svg viewBox="0 0 36 36">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3"/>
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${strokeColor}" stroke-width="3" stroke-dasharray="${stroke}" />
+                         </svg>
+                     </div>
+                 </div>`;
+        }
+
+        function renderWarehouseCards(data) {
+            const container = document.getElementById('warehouse-display');
+            let html = '';
+            const maxCap = Math.max(...data.capacities) || 1;
+            const MAX_H = 180;
+
+            data.warehouses.forEach((name, index) => {
+                const stockVal = data.capacities[index]; // API returns stock as 'capacities'
+                let totalMaterialStock = 0;
+                if (data.materials) data.materials.forEach(m => { if (m.stocks && m.stocks[index]) totalMaterialStock += m.stocks[index]; });
+
+                // Use manual capacity for percentage logic if available
+                const hardCapInKg = (CONFIG.WAREHOUSE_CAPACITIES[name.toUpperCase()] || (stockVal / CONFIG.UNIT_DIVIDER)) * CONFIG.UNIT_DIVIDER;
+                const percent = hardCapInKg > 0 ? (totalMaterialStock / hardCapInKg) * 100 : 0;
+
+                const visualH = Math.max((hardCapInKg / (maxCap * 1.5)) * MAX_H, 50);
+
+                const isCritical = percent >= 80;
+                const fillColor = isCritical ? 'linear-gradient(to top, rgba(220, 38, 38, 0.9), rgba(185, 28, 28, 0.6))' : 'linear-gradient(to top, rgba(6, 182, 212, 0.9), rgba(8, 145, 178, 0.6))';
+                const borderColor = isCritical ? '#ef4444' : '#00f3ff';
+
+                html += `
+                <div class="warehouse-card" style="height:${visualH + 90}px; flex:1; min-width:100px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; cursor:pointer;" onclick="openDetailModal(${index})">
+                    <div class="wh-header" style="text-align:center; margin-bottom:10px;">
+                        <div class="wh-name" style="font-family:'Orbitron'; font-size:0.8rem; letter-spacing:1px; color:#fff;">${name}</div>
+                        <div class="wh-cap" style="color:#64748b; font-size:0.65rem;">Stock: ${(stockVal / 1000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</div>
+                    </div>
+                    <div class="wh-visual-bar" style="height:${visualH}px; width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); position:relative; overflow:hidden;">
+                         <!-- Grid Pattern Inline -->
+                        <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size:20px 20px;"></div>
+                        
+                        <div class="wh-fill" style="position:absolute; bottom:0; left:0; width:100%; height:${percent}%; background:${fillColor}; border-top:3px solid ${borderColor}; box-shadow: 0 0 20px ${borderColor}; transition:height 1s;"></div>
+                        <div class="wh-label-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-family:'Rajdhani'; font-weight:700; font-size:1.3rem; text-shadow:0 2px 4px rgba(0,0,0,0.8); z-index:2;">${Math.round(percent)}%</div>
+                    </div>
+                    <div class="wh-footer" style="height:10px; background:#333; border-top:1px solid #555; border-radius:0 0 4px 4px;"></div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderAnalytics(analytics) {
+            const tableContainer = document.getElementById('top-items-table');
+            const maxVal = analytics.top10[0] ? analytics.top10[0].totalTon : 1;
+
+            let html = `<table style="width:100%; border-collapse:separate; border-spacing:0 12px;">
+                <thead>
+                    <tr>
+                        <th style="color:#64748b; font-size:0.7rem; text-align:left; padding-left:10px; font-weight:600; letter-spacing:1px;">RANK</th>
+                        <th style="color:#64748b; font-size:0.7rem; text-align:left; font-weight:600; letter-spacing:1px;">MATERIAL</th>
+                        <th style="color:#64748b; font-size:0.7rem; text-align:left; font-weight:600; letter-spacing:1px;">TOTAL (TON)</th>
+                        <th style="color:#64748b; font-size:0.7rem; text-align:left; font-weight:600; letter-spacing:1px;">VISUAL</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            analytics.top10.forEach((item, index) => {
+                const percent = (item.totalTon / maxVal) * 100;
+                const rankColor = index === 0 ? '#00f3ff' : (index === 1 ? '#ffffff' : (index === 2 ? '#ff9e0b' : '#334155'));
+                const textColor = index < 3 ? '#000' : '#fff';
+                const glow = index === 0 ? 'box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);' : '';
+
+                html += `
+                <tr style="background:rgba(255,255,255,0.02);">
+                    <td style="padding:12px 10px; border-radius:10px 0 0 10px;">
+                        <div style="width:24px; height:24px; background:${rankColor}; color:${textColor}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-family:'Rajdhani'; font-size:0.9rem; ${glow}">
+                            ${index + 1}
+                        </div>
+                    </td>
+                    <td style="padding:12px 10px; color:#cbd5e1; font-weight:600; font-size:0.85rem;">${item.name}</td>
+                    <td style="padding:12px 10px; font-weight:700; color:#fff; font-family:'Rajdhani'; font-size:1rem;">${item.totalTon.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</td>
+                    <td style="padding:12px 10px; border-radius:0 10px 10px 0;">
+                        <div style="width:100px; height:6px; background:#334155; border-radius:4px; overflow:hidden;">
+                            <div style="width:${percent}%; height:100%; background:#bc13fe; border-radius:4px; box-shadow: 0 0 10px #bc13fe;"></div>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            tableContainer.innerHTML = html;
+        }
+
+        function renderCategoryStats(categories) {
+            const container = document.getElementById('category-chart-container');
+            if (!categories || categories.length === 0) return;
+
+            let svg = '<svg viewBox="0 0 36 36" style="width:120px; height:120px; transform:rotate(-90deg); filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));">';
+            svg += '<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" />';
+
+            let offset = 0;
+            categories.forEach((cat, i) => {
+                const color = ['#00f3ff', '#bc13fe', '#ff2a2a', '#ff9e0b', '#0aff0a'][i] || '#666';
+                const dash = `${cat.percent} ${100 - cat.percent}`;
+                svg += `<circle cx="18" cy="18" r="15.915" fill="transparent" stroke="${color}" stroke-width="4" stroke-dasharray="${dash}" stroke-dashoffset="${-offset}" stroke-linecap="round"></circle>`;
+                offset += cat.percent;
+            });
+            svg += `<g transform="rotate(90 18 18)">
+               <text x="18" y="16" text-anchor="middle" dy=".3em" style="fill:white; font-family:'Rajdhani'; font-size:10px; font-weight:800;">${categories.length}</text>
+               <text x="18" y="23" text-anchor="middle" dy=".3em" style="fill:#aaa; font-family:'Plus Jakarta Sans'; font-size:3px; font-weight:600; text-transform:uppercase;">Jenis</text>
+           </g>`;
+            svg += '</svg>';
+
+            let legend = '<div style="flex:1; margin-left:20px; display:flex; flex-direction:column; justify-content:center;">';
+            categories.forEach((cat, i) => {
+                const color = ['#00f3ff', '#bc13fe', '#ff2a2a', '#ff9e0b', '#0aff0a'][i] || '#666';
+                legend += `
+                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.03); padding-bottom:4px;">
+                       <div style="display:flex; align-items:center; gap:8px;">
+                           <div style="width:8px; height:8px; border-radius:2px; background:${color}; box-shadow:0 0 5px ${color};"></div>
+                           <span style="color:#cbd5e1; font-size:0.75rem; font-weight:500;">${cat.name}</span>
+                       </div>
+                       <div style="text-align:right;">
+                           <div style="color:#fff; font-weight:700; font-family:'Rajdhani'; font-size:0.85rem;">${Math.round(cat.totalTon)}T</div>
+                       </div>
+                   </div>
+               `;
+            });
+            legend += '</div>';
+
+            container.innerHTML = svg + legend;
+        }
+
+        // Initialize
+        window.onload = () => {
+            try {
+                initDashboard();
+            } catch (err) {
+                console.error("Dashboard init error:", err);
+            } finally {
+                // Hide loading overlay after initialization
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) overlay.classList.add('hidden');
+                }, 1000);
+            }
+        };
+
+    </script>
+</body>
+
+</html>

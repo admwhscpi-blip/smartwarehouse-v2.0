@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RM DOWNTIME // SMART WAREHOUSE V2.0</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/rm_stock_v2.css">
+    <link rel="stylesheet" href="homepage-style.css">
+    <link rel="stylesheet" href="css/sim_2050.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            z-index: 1000;
+        }
+
+        .downtime-container {
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .hud-scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.1;
+        }
+
+        .downtime-placeholder {
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px dashed rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            background: rgba(0, 243, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .downtime-placeholder i {
+            font-size: 4rem;
+            color: #00f3ff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+
+        .glitch-text {
+            font-family: 'Orbitron';
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        .status-tag {
+            background: rgba(188, 19, 254, 0.1);
+            border: 1px solid #bc13fe;
+            color: #bc13fe;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: 'Orbitron';
+            margin-top: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hud-scanline"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <a href="rm-history.html" class="nav-link-sub">HISTORIS</a>
+        </div>
+        </div>
+
+        <div class="dropdown-nested">
+            <a href="#" class="nav-link-item has-submenu">RM-STAFFEL</a>
+            <div class="dropdown-submenu">
+                <a href="rm-staffel-masterdata.html" class="nav-link-sub">MASTER DATA</a>
+                <a href="rm-staffel-analys.html" class="nav-link-sub">ANALYS</a>
+            </div>
+        </div>
+
+        <div class="dropdown-nested">
+            <a href="#" class="nav-link-item has-submenu" style="color:#D9FF66;">RM-DOWNTIME</a>
+            <div class="dropdown-submenu">
+                <a href="rm-downtime.html" class="nav-link-sub active">MASTER DATA</a>
+                <a href="#" class="nav-link-sub disabled">ANALYS</a>
+            </div>
+        </div>
+
+        <div class="dropdown-nested">
+            <a href="#" class="nav-link-item has-submenu">RM-LANGSIR</a>
+            <div class="dropdown-submenu">
+                <a href="rm-langsiran.html" class="nav-link-sub">CONTROLLING</a>
+                <a href="#" class="nav-link-sub disabled">GPS TRACKER</a>
+            </div>
+        </div>
+
+        <div class="dropdown-nested">
+            <a href="#" class="nav-link-item has-submenu" style="color:#D9FF66;">BIN SWEEPING</a>
+            <div class="dropdown-submenu">
+                <a href="bin-sweeping-status.html" class="nav-link-sub">STATUS OPERASIONAL</a>
+                <a href="bin-sweeping-analys.html" class="nav-link-sub">ANALYSTIC</a>
+            </div>
+        </div>
+
+        <div class="dropdown-nested">
+            <a href="#" class="nav-link-item has-submenu" style="color:#D9FF66;">RM-KADAR AIR</a>
+            <div class="dropdown-submenu">
+                <a href="rm-ka-masterdata.html" class="nav-link-sub">MASTER DATA</a>
+                <a href="rm-ka-analys.html" class="nav-link-sub">ANALYSTIC</a>
+            </div>
+        </div>
+        </div>
+        </div>
+
+        <!-- CPO DROPDOWN -->
+        <div class="dropdown">
+            <a href="#" class="nav-link dropdown-toggle">CPO</a>
+            <div class="dropdown-content">
+                <a href="cpo-dashboard.html" class="nav-link-item">CPO STOCK</a>
+                <a href="cpo-simulation.html" class="nav-link-item">CPO SIMULASI</a>
+            </div>
+        </div>
+
+        <!-- BKK DROPDOWN -->
+        <div class="dropdown">
+            <a href="#" class="nav-link dropdown-toggle">BKK</a>
+            <div class="dropdown-content">
+                <a href="bkk-dashboard.html" class="nav-link-item">BKK STOCK</a>
+                <a href="bkk-simulasi.html" class="nav-link-item">BKK SIMULASI</a>
+            </div>
+        </div>
+
+        <!-- HUB WAREHOUSE SYSTEM DROPDOWN -->
+        <div class="dropdown">
+            <a href="#" class="nav-link dropdown-toggle">HUB WAREHOUSE SYSTEM</a>
+            <div class="dropdown-content">
+                <a href="about-page.html" class="nav-link-item">LAYOUT RUANG LINGKUP</a>
+                <a href="about-structure.html" class="nav-link-item">STRUKTUR ORGANISASI</a>
+
+                <!-- NESTED SMART ADMIN -->
+                <div class="dropdown-nested">
+                    <a href="#" class="nav-link-item has-submenu">SMART ADMIN</a>
+                    <div class="dropdown-submenu">
+                        <a href="bap4a.html" class="nav-link-sub">BAP4A</a>
+                        <a href="notulensi.html" class="nav-link-sub">NOTULENSI MEETING</a>
+                    </div>
+                </div>
+
+                <!-- NESTED OPERASIONAL & BIAYA -->
+                <div class="dropdown-nested">
+                    <a href="#" class="nav-link-item has-submenu"
+                        style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">OPERASIONAL & BIAYA</a>
+                    <div class="dropdown-submenu">
+                        <div class="dropdown-nested">
+                            <a href="#" class="nav-link-item has-submenu"
+                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">EKSPEDISI</a>
+                            <div class="dropdown-submenu">
+                                <a href="op-ekspedisi-masterdata.html" class="nav-link-sub">MASTER DATA</a>
+                                <a href="op-ekspedisi-analys.html" class="nav-link-sub">ANALYSA</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-nested">
+                            <a href="#" class="nav-link-item has-submenu"
+                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">SEWA UNIT & ALAT</a>
+                            <div class="dropdown-submenu">
+                                <a href="op-sewa-unit-masterdata.html" class="nav-link-sub">MASTER DATA</a>
+                                <a href="op-sewa-unit-analys.html" class="nav-link-sub">ANALYSA</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-nested">
+                            <a href="#" class="nav-link-item has-submenu"
+                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">KONTROL BBM (SOLAR)</a>
+                            <div class="dropdown-submenu">
+                                <a href="op-kontrol-bbm-masterdata.html" class="nav-link-sub">MASTER DATA</a>
+                                <a href="op-kontrol-bbm-analys.html" class="nav-link-sub">ANALYSA</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-nested">
+                            <a href="#" class="nav-link-item has-submenu"
+                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">ANALISA LOADER</a>
+                            <div class="dropdown-submenu">
+                                <a href="op-analisa-loader-masterdata.html" class="nav-link-sub">MASTER DATA</a>
+                                <a href="op-analisa-loader-analys.html" class="nav-link-sub">ANALYSA</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OUTSTANDING DROPDOWN -->
+        <div class="dropdown">
+            <a href="#" class="nav-link dropdown-toggle">OUTSTANDING</a>
+            <div class="dropdown-content">
+                <a href="outstanding-rm.html" class="nav-link-item">OUTSTANDING RM & CPO</a>
+                <a href="outstanding-bkk.html" class="nav-link-item">OUTSTANDING BKK</a>
+            </div>
+        </div>
+        </div>
+
+        <div class="nav-actions">
+            <!-- Fullscreen Mode Toggle if needed -->
+            <button class="btn-hud-primary" onclick="location.reload()">SYNC ENGINE</button>
+        </div>
+    </nav>
+
+    <div class="downtime-container">
+        <header style="margin-bottom: 40px; border-left: 4px solid #bc13fe; padding-left: 20px;">
+            <h1 style="font-family: 'Orbitron'; font-size: 1.8rem; color: #fff; margin: 0;">RM OPERATIONAL DOWNTIME</h1>
+            <p style="color: #64748b; font-size: 0.9rem; margin: 5px 0 0 0;">TRACKING ENGINE // SELECT SUB-MODULE TO
+                PROCEED</p>
+        </header>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:50px;">
+            <!-- MASTERDATA CARD -->
+            <div class="hud-card"
+                style="cursor:pointer; transition:all 0.3s; height:300px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;"
+                onclick="window.location.href='rm-dt-masterdata.html'">
+                <div
+                    style="font-size:3rem; color:#00f3ff; margin-bottom:20px; text-shadow:0 0 15px rgba(0,243,255,0.4);">
+                    📊</div>
+                <div class="glitch-text" style="font-size:1.5rem;">RM-DT-MASTER DATA</div>
+                <div class="status-tag" style="background:rgba(0,243,255,0.1); border-color:#00f3ff; color:#00f3ff;">LOG
+                    & INPUT SYSTEM</div>
+                <p style="color:#64748b; font-size:0.75rem; margin-top:20px; max-width:300px;">Akses 4 tabel
+                    operasional: Template, Kuli Borong, Kuli Harian, dan Daily Activity.</p>
+            </div>
+
+            <!-- ANALYSIS CARD -->
+            <div class="hud-card"
+                style="cursor:pointer; transition:all 0.3s; height:300px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;"
+                onclick="window.location.href='rm-dt-analys.html'">
+                <div
+                    style="font-size:3rem; color:#bc13fe; margin-bottom:20px; text-shadow:0 0 15px rgba(188,19,254,0.4);">
+                    📈</div>
+                <div class="glitch-text" style="font-size:1.5rem;">RM-DT-ANALYS</div>
+                <div class="status-tag">PERFORMANCE ENGINE</div>
+                <p style="color:#64748b; font-size:0.75rem; margin-top:20px; max-width:300px;">Analisis tren downtime,
+                    produktivitas tim kuli, dan performa operasional harian.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

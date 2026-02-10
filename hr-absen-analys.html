@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE - SUPER ANALYTICS 2050</title>
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CHARTS -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <!-- STYLES -->
+    <link rel="stylesheet" href="homepage-style.css">
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: rgba(20, 20, 25, 0.6);
+            --neon-purple: #b026ff;
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --neon-gold: #ffcc00;
+            --text-main: #e0e0e0;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(176, 38, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.05) 0%, transparent 40%);
+        }
+
+        /* Navbar Styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(10, 10, 11, 0.9);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-text {
+            font-family: 'Orbitron';
+            font-weight: 700;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+            font-size: 1.2rem;
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        @keyframes blue-glow {
+            from {
+                filter: drop-shadow(0 0 2px rgba(0, 243, 255, 0.2));
+            }
+
+            to {
+                filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.6));
+            }
+        }
+
+        @keyframes cyber-glow {
+            from {
+                text-shadow: 0 0 5px rgba(0, 243, 255, 0.2);
+            }
+
+            to {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            }
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            color: #fff;
+            padding: 8px 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav-link.active {
+            border-color: var(--neon-purple);
+            background: rgba(176, 38, 255, 0.1);
+            box-shadow: 0 0 15px rgba(176, 38, 255, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .header-actions select {
+            background: #000;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 8px 15px;
+            font-family: 'Orbitron';
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Main Grid */
+        .main-container {
+            padding: 100px 30px 30px 30px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .glass-panel {
+            background: var(--bg-panel);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        .glass-panel.clickable:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.2);
+            background: rgba(30, 30, 35, 0.8);
+        }
+
+        .panel-header {
+            font-family: 'Orbitron';
+            font-size: 0.9rem;
+            color: #fff;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Stats Cards */
+        .stat-val {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+            font-family: 'Orbitron';
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* Calendar */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .calendar-day.clickable {
+            cursor: pointer;
+        }
+
+        .calendar-day.clickable:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .calendar-day.deviation {
+            border: 1px solid rgba(255, 0, 60, 0.3);
+            background: rgba(255, 0, 60, 0.05);
+        }
+
+        .day-num {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 0.6rem;
+            color: #444;
+        }
+
+        .dev-count {
+            color: var(--neon-red);
+            font-weight: bold;
+        }
+
+        /* Ranking List */
+        .rank-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .rank-item.clickable {
+            cursor: pointer;
+        }
+
+        .rank-item.clickable:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .rank-pos {
+            font-family: 'Orbitron';
+            color: var(--neon-gold);
+            width: 25px;
+        }
+
+        .rank-info {
+            flex-grow: 1;
+        }
+
+        .rank-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: block;
+        }
+
+        .rank-bar {
+            height: 4px;
+            background: #333;
+            margin-top: 5px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .rank-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+
+        .rank-val {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* Modal HUD Styling */
+        #detailModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+            width: 85%;
+            max-width: 1000px;
+            max-height: 80vh;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            font-family: 'Orbitron';
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            padding-bottom: 15px;
+        }
+
+        .close-modal {
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: var(--neon-red);
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .detail-table th {
+            text-align: left;
+            padding: 12px;
+            font-family: 'Orbitron';
+            font-size: 0.75rem;
+            color: #888;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-table td {
+            padding: 12px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .row-late {
+            color: var(--neon-red);
+        }
+
+        .row-overstay {
+            color: #00ff88;
+        }
+
+        .row-deviation {
+            color: var(--neon-purple);
+        }
+
+        /* Loader */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #222;
+            border-top-color: var(--neon-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Utilities */
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        .span-3 {
+            grid-column: span 3;
+        }
+
+        .row-span-2 {
+            grid-row: span 2;
+        }
+
+        /* FULLSCREEN MODE */
+        body.fullscreen-mode {
+            background-image: none;
+            background-color: #000;
+        }
+
+        body.fullscreen-mode .header {
+            padding: 10px 30px;
+        }
+
+        body.fullscreen-mode .main-container {
+            padding: 80px 20px 20px 20px;
+        }
+
+        body.fullscreen-mode .dashboard-grid {
+            height: calc(100vh - 120px);
+            gap: 12px;
+        }
+
+        body.fullscreen-mode .glass-panel {
+            padding: 12px;
+        }
+
+        body.fullscreen-mode .stat-val {
+            font-size: 1.8rem;
+        }
+
+        body.fullscreen-mode .rank-list {
+            max-height: none !important;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div class="loader"></div>
+        <p style="margin-top: 15px; font-family: 'Orbitron'; color: var(--neon-purple);">ANALYZING DATA FEED...</p>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalTitle">TRANSACTION DETAILS</span>
+                <i class="fas fa-times close-modal" onclick="closeModal()"></i>
+            </div>
+            <div class="modal-body">
+                <table class="detail-table">
+                    <thead id="modalHead"></thead>
+                    <tbody id="modalBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="logo-section">
+            <a href="homepage-v1.html" class="logo-link" style="text-decoration: none;">
+                <div class="logo-text">
+                    <span class="brand-smart">SMART WAREHOUSE</span>
+                    <span class="brand-v2">V2.0</span>
+                </div>
+            </a>
+            <div class="nav-menu">
+                <a href="hr-absen.html" class="nav-link">MASTER DATA</a>
+                <a href="#" class="nav-link active">ANALYSA</a>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="nav-link" onclick="toggleFullscreen()"
+                style="border:1px solid var(--neon-blue); color:var(--neon-blue); background:transparent; cursor:pointer; font-family:'Orbitron';">
+                <i class="fas fa-expand"></i> FULLSCREEN
+            </button>
+            <select id="monthSelect">
+                <!-- Populated by JS -->
+            </select>
+            <a href="homepage-v1.html" class="nav-link" style="border-color: #ff3e3e; color: #ff3e3e;">EXIT</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="dashboard-grid">
+            <!-- Summary Stats -->
+            <div class="glass-panel clickable" onclick="filterDetails('late')">
+                <div class="panel-header">TOTAL LATECOMERS</div>
+                <div class="stat-val" id="stat-late">0</div>
+                <div class="stat-label">KESIANGAN (>10 MIN)</div>
+                <i class="fas fa-info-circle"
+                    style="position:absolute; bottom:20px; right:20px; font-size:0.8rem; color: #444;"></i>
+            </div>
+            <div class="glass-panel clickable" onclick="filterDetails('deviation')">
+                <div class="panel-header">DEVIATION RATE</div>
+                <div class="stat-val" id="stat-deviation" style="color: var(--neon-purple);">0%</div>
+                <div class="stat-label">ALPHA, SAKIT, IZIN</div>
+                <i class="fas fa-info-circle"
+                    style="position:absolute; bottom:20px; right:20px; font-size:0.8rem; color: #444;"></i>
+            </div>
+            <div class="glass-panel">
+                <div class="panel-header">TOP SHIFT LATE</div>
+                <div class="stat-val" id="stat-shift" style="color: var(--neon-gold); font-size: 1.5rem;">-</div>
+                <div class="stat-label">SHIFT WITH MOST DELAYS</div>
+            </div>
+            <div class="glass-panel clickable" onclick="filterDetails('overstay')">
+                <div class="panel-header">OVERSTAY COUNT</div>
+                <div class="stat-val" id="stat-overstay" style="color: #00ff88;">0</div>
+                <div class="stat-label">PULANG TELAT</div>
+                <i class="fas fa-info-circle"
+                    style="position:absolute; bottom:20px; right:20px; font-size:0.8rem; color: #444;"></i>
+            </div>
+
+            <!-- Chart Activity -->
+            <div class="glass-panel span-2">
+                <div class="panel-header">ATTENDANCE TREND <i class="fas fa-chart-line"></i></div>
+                <div id="chartTrend" style="height: 250px;"></div>
+            </div>
+
+            <!-- Calendar Filtered -->
+            <div class="glass-panel row-span-2">
+                <div class="panel-header">DEVIATION TRACKER <i class="fas fa-calendar-alt"></i></div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Days -->
+                </div>
+                <div style="margin-top: 15px; font-size: 0.7rem; color: #666;">
+                    * CLICK DAY TO VIEW DETAILS (LATE, SAKIT, IZIN, ALPHA)
+                </div>
+            </div>
+
+            <!-- Ranking: Late Leavers -->
+            <div class="glass-panel row-span-2">
+                <div class="panel-header">TOP LATE LEAVERS <i class="fas fa-moon"></i></div>
+                <ul class="rank-list" id="rankLeavers">
+                    <!-- Rank items -->
+                </ul>
+            </div>
+
+            <!-- Ranking: Latecomers -->
+            <div class="glass-panel span-2">
+                <div class="panel-header">TOP KESIANGAN <i class="fas fa-clock"></i></div>
+                <ul class="rank-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"
+                    id="rankLatecomers">
+                    <!-- Rank items -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwvwvSlwDJ-MoH9Q8gINpYjTcXS_G1HTiGb7c_1Xw4bsKg3IVSj2fF3DvF-A8l8iVJQ/exec";
+        let rawData = {};
+        let currentMonth = '';
+
+        let globalEvents = {
+            late: [],
+            overstay: [],
+            deviation: []
+        };
+
+        const SHIFTS = {
+            1: { start: "07:00", end: "16:00" }, // S1 / Long Day
+            2: { start: "16:00", end: "00:00" }, // S2
+            3: { start: "19:00", end: "07:00" }, // Long Night
+            4: { start: "00:00", end: "07:00" }  // S3
+        };
+
+        async function init() {
+            try {
+                const response = await fetch(API_URL);
+                rawData = await response.json();
+
+                const months = Object.keys(rawData);
+                const select = document.getElementById('monthSelect');
+
+                const now = new Date();
+                const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+                const currentMonthSearch = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
+                months.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = opt.textContent = m;
+                    if (m === currentMonthSearch) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                currentMonth = select.value || months[0];
+                select.addEventListener('change', (e) => {
+                    currentMonth = e.target.value;
+                    renderAnalytics();
+                });
+
+                renderAnalytics();
+                document.getElementById('loading').style.display = 'none';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function parseTime(t) {
+            if (!t || !t.includes(':')) return null;
+            const parts = t.split(':');
+            const h = parseInt(parts[0]);
+            const m = parseInt(parts[1]);
+            return h * 60 + m;
+        }
+
+        function getShift(timeStr) {
+            const t = parseTime(timeStr);
+            if (t === null) return null;
+            if (t >= 300 && t <= 660) return 1;    // 05:00 - 11:00 -> S1 / Long Day (07:00)
+            if (t >= 780 && t <= 1049) return 2;  // 13:00 - 17:29 -> S2 (16:00)
+            if (t >= 1050 && t <= 1259) return 3; // 17:30 - 20:59 -> Long Night (19:00)
+            if (t >= 1260 || t <= 180) return 4;  // 21:00 - 03:00 -> S3 (00:00)
+            return null;
+        }
+
+        function formatDuration(m) {
+            if (m < 60) return m + ' menit';
+            const h = Math.floor(m / 60);
+            const rem = m % 60;
+            return h + ' jam' + (rem > 0 ? ' ' + rem + ' menit' : '');
+        }
+
+        function toggleFullscreen() {
+            document.body.classList.toggle('fullscreen-mode');
+            const btn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            if (document.body.classList.contains('fullscreen-mode')) {
+                btn.innerHTML = '<i class="fas fa-compress"></i> EXIT FULLSCREEN';
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            } else {
+                btn.innerHTML = '<i class="fas fa-expand"></i> FULLSCREEN';
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+            setTimeout(renderAnalytics, 300);
+        }
+
+        function updateBranding() {
+            // Logic branding bulan dihapus sesuai instruksi Juragan agar logo tetap bersih dan identik
+        }
+
+        function renderAnalytics() {
+            updateBranding();
+            const data = rawData[currentMonth];
+            if (!data) return;
+            const employees = data.employees;
+
+            globalEvents = { late: [], overstay: [], deviation: [] };
+
+            let lateCount = 0;
+            let overstayCount = 0;
+            let deviationCount = 0;
+            let shiftStats = { 1: 0, 2: 0, 3: 0, 4: 0 };
+            let personLate = [];
+            let personOverstay = [];
+            let dailyDeviations = {};
+
+            employees.forEach(emp => {
+                let empLate = 0;
+                let empOverstay = 0;
+
+                Object.keys(emp.daily).forEach(day => {
+                    const d = emp.daily[day];
+                    const inTime = d.in;
+                    const outTime = d.out;
+                    const inLower = inTime?.toLowerCase() || '';
+
+                    if (['alpha', 'alfa', 'izin', 'sakit', 'cuti', 'off'].some(v => inLower.includes(v))) {
+                        deviationCount++;
+                        dailyDeviations[day] = (dailyDeviations[day] || 0) + 1;
+                        globalEvents.deviation.push({ day, nik: emp.nik, name: emp.nama, type: inTime.toUpperCase() });
+                        return;
+                    }
+
+                    const shiftIdx = getShift(inTime);
+                    if (shiftIdx) {
+                        const shiftStart = parseTime(SHIFTS[shiftIdx].start);
+                        let actualIn = parseTime(inTime);
+                        if (shiftIdx === 4 && actualIn > 1200) actualIn -= 1440;
+
+                        if (actualIn > shiftStart + 10) {
+                            const delay = actualIn - shiftStart;
+                            lateCount++;
+                            empLate++;
+                            shiftStats[shiftIdx]++;
+                            dailyDeviations[day] = (dailyDeviations[day] || 0) + 1;
+                            globalEvents.late.push({ day, nik: emp.nik, name: emp.nama, in: inTime, out: outTime, delay });
+                        }
+
+                        let shiftEnd = parseTime(SHIFTS[shiftIdx].end);
+                        if (shiftIdx === 1) {
+                            if (parseTime(outTime) > parseTime("17:30")) shiftEnd = parseTime("18:00");
+                        }
+
+                        if (shiftEnd === 0) shiftEnd = 1440;
+                        let actualOut = parseTime(outTime);
+                        if (actualOut < 420 && (shiftIdx === 2 || shiftIdx === 3)) actualOut += 1440;
+
+                        if (actualOut > shiftEnd + 30) {
+                            const extra = actualOut - shiftEnd;
+                            overstayCount++;
+                            empOverstay++;
+                            globalEvents.overstay.push({ day, nik: emp.nik, name: emp.nama, in: inTime, out: outTime, extra });
+                        }
+                    }
+                });
+
+                if (empLate > 0) personLate.push({ name: emp.nama, val: empLate });
+                if (empOverstay > 0) personOverstay.push({ name: emp.nama, val: empOverstay });
+            });
+
+            document.getElementById('stat-late').textContent = lateCount;
+            document.getElementById('stat-overstay').textContent = overstayCount;
+            const maxShift = Object.keys(shiftStats).reduce((a, b) => shiftStats[a] > shiftStats[b] ? a : b);
+            const shiftNames = { 1: "S1/LONG", 2: "SHIFT 2", 3: "LONG NIGHT", 4: "SHIFT 3" };
+            document.getElementById('stat-shift').textContent = lateCount > 0 ? shiftNames[maxShift] : '-';
+            const devRate = ((globalEvents.deviation.length / (employees.length * 30)) * 100).toFixed(1);
+            document.getElementById('stat-deviation').textContent = `${devRate}%`;
+
+            renderCalendar(dailyDeviations);
+            renderRankings(personLate, 'rankLatecomers', 'var(--neon-blue)', 'late');
+            renderRankings(personOverstay, 'rankLeavers', 'var(--neon-purple)', 'overstay');
+            renderTrendChart(dailyDeviations);
+        }
+
+        function renderCalendar(deviations) {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 31; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day clickable';
+                const count = deviations[i] || 0;
+                if (count > 0) cell.classList.add('deviation');
+                cell.innerHTML = `
+                    <span class="day-num">${i}</span>
+                    <span class="dev-count">${count > 0 ? count : ''}</span>
+                `;
+                cell.onclick = () => showDayDetail(i);
+                grid.appendChild(cell);
+            }
+        }
+
+        function renderRankings(list, elementId, color, type) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = '';
+            list.sort((a, b) => b.val - a.val).slice(0, 10).forEach((item, idx) => {
+                const li = document.createElement('li');
+                li.className = 'rank-item clickable';
+                li.innerHTML = `
+                    <span class="rank-pos">${idx + 1}</span>
+                    <div class="rank-info">
+                        <span class="rank-name">${item.name}</span>
+                        <div class="rank-bar"><div class="rank-fill" style="width:${Math.min((item.val / 30) * 100, 100)}%; background:${color};"></div></div>
+                    </div>
+                    <span class="rank-val">${item.val}</span>
+                `;
+                li.onclick = () => showPersonDetail(item.name, type);
+                el.appendChild(li);
+            });
+        }
+
+        function openModal(title, heads) {
+            document.getElementById('modalTitle').textContent = title;
+            const head = document.getElementById('modalHead');
+            head.innerHTML = `<tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr>`;
+            document.getElementById('modalBody').innerHTML = '';
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        function filterDetails(type) {
+            const heads = type === 'late' ? ['DATE', 'NIK', 'NAMA', 'IN', 'OUT', 'LATE (SELISIH)'] :
+                type === 'overstay' ? ['DATE', 'NIK', 'NAMA', 'IN', 'OUT', 'OVER (SELISIH)'] :
+                    ['DATE', 'NIK', 'NAMA', 'IN', 'OUT', 'STATUS'];
+
+            openModal(`${type.toUpperCase()} TRANSACTIONS`, heads);
+            const body = document.getElementById('modalBody');
+            const list = globalEvents[type];
+
+            list.forEach(ev => {
+                const tr = document.createElement('tr');
+                tr.className = `row-${type}`;
+                if (type === 'late') {
+                    tr.innerHTML = `<td>Tgl ${ev.day}</td><td>${ev.nik}</td><td>${ev.name}</td><td>${ev.in}</td><td>${ev.out || '-'}</td><td>${formatDuration(ev.delay)}</td>`;
+                } else if (type === 'overstay') {
+                    tr.innerHTML = `<td>Tgl ${ev.day}</td><td>${ev.nik}</td><td>${ev.name}</td><td>${ev.in || '-'}</td><td>${ev.out}</td><td>${formatDuration(ev.extra)}</td>`;
+                } else {
+                    tr.innerHTML = `<td>Tgl ${ev.day}</td><td>${ev.nik}</td><td>${ev.name}</td><td>-</td><td>-</td><td>${ev.type}</td>`;
+                }
+                body.appendChild(tr);
+            });
+        }
+
+        function showPersonDetail(name, type) {
+            const heads = ['DATE', 'IN', 'OUT', 'SELISIH'];
+            openModal(`HISTORY: ${name.toUpperCase()}`, heads);
+            const body = document.getElementById('modalBody');
+            const list = globalEvents[type].filter(ev => ev.name === name);
+
+            list.forEach(ev => {
+                const tr = document.createElement('tr');
+                tr.className = `row-${type}`;
+                const val = type === 'late' ? formatDuration(ev.delay) : formatDuration(ev.extra);
+                tr.innerHTML = `<td>Tgl ${ev.day}</td><td>${ev.in || '-'}</td><td>${ev.out || '-'}</td><td>${val}</td>`;
+                body.appendChild(tr);
+            });
+        }
+
+        function showDayDetail(day) {
+            openModal(`ACTIVITY LOG: DAY ${day}`, ['NAME', 'IN', 'OUT', 'EVENT', 'SELISIH']);
+            const body = document.getElementById('modalBody');
+
+            const dayLate = globalEvents.late.filter(e => parseInt(e.day) === day);
+            const dayOver = globalEvents.overstay.filter(e => parseInt(e.day) === day);
+            const dayDev = globalEvents.deviation.filter(e => parseInt(e.day) === day);
+
+            dayLate.forEach(e => {
+                const tr = document.createElement('tr'); tr.className = 'row-late';
+                tr.innerHTML = `<td>${e.name}</td><td>${e.in}</td><td>${e.out || '-'}</td><td>KESIANGAN</td><td>+${formatDuration(e.delay)}</td>`;
+                body.appendChild(tr);
+            });
+            dayDev.forEach(e => {
+                const tr = document.createElement('tr'); tr.className = 'row-deviation';
+                tr.innerHTML = `<td>${e.name}</td><td>-</td><td>-</td><td>${e.type}</td><td>-</td>`;
+                body.appendChild(tr);
+            });
+            dayOver.forEach(e => {
+                const tr = document.createElement('tr'); tr.className = 'row-overstay';
+                tr.innerHTML = `<td>${e.name}</td><td>${e.in || '-'}</td><td>${e.out}</td><td>PULANG TELAT</td><td>+${formatDuration(e.extra)}</td>`;
+                body.appendChild(tr);
+            });
+
+            if (body.children.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666; padding:20px;">NO DEVIATIONS RECORDED FOR THIS DAY</td></tr>';
+            }
+        }
+
+        let trendChart = null;
+        function renderTrendChart(deviations) {
+            const ctx = document.getElementById('chartTrend');
+            const data = [];
+            for (let i = 1; i <= 31; i++) data.push(deviations[i] || 0);
+
+            const options = {
+                series: [{ name: 'Events', data: data }],
+                chart: { type: 'area', height: 250, toolbar: { show: false }, background: 'transparent' },
+                colors: ['#b026ff'],
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { opacityFrom: 0.5, opacityTo: 0 } },
+                xaxis: { categories: Array.from({ length: 31 }, (_, i) => i + 1), labels: { style: { colors: '#444' } } },
+                yaxis: { labels: { style: { colors: '#444' } } },
+                grid: { borderColor: 'rgba(255,255,255,0.05)' },
+                dataLabels: { enabled: false }
+            };
+
+            if (trendChart) trendChart.destroy();
+            trendChart = new ApexCharts(ctx, options);
+            trendChart.render();
+        }
+
+        init();
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target == modal) closeModal();
+        }
+    </script>
+</body>
+
+</html>

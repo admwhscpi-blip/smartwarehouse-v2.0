@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE - KONTROL CUTI v2.0</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CHARTS -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="homepage-style.css">
+    <style>
+        :root {
+            --bg-dark: #020403;
+            --glass-bg: rgba(10, 30, 25, 0.4);
+            --glass-border: rgba(16, 185, 129, 0.2);
+            --neon-emerald: #10b981;
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-gold: #ffd700;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(0, 243, 255, 0.1) 0%, transparent 40%);
+        }
+
+        /* PREMIUM NAV */
+        .navbar {
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--glass-border);
+            padding: 15px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 2000;
+            box-sizing: border-box;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .nav-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 10px 25px;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 1px;
+        }
+
+        .nav-tab-btn.active {
+            background: var(--neon-emerald);
+            color: #000;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        /* MAIN LAYOUT */
+        .main-container {
+            padding: 120px 40px 40px 40px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .view-section {
+            display: none;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* LUXURY PANELS */
+        .premium-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .premium-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1), transparent);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 15px;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron';
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--neon-emerald);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        /* MASTER LOG TABLE */
+        .table-luxury {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .table-luxury th {
+            font-family: 'Orbitron';
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            padding: 15px;
+            text-align: left;
+            letter-spacing: 1px;
+        }
+
+        .table-luxury tr {
+            transition: all 0.3s;
+        }
+
+        .table-luxury td {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            font-family: 'Rajdhani';
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .table-luxury td:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .table-luxury td:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .table-luxury tr:hover td {
+            background: rgba(16, 185, 129, 0.1);
+            transform: scale(1.01);
+        }
+
+        /* ANALYSA GRID */
+        .analysa-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr 400px;
+            grid-template-rows: auto auto;
+            gap: 25px;
+        }
+
+        /* CALENDAR */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .cal-day-head {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            font-family: 'Orbitron';
+            padding-bottom: 5px;
+        }
+
+        .cal-cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .cal-cell:hover {
+            background: var(--neon-emerald);
+            color: #000;
+            transform: translateY(-3px) scale(1.1);
+            z-index: 10;
+        }
+
+        .cal-cell.has-data {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        }
+
+        .cal-cell.has-data::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #fff;
+        }
+
+        .cal-cell.active-cell {
+            background: rgba(16, 185, 129, 0.8);
+            border: 1px solid #fff;
+            color: #000;
+        }
+
+        /* SEARCH & PROFILE */
+        .search-wrapper {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .lux-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 45px 15px 20px;
+            color: #fff;
+            font-family: 'Rajdhani';
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .lux-input:focus {
+            border-color: var(--neon-emerald);
+        }
+
+        .profile-card {
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .balance-circle {
+            width: 140px;
+            height: 140px;
+            border: 4px solid var(--neon-emerald);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+            position: relative;
+        }
+
+        .balance-val {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--neon-emerald);
+        }
+
+        .balance-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* LOADING */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s, visibility 1s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(16, 185, 129, 0.1);
+            border-top: 4px solid var(--neon-emerald);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-emerald);
+        }
+
+        .badge-type {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .bg-ct {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--neon-gold);
+        }
+
+        .bg-s {
+            background: rgba(255, 0, 85, 0.2);
+            color: var(--neon-pink);
+        }
+
+        .bg-i {
+            background: rgba(0, 243, 255, 0.2);
+            color: var(--neon-cyan);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div
+            style="margin-top:20px; font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-emerald); letter-spacing:4px;">
+            INITIALIZING CUTI v2.0</div>
+    </div>
+
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link">
+            <div class="logo-text">
+                <span class="brand-smart" style="color:var(--neon-emerald)">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <div class="nav-tabs">
+            <button class="nav-tab-btn active" onclick="switchView('master')">MASTER DATA LOGS</button>
+            <button class="nav-tab-btn" onclick="switchView('analysa')">ANALYTICS COMMAND</button>
+        </div>
+
+        <button class="nav-tab-btn" onclick="window.location.href='homepage-v1.html'"
+            style="border:1px solid var(--neon-pink); color:var(--neon-pink);">EXIT SYSTEM</button>
+    </nav>
+
+    <div class="main-container">
+
+        <!-- VIEW: MASTER DATA (RAW LOGS) -->
+        <div id="view-master" class="view-section active">
+            <div class="premium-panel">
+                <div class="panel-header">
+                    <div class="panel-title">LIVE FEED: FORM RESPONSES LOG</div>
+                    <div style="font-size:0.8rem; color:var(--text-dim);">FILTERED: AFTER 1 FEB 2026</div>
+                </div>
+                <div style="max-height: 75vh; overflow-y: auto;">
+                    <table class="table-luxury">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>NIK</th>
+                                <th>Nama Personnel</th>
+                                <th>Tanggal Cuti</th>
+                                <th>Department</th>
+                                <th>Jenis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: ANALYSA (COMMAND CENTER) -->
+        <div id="view-analysa" class="view-section">
+            <div class="analysa-grid">
+
+                <!-- 1. SEARCH & DETAILED PROFILE -->
+                <div class="premium-panel" style="grid-row: span 2;">
+                    <div class="panel-title">PERSONNEL INTEL <i class="fas fa-fingerprint"></i></div>
+                    <div class="search-wrapper">
+                        <input type="text" id="searchInput" class="lux-input" placeholder="Search Master Personnel..."
+                            onkeyup="handleSearchInput()">
+                        <i class="fas fa-search"
+                            style="position:absolute; right:20px; top:18px; color:var(--text-dim);"></i>
+                        <div id="suggestions"
+                            style="position:absolute; top:100%; width:100%; background:#111; z-index:100; border:1px solid var(--glass-border); display:none; border-radius:10px; max-height:200px; overflow-y:auto;">
+                        </div>
+                    </div>
+
+                    <div id="profileView" class="profile-card" style="display:none;">
+                        <h2 id="pName" style="font-family:'Orbitron'; color:#fff; margin-bottom:5px;">-</h2>
+                        <div id="pDept"
+                            style="color:var(--neon-emerald); font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:25px;">
+                            -</div>
+
+                        <div class="balance-circle">
+                            <span class="balance-val" id="pBalance">0</span>
+                            <span class="balance-label">Days Left</span>
+                        </div>
+
+                        <div
+                            style="background:rgba(255,255,255,0.03); padding:15px; border-radius:15px; text-align:left;">
+                            <div
+                                style="font-family:'Orbitron'; font-size:0.7rem; color:var(--text-dim); margin-bottom:10px;">
+                                USAGE HISTORY (CT ONLY)</div>
+                            <div id="pHistory" style="max-height:150px; overflow-y:auto;">
+                                <!-- History entries -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="searchPlaceholder" style="text-align:center; padding:100px 0; color:#444;">
+                        <i class="fas fa-user-astronaut" style="font-size:4rem; margin-bottom:20px;"></i><br>
+                        Awaiting Personnel Selection
+                    </div>
+                </div>
+
+                <!-- 2. INTERACTIVE CALENDAR -->
+                <div class="premium-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">LEAVE RADAR (CALENDAR)</div>
+                        <div class="calendar-nav">
+                            <button onclick="changeMonth(-1)"
+                                style="background:none; border:none; color:var(--neon-emerald); cursor:pointer;"><i
+                                    class="fas fa-chevron-left"></i></button>
+                            <span id="calMonthHeader" style="font-family:'Orbitron'; margin:0 20px;">FEBRUARI
+                                2026</span>
+                            <button onclick="changeMonth(1)"
+                                style="background:none; border:none; color:var(--neon-emerald); cursor:pointer;"><i
+                                    class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="cal-grid" id="calendarGrid">
+                        <!-- Days -->
+                    </div>
+                </div>
+
+                <!-- 3. DAILY DETAIL (SIDE PANEL) -->
+                <div class="premium-panel">
+                    <div class="panel-title">DAILY LOG DETAILS <i class="fas fa-clipboard-list"></i></div>
+                    <div id="dayDetailHeader"
+                        style="font-family:'Rajdhani'; font-weight:700; color:var(--neon-emerald); font-size:1.2rem; margin-bottom:15px;">
+                        Select a date...</div>
+                    <div id="dayDetailList" style="max-height: 250px; overflow-y:auto;">
+                        <!-- Selected day people -->
+                    </div>
+                </div>
+
+                <!-- 4. TOP 10 REMAINING -->
+                <div class="premium-panel">
+                    <div class="panel-title">TOP 10 QUOTA BALANCE <i class="fas fa-trophy"></i></div>
+                    <div id="rankingList" style="margin-top:20px;">
+                        <!-- Rank Items -->
+                    </div>
+                </div>
+
+                <!-- 5. LOWEST QUOTA ALERT (REPLACES DEPT POOL) -->
+                <div class="premium-panel">
+                    <div class="panel-title"
+                        style="color:var(--neon-pink); text-shadow:0 0 10px rgba(255, 0, 85, 0.3);">LOWEST QUOTA ALERT
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div id="lowestRankingList" style="margin-top:20px;">
+                        <!-- Lowest Rank Items -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FOR DEPT DRILLDOWN -->
+    <div id="modalDept"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div class="premium-panel" style="width:500px; max-height:80vh;">
+            <div class="panel-header">
+                <div class="panel-title" id="mDeptTitle">DEPT EMPLOYEES</div>
+                <button onclick="closeModal()" style="background:none; border:none; color:#fff; cursor:pointer;"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div id="mDeptList" style="overflow-y:auto; max-height:60vh;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzT-Gou42wbJiTSvknuWSBUHzizo-HfSsFiqVRu2yYEUUIk_xD9oM84_eMtuf-rmPfg4g/exec";
+
+        let state = {
+            employees: [],
+            logs: [],
+            calendar: {},
+            depts: {},
+            viewDate: new Date(2026, 1, 1) // Feb 2026
+        };
+
+        function switchView(view) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + view).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if (view === 'analysa') setTimeout(() => { renderAnalytics(); }, 100);
+        }
+
+        async function fetchData() {
+            try {
+                const res = await fetch(`${API_URL}?action=getData`);
+                const json = await res.json();
+
+                if (json.status === 'success' && json.data) {
+                    // Check if we are receiving v1 or v2 data structure
+                    if (!json.data.logs) {
+                        console.error("DETECTED OUTDATED APPS SCRIPT VERSION");
+                        document.getElementById('loading-overlay').innerHTML = `
+                            <div style="color:var(--neon-pink); text-align:center; padding:20px;">
+                                <i class="fas fa-exclamation-triangle" style="font-size:3rem; margin-bottom:20px;"></i><br>
+                                <div style="font-family:'Orbitron'; font-size:1.2rem;">OUTDATED APPS SCRIPT</div>
+                                <p style="font-family:'Rajdhani'; margin-top:15px; color:#fff;">Silakan Update & Deploy ulang Apps Script ke Versi 2.0<br>Agar data LOGS dan ANALYTICS bisa muncul.</p>
+                                <button onclick="location.reload()" style="background:var(--neon-emerald); border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; margin-top:20px;">RETRY AFTER UPDATE</button>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    state.employees = json.data.employees || [];
+                    state.logs = json.data.logs || [];
+                    state.calendar = json.data.calendar || {};
+                    state.depts = json.data.deptBalance || {};
+
+                    renderLogs();
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                } else {
+                    throw new Error(json.message || "Failed to fetch data");
+                }
+            } catch (err) {
+                console.error("Fetch failed", err);
+                document.getElementById('loading-overlay').innerHTML = `
+                    <div style="color:var(--neon-pink); text-align:center;">
+                        <i class="fas fa-wifi-slash" style="font-size:3rem; margin-bottom:20px;"></i><br>
+                        CONNECTION ERROR<br>
+                        <span style="font-size:0.8rem; color:#888;">${err.message}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function renderLogs() {
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = state.logs.map(l => {
+                const date = new Date(l.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                const typeClass = l.type.includes('TAHUNAN') ? 'bg-ct' : (l.type.includes('SAKIT') ? 'bg-s' : 'bg-i');
+                return `
+                    <tr>
+                        <td>${new Date(l.timestamp).toLocaleTimeString()}</td>
+                        <td style="color:var(--neon-emerald)">${l.nik}</td>
+                        <td style="font-weight:700;">${l.name}</td>
+                        <td>${date}</td>
+                        <td>${l.dept}</td>
+                        <td><span class="badge-type ${typeClass}">${l.type}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ANALYTICS CORE
+        function renderAnalytics() {
+            renderCalendar();
+            renderRanking();
+            renderLowestRanking();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const header = document.getElementById('calMonthHeader');
+            const months = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+
+            const year = state.viewDate.getFullYear();
+            const month = state.viewDate.getMonth();
+            header.innerText = `${months[month]} ${year}`;
+
+            let html = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="cal-day-head">${d}</div>`).join('');
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) html += `<div class="cal-cell" style="opacity:0; pointer-events:none;"></div>`;
+
+            for (let d = 1; d <= lastDate; d++) {
+                const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const hasData = state.calendar[fullDate] ? 'has-data' : '';
+                html += `<div class="cal-cell ${hasData}" onclick="showDayDetail('${fullDate}', this)">${d}</div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function changeMonth(delta) {
+            state.viewDate.setMonth(state.viewDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function showDayDetail(date, el) {
+            document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('active-cell'));
+            el.classList.add('active-cell');
+
+            const datePlain = new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('dayDetailHeader').innerText = datePlain;
+            const names = state.calendar[date] || [];
+
+            const listEl = document.getElementById('dayDetailList');
+            if (names.length === 0) {
+                listEl.innerHTML = '<div style="color:#444; padding:20px; text-align:center;">No leave entries</div>';
+            } else {
+                listEl.innerHTML = names.map(n => `
+                    <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:10px; margin-bottom:8px; border-left:3px solid var(--neon-emerald);">
+                        ${n}
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderRanking() {
+            const rankings = [...state.employees]
+                .sort((a, b) => b.remaining - a.remaining)
+                .slice(0, 10);
+
+            document.getElementById('rankingList').innerHTML = rankings.map((r, i) => `
+                <div style="display:flex; align-items:center; margin-bottom:12px; background:rgba(255,255,255,0.02); padding:10px; border-radius:12px;">
+                    <div style="width:30px; font-family:'Orbitron'; color:var(--neon-emerald)">#${i + 1}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:bold; font-size:0.9rem;">${r.name}</div>
+                        <div style="font-size:0.7rem; color:var(--text-dim);">${r.dept}</div>
+                    </div>
+                    <div style="font-family:'Orbitron'; font-weight:900; color:var(--neon-emerald); font-size:1.2rem;">${r.remaining}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderLowestRanking() {
+            const rankings = [...state.employees]
+                .sort((a, b) => a.remaining - b.remaining)
+                .slice(0, 10);
+
+            // Filter out those with high balance if needed, but "Top 10 Lowest" usually implies absolute bottom.
+
+            document.getElementById('lowestRankingList').innerHTML = rankings.map((r, i) => `
+                <div style="display:flex; align-items:center; margin-bottom:12px; background:rgba(255, 0, 85, 0.05); padding:10px; border-radius:12px; border-left: 2px solid var(--neon-pink);">
+                    <div style="width:30px; font-family:'Orbitron'; color:var(--neon-pink)">#${i + 1}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:bold; font-size:0.9rem;">${r.name}</div>
+                        <div style="font-size:0.7rem; color:var(--text-dim);">${r.dept}</div>
+                    </div>
+                    <div style="font-family:'Orbitron'; font-weight:900; color:var(--neon-pink); font-size:1.2rem;">${r.remaining}</div>
+                </div>
+            `).join('');
+        }
+
+        function openDeptDrilldown(name) {
+            const dept = state.depts[name];
+            document.getElementById('mDeptTitle').innerText = name;
+            document.getElementById('mDeptList').innerHTML = dept.members
+                .sort((a, b) => b.balance - a.balance)
+                .map(m => `
+                    <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span>${m.name}</span>
+                        <span style="color:var(--neon-emerald); font-weight:bold;">${m.balance} HARI</span>
+                    </div>
+                `).join('');
+            document.getElementById('modalDept').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('modalDept').style.display = 'none'; }
+
+        // SEARCH
+        function handleSearchInput() {
+            const val = document.getElementById('searchInput').value.toUpperCase();
+            const sug = document.getElementById('suggestions');
+            if (val.length < 1) { sug.style.display = 'none'; return; }
+
+            const matches = state.employees.filter(e => e.name.includes(val) || e.nik.includes(val)).slice(0, 10);
+            if (matches.length) {
+                sug.innerHTML = matches.map(m => `
+                    <div style="padding:12px; cursor:pointer;" onclick="viewProfile('${m.nik}')">
+                        <div style="font-weight:bold; font-size:0.9rem;">${m.name}</div>
+                        <div style="font-size:0.7rem; color:#888;">NIK: ${m.nik}</div>
+                    </div>
+                `).join('');
+                sug.style.display = 'block';
+            } else sug.style.display = 'none';
+        }
+
+        function viewProfile(nik) {
+            const emp = state.employees.find(e => e.nik === nik);
+            document.getElementById('suggestions').style.display = 'none';
+            document.getElementById('searchPlaceholder').style.display = 'none';
+            document.getElementById('profileView').style.display = 'block';
+
+            document.getElementById('pName').innerText = emp.name;
+            document.getElementById('pDept').innerText = emp.dept;
+            document.getElementById('pBalance').innerText = emp.remaining;
+
+            document.getElementById('pHistory').innerHTML = emp.history.length ?
+                emp.history.map(h => `
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #333; font-size:0.85rem;">
+                        <span>${new Date(h.date).toLocaleDateString('id-ID')}</span>
+                        <span style="color:var(--neon-emerald)">${h.type}</span>
+                    </div>
+                `).join('') : '<div style="padding:20px; text-align:center; color:#444;">No history</div>';
+        }
+
+        window.onload = fetchData;
+    </script>
+</body>
+
+</html>

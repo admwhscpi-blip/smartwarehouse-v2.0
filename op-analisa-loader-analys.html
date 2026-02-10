@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - LOADER ANALYTICS</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            /* Blue for Loader */
+            --secondary: #0ea5e9;
+            --accent: #facc15;
+            --info: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark-bg: #050505;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        /* DYNAMIC BACKGROUND */
+        .bg-animate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(14, 165, 233, 0.05) 0%, transparent 40%);
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, transparent 90%);
+        }
+
+        /* HEADER */
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, var(--primary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #ccc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* LAYOUT */
+        .dashboard-container {
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* KPI ROW */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .kpi-title {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .kpi-sub {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        /* CHARTS */
+        .chart-section-full {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        /* LOADING */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(59, 130, 246, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-animate"></div>
+    <div class="grid-bg"></div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-family: 'Orbitron'; color: var(--primary); letter-spacing: 2px;">ANALYZING LOADER DATA...</div>
+    </div>
+
+    <header class="analytics-header">
+        <div class="header-title">
+            <h1>LOADER ANALYTICS DASHBOARD</h1>
+        </div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <select id="periodSlicer" onchange="applyFilter()" style="
+                background: rgba(0, 0, 0, 0.6); 
+                color: var(--primary); 
+                border: 1px solid var(--primary); 
+                padding: 8px 15px; 
+                border-radius: 5px; 
+                font-family: 'Rajdhani'; 
+                font-weight: bold; 
+                cursor: pointer;
+                outline: none;
+            ">
+                <option value="ALL">ALL PERIODE</option>
+            </select>
+            <a href="op-analisa-loader-masterdata.html" class="back-btn">← BACK TO MASTER DATA</a>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+
+        <!-- KPI ROW -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">TOTAL OUTPUT</div>
+                <div class="kpi-value" id="kpi-output" style="color: var(--primary);">0 KG</div>
+                <div class="kpi-sub">Total Handled</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">AVG EFFICIENCY</div>
+                <div class="kpi-value" id="kpi-eff">0 KG/H</div>
+                <div class="kpi-sub">Average Productivity</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">AVG FUEL RATIO</div>
+                <div class="kpi-value" id="kpi-fuel" style="color: var(--accent);">0 KG/L</div>
+                <div class="kpi-sub">Output per Liter</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">AVG UTILIZATION</div>
+                <div class="kpi-value" id="kpi-util" style="color: var(--success);">0%</div>
+                <div class="kpi-sub">Working Time</div>
+            </div>
+        </div>
+
+        <!-- MAIN TREND CHART -->
+        <div class="chart-section-full">
+            <div class="chart-header">
+                <div class="chart-title">EFFICIENCY TREND (KG/HOUR)</div>
+                <div style="font-size:0.8rem; color:#64748b;">PRODUCTIVITY OVER TIME</div>
+            </div>
+            <div style="height: 350px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- GRID CHARTS -->
+        <div class="charts-grid">
+
+            <!-- PRODUCTIVITY BY LOADER -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--accent);">PRODUCTIVITY BY LOADER (TOTAL OUTPUT)</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="prodChart"></canvas>
+                </div>
+            </div>
+
+            <!-- FUEL EFFICIENCY -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--info);">FUEL EFFICIENCY RANK (KG/LITER)</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="fuelChart"></canvas>
+                </div>
+            </div>
+
+            <!-- UTILIZATION VS DOWNTIME -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--danger);">UTILIZATION vs DOWNTIME (HOURS)</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="utilChart"></canvas>
+                </div>
+            </div>
+
+            <!-- HM vs OUTPUT -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--secondary);">SCATTER: HM vs OUTPUT</div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="scatChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwG3MgS41qKBIT-kAgWkXPZWbzOkQ4PCiPHpkXvs-iziPnJxdTxqsKuYf5T4b-YmHUMfw/exec';
+
+        let GLOBAL_DATA = [];
+        let CHART_INSTANCES = {};
+
+        // STARTUP
+        window.onload = loadData;
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL + '?action=getLoader');
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                GLOBAL_DATA = data;
+                populateSlicer(data);
+                processAndRender(data);
+                document.getElementById('loading-overlay').style.display = 'none';
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("Failed to load analytics data.");
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        function populateSlicer(rows) {
+            const slicer = document.getElementById('periodSlicer');
+            const periods = new Set();
+
+            rows.forEach(r => {
+                const dateRaw = r[1] ? new Date(r[1]) : null;
+                if (dateRaw && !isNaN(dateRaw)) {
+                    const monthYear = dateRaw.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                    periods.add(monthYear);
+                }
+            });
+
+            const sortedPeriods = Array.from(periods);
+            sortedPeriods.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                slicer.appendChild(opt);
+            });
+        }
+
+        function applyFilter() {
+            const selected = document.getElementById('periodSlicer').value;
+            let filtered = [];
+
+            if (selected === 'ALL') {
+                filtered = GLOBAL_DATA;
+            } else {
+                filtered = GLOBAL_DATA.filter(r => {
+                    const dateRaw = r[1] ? new Date(r[1]) : null;
+                    if (!dateRaw || isNaN(dateRaw)) return false;
+                    const monthYear = dateRaw.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).toUpperCase();
+                    return monthYear === selected;
+                });
+            }
+
+            processAndRender(filtered);
+        }
+
+        function processAndRender(rows) {
+
+            // CLEAR OLD CHARTS
+            ['trendChart', 'prodChart', 'fuelChart', 'utilChart', 'scatChart'].forEach(id => {
+                if (CHART_INSTANCES[id]) CHART_INSTANCES[id].destroy();
+            });
+
+            let totalOutput = 0;
+            let totalEff = 0;
+            let totalFuelEff = 0;
+            let totalUtil = 0;
+            let count = 0;
+
+            const dateMap = {}; // date -> eff (avg)
+            const loaderOutput = {}; // name -> total output
+            const loaderFuelEff = {}; // name -> avg kg/l
+            const loaderUtil = {}; // name -> avg util
+            const loaderDowntime = {}; // name -> avg downtime
+            const scatterData = [];
+
+            rows.forEach(r => {
+                const output = parseFloat(r[8]) || 0;
+                const eff = parseFloat(r[9]) || 0;
+                const fuelEff = parseFloat(r[10]) || 0;
+                const util = parseFloat(r[14]) || 0;
+                const downtime = parseFloat(r[13]) || 0;
+                const hm = parseFloat(r[6]) || 0;
+                const name = r[2] || 'UNKNOWN';
+
+                if (output > 0) {
+                    totalOutput += output;
+                    totalEff += eff;
+                    totalFuelEff += fuelEff;
+                    totalUtil += util;
+                    count++;
+
+                    // Date Aggregation (Avg Eff)
+                    const dateRaw = r[1] ? new Date(r[1]) : null;
+                    if (dateRaw) {
+                        const dateKey = dateRaw.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                        if (!dateMap[dateKey]) dateMap[dateKey] = { sum: 0, count: 0 };
+                        dateMap[dateKey].sum += eff;
+                        dateMap[dateKey].count += 1;
+                    }
+
+                    // Loader Aggregations
+                    loaderOutput[name] = (loaderOutput[name] || 0) + output;
+
+                    if (!loaderFuelEff[name]) loaderFuelEff[name] = { sum: 0, count: 0 };
+                    loaderFuelEff[name].sum += fuelEff;
+                    loaderFuelEff[name].count += 1;
+
+                    if (!loaderUtil[name]) loaderUtil[name] = { sumUtil: 0, sumDown: 0, count: 0 };
+                    loaderUtil[name].sumUtil += util;
+                    loaderUtil[name].sumDown += downtime;
+                    loaderUtil[name].count += 1;
+
+                    scatterData.push({ x: hm, y: output });
+                }
+            });
+
+            // FILTER 'UNKNOWN'
+            delete loaderOutput['UNKNOWN'];
+            delete loaderFuelEff['UNKNOWN'];
+            delete loaderUtil['UNKNOWN'];
+
+            // KPIs
+            const avgEff = count > 0 ? (totalEff / count) : 0;
+            const avgFuelEff = count > 0 ? (totalFuelEff / count) : 0;
+            const avgUtil = count > 0 ? (totalUtil / count) : 0;
+
+            document.getElementById('kpi-output').textContent = totalOutput.toLocaleString('id-ID') + ' KG';
+            document.getElementById('kpi-eff').textContent = avgEff.toFixed(2) + ' KG/H';
+            document.getElementById('kpi-fuel').textContent = avgFuelEff.toFixed(2) + ' KG/L';
+            document.getElementById('kpi-util').textContent = avgUtil.toFixed(1) + '%';
+
+            renderCharts(dateMap, loaderOutput, loaderFuelEff, loaderUtil, scatterData);
+        }
+
+        function renderCharts(dateMap, loaderOutput, loaderFuelEff, loaderUtil, scatterData) {
+
+            // 1. TREND CHART
+            const sortedDates = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            const grad = trendCtx.createLinearGradient(0, 0, 0, 300);
+            grad.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+            grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            CHART_INSTANCES['trendChart'] = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Efficiency (KG/H)',
+                        data: sortedDates.map(d => dateMap[d].sum / dateMap[d].count),
+                        borderColor: '#3b82f6',
+                        backgroundColor: grad,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { display: false }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2. PRODUCTIVITY (Bar)
+            const sortedLoaders = Object.entries(loaderOutput).sort((a, b) => b[1] - a[1]);
+            const prodCtx = document.getElementById('prodChart').getContext('2d');
+            CHART_INSTANCES['prodChart'] = new Chart(prodCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedLoaders.map(l => l[0]),
+                    datasets: [{
+                        label: 'Total Output (KG)',
+                        data: sortedLoaders.map(l => l[1]),
+                        backgroundColor: '#facc15',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 3. FUEL EFFICIENCY (Horizontal Bar)
+            const fuelData = Object.entries(loaderFuelEff).map(([k, v]) => [k, v.sum / v.count]).sort((a, b) => b[1] - a[1]);
+            const fuelCtx = document.getElementById('fuelChart').getContext('2d');
+            CHART_INSTANCES['fuelChart'] = new Chart(fuelCtx, {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: fuelData.map(l => l[0]),
+                    datasets: [{
+                        label: 'Avg KG/Liter',
+                        data: fuelData.map(l => l[1]),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { display: false }, ticks: { color: '#fff' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 4. UTILIZATION VS DOWNTIME (Stacked Bar)
+            // Simplified for average
+            const utilLabels = Object.keys(loaderUtil);
+            const utilData = utilLabels.map(l => loaderUtil[l].sumUtil / loaderUtil[l].count);
+            const downData = utilLabels.map(l => loaderUtil[l].sumDown / loaderUtil[l].count);
+
+            const utilCtx = document.getElementById('utilChart').getContext('2d');
+            CHART_INSTANCES['utilChart'] = new Chart(utilCtx, {
+                type: 'bar',
+                data: {
+                    labels: utilLabels,
+                    datasets: [
+                        {
+                            label: 'Avg Utilization (%)',
+                            data: utilData,
+                            backgroundColor: '#10b981',
+                        },
+                        {
+                            label: 'Avg Downtime (Hrs)',
+                            data: downData,
+                            backgroundColor: '#ef4444',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { labels: { color: '#fff' } } }
+                }
+            });
+
+            // 5. SCATTER (HM vs Output)
+            const scatCtx = document.getElementById('scatChart').getContext('2d');
+            CHART_INSTANCES['scatChart'] = new Chart(scatCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'HM vs Output',
+                        data: scatterData,
+                        backgroundColor: 'rgba(14, 165, 233, 0.6)',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Hour Meter (HM)', color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { title: { display: true, text: 'Output (KG)', color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

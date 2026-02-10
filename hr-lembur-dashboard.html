@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <title>SMART WAREHOUSE - SUPER ANALYTICS 2050</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CHARTS -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="homepage-style.css">
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: rgba(20, 20, 25, 0.6);
+            --neon-purple: #b026ff;
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --neon-gold: #ffcc00;
+            --text-main: #e0e0e0;
+            --text-dim: #888;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(176, 38, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.05) 0%, transparent 40%);
+        }
+
+        /* --- DASHBOARD CONTROLS (IN NAVBAR) --- */
+        .dashboard-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 20px;
+            font-family: 'Orbitron';
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn.active,
+        .nav-btn:hover {
+            background: rgba(176, 38, 255, 0.2);
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 15px rgba(176, 38, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .month-selector {
+            background: #000;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 8px 15px;
+            font-family: 'Orbitron';
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .main-container {
+            padding: 30px;
+            padding-top: 120px;
+            /* Offset for Fixed Navbar */
+            max-width: 1920px;
+            margin: 0 auto;
+            min-height: 90vh;
+        }
+
+        /* --- VIEWS --- */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- MASTER DATA TABLE --- */
+        .table-wrapper {
+            background: var(--bg-panel);
+            border: var(--glass-border);
+            border-radius: 10px;
+            overflow: auto;
+            max-height: 80vh;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th {
+            background: rgba(176, 38, 255, 0.15);
+            color: var(--neon-purple);
+            padding: 15px;
+            font-family: 'Orbitron';
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            text-align: center;
+            border-bottom: 2px solid var(--neon-purple);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .fixed-col {
+            position: sticky;
+            left: 0;
+            background: #0a0a0a;
+            z-index: 5;
+            border-right: 1px solid #333;
+        }
+
+        th.fixed-col {
+            z-index: 15;
+            background: #111;
+        }
+
+        /* --- ANALYSA DASHBOARD --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 300px 320px;
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+
+        .glass-panel {
+            background: var(--bg-panel);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--neon-purple), transparent);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron';
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        /* SEARCH BOX & SUGGESTIONS */
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            color: #fff;
+            border-radius: 6px;
+            font-family: 'Rajdhani';
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid var(--neon-purple);
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+        }
+
+        .sub-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #222;
+        }
+
+        .sub-item:hover {
+            background: var(--neon-purple);
+            color: #fff;
+        }
+
+        .search-result {
+            margin-top: 10px;
+        }
+
+        .stat-big {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+
+        .mini-detail-table {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        .mini-detail-table td {
+            text-align: left;
+            padding: 4px 0;
+            border: none;
+        }
+
+        /* CALENDAR */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day-cell {
+            background: rgba(255, 255, 255, 0.05);
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .day-cell.holiday {
+            border: 1px solid rgba(255, 0, 60, 0.4);
+            background: rgba(255, 0, 60, 0.1);
+            color: var(--neon-red);
+        }
+
+        .day-cell:hover,
+        .day-cell.active-day {
+            background: rgba(176, 38, 255, 0.5);
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 0 15px var(--neon-purple);
+            border: 1px solid #fff;
+        }
+
+        .val-badge {
+            font-weight: bold;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        /* CALENDAR DETAIL */
+        #dayDetailContainer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        .day-summary-title {
+            font-size: 1rem;
+            color: var(--neon-gold);
+            margin-bottom: 10px;
+            font-family: 'Orbitron';
+        }
+
+        /* RANKING LIST */
+        .rank-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .rank-num {
+            width: 30px;
+            font-weight: bold;
+            color: var(--neon-gold);
+            font-family: 'Orbitron';
+        }
+
+        .rank-info {
+            flex: 1;
+        }
+
+        .rank-bar-bg {
+            height: 4px;
+            background: #333;
+            margin-top: 5px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .rank-bar-fill {
+            height: 100%;
+            background: var(--neon-blue);
+            border-radius: 2px;
+        }
+
+        .rank-val {
+            font-weight: bold;
+            color: #fff;
+            float: right;
+        }
+
+        /* REASON PANEL */
+        .reason-panel {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .reason-title {
+            color: var(--neon-gold);
+            font-family: 'Orbitron';
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reason-content {
+            color: #ccc;
+            line-height: 1.4;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .reason-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed #444;
+            color: #00f3ff;
+            font-family: 'Rajdhani';
+            font-size: 0.9rem;
+            outline: none;
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .tm-date {
+            color: var(--neon-blue);
+            font-weight: bold;
+            min-width: 60px;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+        }
+
+        /* FULLSCREEN MODE */
+        body.fullscreen-mode {
+            background-image: none;
+            background-color: #000;
+        }
+
+        body.fullscreen-mode .navbar {
+            padding: 10px 30px;
+        }
+
+        body.fullscreen-mode .main-container {
+            padding: 80px 20px 20px 20px;
+        }
+
+        body.fullscreen-mode .dashboard-grid {
+            grid-template-columns: 300px 1fr 280px 320px;
+            height: calc(100vh - 120px);
+            gap: 12px;
+        }
+
+        body.fullscreen-mode .glass-panel {
+            padding: 12px;
+        }
+
+        /* Adjust internal heights to fill space */
+        .rank-list {
+            flex: 1;
+            max-height: none !important;
+        }
+
+        /* BRANDING EXTRAS */
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate !important;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        @keyframes blue-glow {
+            from {
+                filter: drop-shadow(0 0 2px rgba(0, 243, 255, 0.2));
+            }
+
+            to {
+                filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.6));
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text-main">WAIT JURAGAN...</div>
+        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="homepage-v1.html" class="logo-link" style="text-decoration: none;">
+            <div class="logo-text" style="display: flex; align-items: center; gap: 8px; font-family: 'Orbitron';">
+                <span class="brand-smart">SMART WAREHOUSE</span>
+                <span class="brand-v2">V2.0</span>
+            </div>
+        </a>
+
+        <!-- DASHBOARD CONTROLS CENTER -->
+        <div class="dashboard-controls">
+            <div class="nav-tabs">
+                <button class="nav-btn active" onclick="switchView('master')">MASTER DATA</button>
+                <button class="nav-btn" onclick="switchView('analysa')">ANALYSA</button>
+            </div>
+
+            <select id="monthSelector" class="month-selector" onchange="fetchData()">
+                <option value="JANUARI 2026">JANUARI 2026</option>
+                <option value="FEBRUARI 2026">FEBRUARI 2026</option>
+                <option value="MARET 2026">MARET 2026</option>
+                <option value="MARET 2026">MARET 2026</option>
+                <option value="APRIL 2026">APRIL 2026</option>
+                <option value="MEI 2026">MEI 2026</option>
+                <option value="JUNI 2026">JUNI 2026</option>
+                <option value="JULI 2026">JULI 2026</option>
+                <option value="AGUSTUS 2026">AGUSTUS 2026</option>
+                <option value="SEPTEMBER 2026">SEPTEMBER 2026</option>
+                <option value="OKTOBER 2026">OKTOBER 2026</option>
+                <option value="NOVEMBER 2026">NOVEMBER 2026</option>
+                <option value="DESEMBER 2026">DESEMBER 2026</option>
+            </select>
+        </div>
+
+        <!-- RIGHT -->
+        <div style="display:flex; gap:10px;">
+            <button class="nav-btn" onclick="toggleFullscreen()"
+                style="border-color:var(--neon-blue); color:var(--neon-blue);">
+                <i class="fas fa-expand"></i> FULLSCREEN
+            </button>
+            <button class="nav-btn" onclick="window.location.href='homepage-v1.html'"
+                style="border-color:var(--neon-red); color:var(--neon-red);">
+                EXIT
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="main-container">
+
+        <!-- VIEW: MASTER DATA -->
+        <div id="view-master" class="view-section active">
+            <div class="table-wrapper">
+                <table id="masterTable">
+                    <!-- JS Generated -->
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW: ANALYSA -->
+        <div id="view-analysa" class="view-section">
+            <div class="dashboard-grid">
+
+                <!-- COLUMN 1: PERSONNEL & COMPARE -->
+                <div class="glass-panel grid-row-2">
+                    <div class="panel-title">PERSONNEL SEARCH <i class="fas fa-search"></i></div>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Type Name..."
+                            onkeyup="handleSearchInput()">
+                        <div id="suggestions" class="suggestions-list"></div>
+                    </div>
+                    <div id="profileResult" class="search-result" style="display:none; text-align:center;">
+                        <img src="https://robohash.org/emp.png?set=set4"
+                            style="width:60px; height:60px; border-radius:50%; border:2px solid var(--neon-purple); margin-bottom:10px;">
+                        <h3 id="pName" style="margin:0; color:#fff; font-size: 1rem;">-</h3>
+                        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:10px;">
+                            <div style="font-size:0.7rem; color:#aaa;">TOTAL HOURS</div>
+                            <div id="pTotal" class="stat-big" style="font-size:1.8rem;">0</div>
+                        </div>
+
+                        <table class="mini-detail-table" style="margin-top:20px;">
+                            <tbody id="pMiniHistory">
+                                <!-- Top 5 Days -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="searchPlaceholder" style="text-align:center; padding:30px 0; color:#555;">
+                        <i class="fas fa-id-card" style="font-size:2.5rem; margin-bottom:10px;"></i><br>
+                        Select Personnel
+                    </div>
+                    <div style="margin-top:auto; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
+                        <div class="panel-title" style="margin-bottom:10px; border:none; padding:0;">WORKDAY VS HOLIDAY
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div id="chartCompare" style="min-height: 150px;"></div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: DAILY TREND & LOWEST -->
+                <div class="glass-panel grid-row-2">
+                    <div class="panel-title">DAILY OT MOVEMENT <i class="fas fa-chart-line"></i></div>
+                    <div id="chartDaily" style="flex:1; min-height: 250px;"></div>
+                    <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;">
+                        <div class="panel-title">TOP 5 LOWEST <i class="fas fa-bed"></i></div>
+                        <ul class="rank-list" id="rankLow" style="max-height: 200px;"></ul>
+                    </div>
+                </div>
+
+                <!-- COLUMN 3: TOP 10 HIGHEST (PORTRAIT) -->
+                <div class="glass-panel grid-row-2">
+                    <div class="panel-title">TOP 10 HIGHEST <i class="fas fa-trophy" style="color:var(--neon-gold)"></i>
+                    </div>
+                    <ul class="rank-list" id="rankHigh" style="flex:1;"></ul>
+                </div>
+
+                <!-- COLUMN 4: ACTIVITY & TIMELINE -->
+                <div class="glass-panel grid-row-2">
+                    <div class="panel-title">MONTHLY ACTIVITY <i class="fas fa-calendar-alt"></i></div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                    <div
+                        style="margin-top:10px; display:flex; justify-content:space-between; font-size:0.7rem; color:#666;">
+                        <span><span style="color:var(--neon-red)">●</span> HOL</span>
+                        <span><span style="color:var(--neon-purple)">●</span> WRK</span>
+                    </div>
+                    <div class="reason-panel" id="reasonPanel"
+                        style="flex:1; margin-top:20px; display: flex; flex-direction: column;">
+                        <div class="reason-title"><i class="fas fa-industry"></i> OPERATIONAL LOGISTICS</div>
+                        <div id="reasonContent" class="reason-content"
+                            style="flex:1; overflow-y:auto; font-size: 0.8rem;"></div>
+                    </div>
+
+                    <!-- DAY DETAIL SUMMARY (RESTORED) -->
+                    <div id="dayDetailContainer" style="margin-top:20px; border-top:1px dashed #444; padding-top:15px;">
+                        <div class="day-summary-title" id="dayDetailHeader"
+                            style="font-size:0.8rem; color:var(--neon-blue); font-family:'Orbitron';">Day -</div>
+                        <div style="font-size:1.5rem; font-weight:bold; margin:5px 0;" id="dayDetailTotal">0h</div>
+                        <div style="max-height:150px; overflow-y:auto;">
+                            <table class="mini-detail-table">
+                                <tbody id="dayDetailList">
+                                    <!-- List of people -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGIC -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwjxJVAhHSpYY9taTQ5SR7A00M3pQfHdm9lXO33Zr88EDS1awbrFj2xkpeN0rOGomaI/exec";
+
+        let rawData = [];
+        let monthTotals = {}; // day 1..31 -> total hours
+        let personList = [];  // Array of {name, nik, total, daily: {}}
+
+        function switchView(view) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById('view-' + view).classList.add('active');
+            const btns = document.querySelectorAll('.nav-btn');
+            if (view === 'master') btns[0].classList.add('active');
+            else btns[1].classList.add('active');
+
+            if (view === 'analysa' && rawData.length > 0) {
+                setTimeout(() => {
+                    renderCharts();
+                    updateBranding();
+                    updateReasonPanel();
+                }, 100);
+            }
+        }
+
+        function toggleFullscreen() {
+            document.body.classList.toggle('fullscreen-mode');
+            const btn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            if (document.body.classList.contains('fullscreen-mode')) {
+                btn.innerHTML = '<i class="fas fa-compress"></i> EXIT FULLSCREEN';
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            } else {
+                btn.innerHTML = '<i class="fas fa-expand"></i> FULLSCREEN';
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+            setTimeout(renderCharts, 300);
+        }
+
+        function updateBranding() {
+            // Branding bulan dinonaktifkan agar logo tetap identik (SMART WAREHOUSE V2.0)
+        }
+
+        function updateReasonPanel() {
+            const monthStr = document.getElementById('monthSelector').value;
+            const content = document.getElementById('reasonContent');
+
+            if (monthStr === "JANUARI 2026") {
+                content.innerHTML = `
+                    <div style="font-size:0.7rem; color: #888; margin-bottom: 5px;">FACILITY: CIGADING EXTERNAL WAREHOUSE (RM-BK-CPO)</div>
+                    <div class="timeline-item"><span class="tm-date">01-03 JAN</span> <span>MV AFRICAN - WHEAT UNLOADING</span></div>
+                    <div class="timeline-item"><span class="tm-date">04-06 JAN</span> <span>SBM BRAZIL - LOADING EXPEDITION</span></div>
+                    <div class="timeline-item"><span class="tm-date">07-18 JAN</span> <span>MV YANGZE - SBM DISCHARGE</span></div>
+                    <div class="timeline-item"><span class="tm-date">19-27 JAN</span> <span>MV SDM BEIHAI - SBM UNLOADING</span></div>
+                    <div class="timeline-item"><span class="tm-date">28-31 JAN</span> <span>MAINTENANCE & FINAL LOADING</span></div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div style="font-size:0.7rem; color: #888; margin-bottom: 5px;">INPUT OPERATIONAL DRIVER:</div>
+                    <input type="text" class="reason-input" placeholder="Enter reason for ${monthStr}...">
+                    <input type="text" class="reason-input" placeholder="Timeline detail...">
+                `;
+            }
+        }
+
+        let dailyChart = null;
+        let compareChart = null;
+
+        function renderCharts() {
+            // prepare data
+            const days = [];
+            const dailyData = [];
+            let workdayTotal = 0;
+            let holidayTotal = 0;
+
+            const monthStr = document.getElementById('monthSelector').value;
+
+            for (let i = 1; i <= 31; i++) {
+                days.push(i);
+                const val = monthTotals[i] || 0;
+                dailyData.push(val.toFixed(1));
+
+                if (isWeekend(i, monthStr)) {
+                    holidayTotal += val;
+                } else {
+                    workdayTotal += val;
+                }
+            }
+
+            // 1. DAILY CHART
+            const dailyOptions = {
+                series: [{
+                    name: 'Total Overtime',
+                    data: dailyData
+                }],
+                chart: {
+                    type: 'area',
+                    height: 250,
+                    background: 'transparent',
+                    toolbar: { show: false }
+                },
+                colors: ['#00f3ff'],
+                stroke: { curve: 'smooth', width: 2 },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.1,
+                        stops: [0, 90, 100]
+                    }
+                },
+                dataLabels: { enabled: false },
+                xaxis: {
+                    categories: days,
+                    labels: { style: { colors: '#888' } },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: { style: { colors: '#888' } },
+                    grid: { show: true, borderColor: 'rgba(255,255,255,0.05)' }
+                },
+                grid: { borderColor: 'rgba(255,255,255,0.05)' },
+                tooltip: { theme: 'dark' }
+            };
+
+            if (dailyChart) dailyChart.destroy();
+            dailyChart = new ApexCharts(document.querySelector("#chartDaily"), dailyOptions);
+            dailyChart.render();
+
+            // 2. COMPARE CHART
+            const compareOptions = {
+                series: [workdayTotal, holidayTotal],
+                labels: ['Workday', 'Holiday/Weekend'],
+                chart: {
+                    type: 'donut',
+                    height: 200,
+                    background: 'transparent'
+                },
+                colors: ['#b026ff', '#ff003c'],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '70%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    formatter: function (w) {
+                                        return (workdayTotal + holidayTotal).toFixed(0) + "h";
+                                    },
+                                    color: '#fff'
+                                }
+                            }
+                        }
+                    }
+                },
+                stroke: { show: false },
+                legend: { position: 'bottom', labels: { colors: '#fff' } },
+                dataLabels: { enabled: false }
+            };
+
+            if (compareChart) compareChart.destroy();
+            compareChart = new ApexCharts(document.querySelector("#chartCompare"), compareOptions);
+            compareChart.render();
+        }
+
+        async function fetchData() {
+            const sheet = document.getElementById('monthSelector').value;
+            const loader = document.getElementById('loading-overlay');
+            loader.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}?action=getData&sheet=${encodeURIComponent(sheet)}`);
+                const json = await response.json();
+
+                if (json.status === 'success') {
+                    // Remove demo notification if exists
+                    const oldNotif = document.getElementById('demo-notification');
+                    if (oldNotif) oldNotif.remove();
+
+                    rawData = json.data.employees;
+                    processData(sheet);
+                    renderMasterTable();
+                    renderAnalysa();
+                    updateBranding();
+                    updateReasonPanel();
+                } else {
+                    throw new Error(json.message);
+                }
+            } catch (e) {
+                console.warn("Connection Failed. Switching to DEMO MODE.", e);
+                loadMockData();
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function loadMockData() {
+            // Generate dummy names and data for demo
+            rawData = [];
+            const names = ["SABAR", "FAHRUL SAHROJI", "MUHAMMAD FIRDAUS", "ADE YANTO", "AHMAD AZIZ", "NANANG KOSIM", "MUMUH MUKHTAQIEN", "SAHRONI", "HAMZAH HAS", "MUH. AKIL", "ABI FAJAR AHMAD FAUZI", "AKHMAD ROYAN", "FIGO PERMANA SEBASTIAN"];
+
+            names.forEach((n, idx) => {
+                let att = {};
+                for (let i = 1; i <= 31; i++) {
+                    // Random overtime: 30% chance of having overtime between 1-5 hours
+                    att[i] = Math.random() > 0.7 ? (Math.random() * 4 + 1).toFixed(1) : 0;
+                }
+                rawData.push({
+                    name: (1000 + idx).toString(), // NIK
+                    nik: n, // Name (Swapped logic)
+                    attendance: att
+                });
+            });
+
+            processData(document.getElementById('monthSelector').value);
+            renderMasterTable();
+            renderAnalysa();
+
+            // Add notification if not already present
+            if (!document.getElementById('demo-notification')) {
+                const demoNotif = document.createElement('div');
+                demoNotif.id = 'demo-notification';
+                demoNotif.innerHTML = 'CONNECTION FAILED - VIEWING DEMO DATA';
+                demoNotif.style.cssText = 'position:fixed; bottom:20px; right:20px; background:var(--neon-red); color:#fff; padding:10px 20px; border-radius:4px; font-family:"Orbitron"; z-index:9999; animation:pulse-red 2s infinite;';
+                document.body.appendChild(demoNotif);
+            }
+        }
+
+        function processData(monthStr) {
+            // Reset
+            monthTotals = {};
+            for (let i = 1; i <= 31; i++) monthTotals[i] = 0;
+
+            personList = rawData.map(p => {
+                let sum = 0;
+                let daily = {};
+                for (let i = 1; i <= 31; i++) {
+                    let val = parseFloat(p.attendance[i]);
+                    if (isNaN(val)) val = 0;
+
+                    daily[i] = val;
+                    sum += val;
+                    monthTotals[i] += val;
+                }
+
+                // --- FIX SWAPPED DATA ---
+                // Based on verification: API returns NIK in p.name and Name in p.nik
+                // We swap them here for correct usage throughout the app
+                return {
+                    name: p.nik, // Map p.nik (Data Name) to name
+                    nik: p.name, // Map p.name (Data NIK) to nik
+                    total: sum,
+                    daily: daily
+                };
+            });
+
+            // Sort by Total Descending
+            personList.sort((a, b) => b.total - a.total);
+        }
+
+        function renderMasterTable() {
+            const table = document.getElementById('masterTable');
+            // Headers "NAME" and "NIK" now match the swapped data correctly
+            let headHtml = `<thead><tr>
+                <th class="fixed-col">NAME</th>
+                <th>NIK</th>`;
+
+            for (let i = 1; i <= 31; i++) headHtml += `<th>${i}</th>`;
+            headHtml += `<th>TOTAL</th></tr></thead>`;
+
+            let bodyHtml = `<tbody>`;
+            personList.forEach(p => {
+                bodyHtml += `<tr>
+                    <td class="fixed-col" style="text-align:left; font-weight:bold; color:var(--text-main);">${p.name}</td>
+                    <td>${p.nik || '-'}</td>`;
+
+                for (let i = 1; i <= 31; i++) {
+                    const val = p.daily[i];
+                    const color = val > 4 ? 'var(--neon-red)' : (val > 0 ? 'var(--neon-blue)' : '#444');
+                    bodyHtml += `<td style="color:${color}">${val > 0 ? val : '-'}</td>`;
+                }
+                bodyHtml += `<td style="font-weight:bold; color:var(--neon-gold)">${p.total.toFixed(1)}</td></tr>`;
+            });
+            bodyHtml += `</tbody>`;
+
+            table.innerHTML = headHtml + bodyHtml;
+        }
+
+        function renderAnalysa() {
+            renderCharts();
+            renderCalendar();
+            renderRankings();
+
+            // Clear search
+            document.getElementById('searchInput').value = '';
+            document.getElementById('suggestions').style.display = 'none';
+            document.getElementById('profileResult').style.display = 'none';
+            document.getElementById('searchPlaceholder').style.display = 'block';
+
+            // Clear Calendar Detail
+            document.getElementById('dayDetailContainer').style.display = 'none';
+        }
+
+        function renderRankings() {
+            // Top 10 High - Using Name
+            const topList = document.getElementById('rankHigh');
+            topList.innerHTML = '';
+            personList.slice(0, 10).forEach((p, idx) => {
+                const pct = (p.total / (personList[0].total || 1)) * 100;
+                topList.innerHTML += `
+                    <li class="rank-item">
+                        <div class="rank-num">${idx + 1}</div>
+                        <div class="rank-info">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>${p.name}</span>
+                                <span class="rank-val">${p.total}h</span>
+                            </div>
+                            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+                        </div>
+                    </li>`;
+            });
+
+            // Top 5 Low
+            const bottomList = document.getElementById('rankLow');
+            bottomList.innerHTML = '';
+            const lowData = [...personList].sort((a, b) => a.total - b.total).slice(0, 5);
+
+            lowData.forEach((p, idx) => {
+                bottomList.innerHTML += `
+                    <li class="rank-item">
+                        <div class="rank-num" style="color:#aaa">${idx + 1}</div>
+                        <div class="rank-info">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>${p.name}</span>
+                                <span class="rank-val" style="color:#4bd">${p.total}h</span>
+                            </div>
+                        </div>
+                    </li>`;
+            });
+        }
+
+        function isWeekend(day, monthStr) {
+            const parts = monthStr.split(' ');
+            const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+            const mIdx = monthNames.indexOf(parts[0]);
+            const year = parseInt(parts[1]);
+            if (mIdx === -1) return false;
+            const date = new Date(year, mIdx, day);
+            const d = date.getDay();
+            return (d === 0 || d === 6);
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            const monthStr = document.getElementById('monthSelector').value;
+
+            for (let i = 1; i <= 31; i++) {
+                const total = monthTotals[i] || 0;
+                const isHol = isWeekend(i, monthStr);
+
+                grid.innerHTML += `
+                    <div class="day-cell ${isHol ? 'holiday' : ''}" onclick="showDayDetail(${i}, this)">
+                        <span style="opacity:0.5; font-size:0.6rem;">${i}</span>
+                        <span class="val-badge">${total > 0 ? Math.round(total) : '-'}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function showDayDetail(day, el) {
+            // Highlight active day
+            document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('active-day'));
+            el.classList.add('active-day');
+
+            const container = document.getElementById('dayDetailContainer');
+            container.style.display = 'block';
+            document.getElementById('dayDetailHeader').innerText = `SUMMARY - DAY ${day}`;
+            document.getElementById('dayDetailTotal').innerText = `${monthTotals[day].toFixed(1)} Hours Total`;
+
+            // List people who worked
+            const workers = personList.filter(p => p.daily[day] > 0);
+            workers.sort((a, b) => b.daily[day] - a.daily[day]);
+
+            let listHtml = '';
+            workers.forEach(w => {
+                listHtml += `<tr>
+                    <td>${w.name}</td>
+                    <td style="text-align:right; color:var(--neon-blue); font-weight:bold;">${w.daily[day]}h</td>
+                </tr>`;
+            });
+
+            if (workers.length === 0) listHtml = '<tr><td colspan="2" style="color:#666; text-align:center;">No Overtime</td></tr>';
+            document.getElementById('dayDetailList').innerHTML = listHtml;
+        }
+
+        // --- SEARCH AUTOCOMPLETE LOGIC ---
+        function handleSearchInput() {
+            const term = document.getElementById('searchInput').value.toUpperCase();
+            const suggestionsBox = document.getElementById('suggestions');
+
+            if (term.length < 1) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            // Filter names starting with term
+            const matches = personList.filter(p => p.name.toUpperCase().startsWith(term));
+
+            if (matches.length > 0) {
+                let html = '';
+                matches.forEach(p => {
+                    html += `<div class="sub-item" onclick="selectPersonnel('${p.nik}')">${p.name}</div>`;
+                });
+                suggestionsBox.innerHTML = html;
+                suggestionsBox.style.display = 'block';
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        }
+
+        function selectPersonnel(nik) {
+            // Find by NIK (which is unique ID)
+            const found = personList.find(p => p.nik === nik);
+            if (found) {
+                showProfile(found);
+                document.getElementById('searchInput').value = found.name;
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        }
+
+        function showProfile(found) {
+            const resultBox = document.getElementById('profileResult');
+            const placeholder = document.getElementById('searchPlaceholder');
+
+            placeholder.style.display = 'none';
+            resultBox.style.display = 'block';
+
+            document.getElementById('pName').innerText = found.name;
+            document.getElementById('pTotal').innerText = found.total.toFixed(1);
+
+            let activeDays = 0;
+            Object.values(found.daily).forEach(v => { if (v > 0) activeDays++ });
+            const avg = activeDays > 0 ? (found.total / activeDays).toFixed(1) : 0;
+            document.getElementById('pAvg').innerText = avg;
+
+            let entries = [];
+            for (let i = 1; i <= 31; i++) {
+                if (found.daily[i] > 0) entries.push({ day: i, val: found.daily[i] });
+            }
+            entries.sort((a, b) => b.val - a.val);
+
+            let histHtml = '';
+            entries.slice(0, 5).forEach(e => {
+                histHtml += `<tr>
+                    <td style="color:#888;">Day ${e.day}</td>
+                    <td style="text-align:right; color:var(--neon-blue); font-weight:bold;">${e.val}h</td>
+                </tr>`;
+            });
+            if (entries.length === 0) histHtml = '<tr><td colspan="2" style="text-align:center; color:#555;">No Data</td></tr>';
+            document.getElementById('pMiniHistory').innerHTML = histHtml;
+        }
+
+        window.onload = function () {
+            fetchData();
+        };
+
+    </script>
+</body>
+
+</html>

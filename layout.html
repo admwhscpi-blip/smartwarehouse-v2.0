@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHSMART - Layout Map</title>
+    <link rel="stylesheet" href="css/style-main.css">
+    <link rel="stylesheet" href="css/style-layout.css">
+
+    <!-- ISOLATED MAP STYLES FROM V2 -->
+    <style>
+        body {
+            background: #000;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .nav-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 30px;
+            box-sizing: border-box;
+        }
+
+        .nav-brand {
+            color: #00f3ff;
+            font-weight: bold;
+            font-family: 'Orbitron';
+            font-size: 1.2rem;
+        }
+
+        .nav-links a {
+            color: #aaa;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        #layout-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Map Styles */
+        .wh-zone {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            transition: 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-weight: bold;
+        }
+
+        .wh-zone:hover {
+            border-color: #00f3ff;
+            background: rgba(0, 243, 255, 0.1);
+            color: #fff;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Gudang F Highlight */
+        #zone-f {
+            position: absolute;
+            top: 40%;
+            left: 60%;
+            width: 200px;
+            height: 120px;
+            border-color: #bc13fe;
+        }
+
+        #zone-f::after {
+            content: 'GUDANG F';
+        }
+
+        /* Rental Detail Overlay */
+        #rental-overlay {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 500px;
+            height: 100%;
+            background: #0f172a;
+            border-left: 1px solid #333;
+            transition: 0.3s;
+            z-index: 200;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        #rental-overlay.active {
+            right: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="nav-overlay">
+        <div class="nav-brand">WHSMART MAP V2</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="dashboard.html?module=rm">RM Stock</a>
+            <a href="dashboard.html?module=cpo">CPO Tanks</a>
+            <a href="#" style="color:#00f3ff">Layout Map</a>
+        </div>
+    </div>
+
+    <!-- SIMPLE MAP VISUALIZATION -->
+    <div id="layout-container">
+        <div
+            style="position:relative; width:800px; height:500px; background:rgba(255,255,255,0.02); border:1px dashed #444;">
+            <!-- Generic Warehouses -->
+            <div class="wh-zone" style="position:absolute; top:10%; left:10%; width:150px; height:100px;">RM STOCK</div>
+            <div class="wh-zone" style="position:absolute; top:10%; left:35%; width:100px; height:100px;">CPO</div>
+
+            <!-- GUDANG F (Clickable) -->
+            <div id="zone-f" class="wh-zone" onclick="openRentalDetails()"></div>
+
+            <div style="position:absolute; bottom:10px; left:10px; color:#555;">* Click highlighted zones to view data
+            </div>
+        </div>
+    </div>
+
+    <!-- RENTAL SIDEBAR (Loaded from app-rental-f.js logic ideally, but simplified here for static) -->
+    <div id="rental-overlay">
+        <button class="close-btn" onclick="closeRentalDetails()">&times;</button>
+        <h2 style="color:#bc13fe; margin-top:0;">GUDANG F DETAIL</h2>
+        <div style="color:#fff; margin-bottom:20px;">Unit Status: <span style="color:#00f3ff">Active</span></div>
+
+        <div id="rental-content">
+            <!-- Content will be injected by RentalScript -->
+            <p>Loading specific warehouse data...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app-config.js"></script>
+    <script src="js/app-rental-f.js"></script>
+    <script>
+        function openRentalDetails() {
+            document.getElementById('rental-overlay').classList.add('active');
+            if (typeof RentalFService !== 'undefined') {
+                RentalFService.init(); // Load data logic
+            } else {
+                document.getElementById('rental-content').innerHTML = "Rental Service Script not loaded.";
+            }
+        }
+        function closeRentalDetails() {
+            document.getElementById('rental-overlay').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>
