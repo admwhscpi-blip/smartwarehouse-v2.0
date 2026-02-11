@@ -4,7 +4,7 @@
     const ROLE_KEY = "userRole";
 
     const path = window.location.pathname.toLowerCase();
-    const isLoginPage = path.endsWith('index.html') || path === '/' || path.endsWith('login.html');
+    const isLoginPage = path.endsWith('index.html') || path === '/' || path.endsWith('login.html') || path.includes('about-page.html');
 
     if (!isLoginPage) {
         // Step 1: Check gatekeeper (index login)
