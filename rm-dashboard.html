@@ -293,11 +293,17 @@
                 const fillColor = isCritical ? 'linear-gradient(to top, rgba(220, 38, 38, 0.9), rgba(185, 28, 28, 0.6))' : 'linear-gradient(to top, rgba(6, 182, 212, 0.9), rgba(8, 145, 178, 0.6))';
                 const borderColor = isCritical ? '#ef4444' : '#00f3ff';
 
+                const capTon = hardCapInKg / 1000;
+                const stockTon = totalMaterialStock / 1000;
+
                 html += `
-                <div class="warehouse-card" style="height:${visualH + 90}px; flex:1; min-width:100px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; cursor:pointer;" onclick="openDetailModal(${index})">
-                    <div class="wh-header" style="text-align:center; margin-bottom:10px;">
-                        <div class="wh-name" style="font-family:'Orbitron'; font-size:0.8rem; letter-spacing:1px; color:#fff;">${name}</div>
-                        <div class="wh-cap" style="color:#64748b; font-size:0.65rem;">Stock: ${(stockVal / 1000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</div>
+                <div class="warehouse-card" style="height:${visualH + 110}px; flex:1; min-width:120px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; cursor:pointer;" onclick="openDetailModal(${index})">
+                    <div class="wh-header" style="text-align:center; margin-bottom:12px;">
+                        <div class="wh-name" style="font-family:'Orbitron'; font-size:0.85rem; letter-spacing:1px; color:#fff; margin-bottom:4px;">${name}</div>
+                        <div class="wh-info" style="display:flex; flex-direction:column; gap:2px;">
+                            <div style="color:#94a3b8; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Capacity: ${capTon.toLocaleString('en-US')} TON</div>
+                            <div style="color:#00f3ff; font-size:0.75rem; font-weight:700; font-family:'Rajdhani';">Stock: ${stockTon.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</div>
+                        </div>
                     </div>
                     <div class="wh-visual-bar" style="height:${visualH}px; width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); position:relative; overflow:hidden;">
                          <!-- Grid Pattern Inline -->
