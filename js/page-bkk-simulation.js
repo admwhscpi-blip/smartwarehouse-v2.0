@@ -22,14 +22,23 @@ const BKKSim = {
         const BKK_API_URL = CONFIG.BKK_API_URL;
 
         try {
-            const response = await fetch(BKK_API_URL + "?t=" + new Date().getTime());
+            const response = await fetch(BKK_API_URL + (BKK_API_URL.includes('?') ? '&' : '?') + "t=" + new Date().getTime());
             const data = await response.json();
 
-            if (data && data.materials) {
-                this.warehouses = data.materials.map(item => ({
+            let materials = data.materials || [];
+            if (materials.length === 0 && data.silos) {
+                materials = data.silos.map(s => ({
+                    name: s.id,
+                    stock: s.stock || 0,
+                    cap: s.capacity || 3000000
+                }));
+            }
+
+            if (materials.length > 0) {
+                this.warehouses = materials.map(item => ({
                     name: item.warehouse || item.name,
                     stock: item.stock || 0,
-                    cap: item.capacity || 0
+                    cap: item.capacity || item.cap || 0
                 }));
             }
         } catch (error) {

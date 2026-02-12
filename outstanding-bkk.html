@@ -968,21 +968,35 @@
 
         let appData = null;
 
-        function fetchBKK() {
-            return new Promise((resolve, reject) => {
-                const cb = 'bkk_' + Math.round(Math.random() * 100000);
-                window[cb] = (d) => { delete window[cb]; document.body.removeChild(tag); resolve(d); };
-                const tag = document.createElement('script');
-                const sep = API_URL.includes('?') ? '&' : '?';
-                tag.src = `${API_URL}${sep}callback=${cb}&t=${Date.now()}`;
-                tag.onerror = reject;
-                document.body.appendChild(tag);
-            });
+        async function fetchBKK() {
+            try {
+                const response = await fetch(API_URL + (API_URL.includes('?') ? '&' : '?') + "t=" + Date.now());
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                // Return empty structure to prevent crashes
+                return { trucks: [], intake: [], silos: [] };
+            }
         }
 
         async function init() {
             try {
                 const data = await fetchBKK();
+
+                // DATA ADAPTATION
+                if (!data.silos && data.materials) {
+                    data.silos = data.materials.map(m => ({
+                        id: m.warehouse,
+                        material: m.name,
+                        stock: m.stock,
+                        percentage: (m.percentage || 0) / 100,
+                        age: m.age,
+                        doh: m.doh,
+                        usage: m.usageDaily
+                    }));
+                }
+
                 appData = data;
                 document.getElementById('loading').style.display = 'none';
                 renderDashboard(data);
