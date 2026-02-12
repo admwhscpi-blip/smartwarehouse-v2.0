@@ -275,44 +275,52 @@
         function renderWarehouseCards(data) {
             const container = document.getElementById('warehouse-display');
             let html = '';
-            const maxCap = Math.max(...data.capacities) || 1;
+
+            // Limit max capacity for visual scaling (max height of bar)
+            const maxCap = Math.max(...data.capacities) || 10000;
             const MAX_H = 180;
 
             data.warehouses.forEach((name, index) => {
-                const stockVal = data.capacities[index]; // API returns stock as 'capacities'
-                let totalMaterialStock = 0;
-                if (data.materials) data.materials.forEach(m => { if (m.stocks && m.stocks[index]) totalMaterialStock += m.stocks[index]; });
+                // 1. Get capacity for this warehouse (from API)
+                const capKg = data.capacities[index] || 0;
 
-                // Use manual capacity for percentage logic if available
-                const hardCapInKg = (CONFIG.WAREHOUSE_CAPACITIES[name.toUpperCase()] || (stockVal / CONFIG.UNIT_DIVIDER)) * CONFIG.UNIT_DIVIDER;
-                const percent = hardCapInKg > 0 ? (totalMaterialStock / hardCapInKg) * 100 : 0;
+                // 2. Calculate total stock for this warehouse from all materials
+                let totalStockKg = 0;
+                if (data.materials) {
+                    data.materials.forEach(m => {
+                        if (m.stocks && m.stocks[index]) totalStockKg += m.stocks[index];
+                    });
+                }
 
-                const visualH = Math.max((hardCapInKg / (maxCap * 1.5)) * MAX_H, 50);
+                // 3. Percent calculation
+                const percent = capKg > 0 ? (totalStockKg / capKg) * 100 : 0;
 
-                const isCritical = percent >= 80;
-                const fillColor = isCritical ? 'linear-gradient(to top, rgba(220, 38, 38, 0.9), rgba(185, 28, 28, 0.6))' : 'linear-gradient(to top, rgba(6, 182, 212, 0.9), rgba(8, 145, 178, 0.6))';
-                const borderColor = isCritical ? '#ef4444' : '#00f3ff';
+                // 4. Visual height for the card container (relative to max capacity in site)
+                const visualH = Math.max((capKg / (maxCap * 1.2)) * MAX_H, 60);
 
-                const capTon = hardCapInKg / 1000;
-                const stockTon = totalMaterialStock / 1000;
+                const isCritical = percent >= 85;
+                const isHigh = percent >= 70;
+
+                const fillColor = isCritical ? 'linear-gradient(to top, #ef4444, #991b1b)' :
+                    (isHigh ? 'linear-gradient(to top, #f59e0b, #9a3412)' :
+                        'linear-gradient(to top, #00f3ff, #0e7490)');
+                const borderColor = isCritical ? '#ef4444' : (isHigh ? '#f59e0b' : '#00f3ff');
 
                 html += `
-                <div class="warehouse-card" style="height:${visualH + 110}px; flex:1; min-width:120px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; cursor:pointer;" onclick="openDetailModal(${index})">
+                <div class="warehouse-card" style="height:${visualH + 100}px; flex:1; min-width:120px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; cursor:pointer;" onclick="openDetailModal(${index})">
                     <div class="wh-header" style="text-align:center; margin-bottom:12px;">
-                        <div class="wh-name" style="font-family:'Orbitron'; font-size:0.85rem; letter-spacing:1px; color:#fff; margin-bottom:4px;">${name}</div>
-                        <div class="wh-info" style="display:flex; flex-direction:column; gap:2px;">
-                            <div style="color:#94a3b8; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Capacity: ${capTon.toLocaleString('en-US')} TON</div>
-                            <div style="color:#00f3ff; font-size:0.75rem; font-weight:700; font-family:'Rajdhani';">Stock: ${stockTon.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</div>
-                        </div>
+                        <div class="wh-name" style="font-family:'Orbitron'; font-size:0.85rem; letter-spacing:1px; color:#fff; font-weight:700;">${name}</div>
+                        <div class="wh-cap" style="color:#64748b; font-size:0.7rem; font-family:'Rajdhani';">Cap: ${(capKg / 1000).toLocaleString('id-ID')} T</div>
+                        <div class="wh-stock" style="color:#64748b; font-size:0.7rem; font-family:'Rajdhani';">Stock: ${(totalStockKg / 1000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} T</div>
                     </div>
-                    <div class="wh-visual-bar" style="height:${visualH}px; width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); position:relative; overflow:hidden;">
-                         <!-- Grid Pattern Inline -->
-                        <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size:20px 20px;"></div>
+                    <div class="wh-visual-bar" style="height:${visualH}px; width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); position:relative; overflow:hidden; border-radius:4px 4px 0 0;">
+                        <!-- Grid Pattern -->
+                        <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size:15px 15px;"></div>
                         
-                        <div class="wh-fill" style="position:absolute; bottom:0; left:0; width:100%; height:${percent}%; background:${fillColor}; border-top:3px solid ${borderColor}; box-shadow: 0 0 20px ${borderColor}; transition:height 1s;"></div>
-                        <div class="wh-label-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-family:'Rajdhani'; font-weight:700; font-size:1.3rem; text-shadow:0 2px 4px rgba(0,0,0,0.8); z-index:2;">${Math.round(percent)}%</div>
+                        <div class="wh-fill" style="position:absolute; bottom:0; left:0; width:100%; height:${Math.min(percent, 100)}%; background:${fillColor}; border-top:2px solid ${borderColor}; box-shadow: 0 0 15px ${borderColor}44; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                        <div class="wh-label-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-family:'Orbitron'; font-weight:900; font-size:1.1rem; text-shadow:0 0 10px #000; z-index:2;">${Math.round(percent)}%</div>
                     </div>
-                    <div class="wh-footer" style="height:10px; background:#333; border-top:1px solid #555; border-radius:0 0 4px 4px;"></div>
+                    <div class="wh-footer" style="height:6px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); border-top:none; border-radius:0 0 4px 4px;"></div>
                 </div>`;
             });
             container.innerHTML = html;
