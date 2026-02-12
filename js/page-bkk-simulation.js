@@ -19,7 +19,7 @@ const BKKSim = {
 
     fetchWarehouseData: async function () {
         // Fetch from BKK API
-        const BKK_API_URL = "https://script.google.com/macros/s/AKfycbzeYIfUcBkPdD5KqAy8Z6RHXev6NWM0LFLA3VKkwMlvGxfI9k9kiYnh_tj4wVGzIFR8/exec";
+        const BKK_API_URL = CONFIG.BKK_API_URL;
 
         try {
             const response = await fetch(BKK_API_URL + "?t=" + new Date().getTime());

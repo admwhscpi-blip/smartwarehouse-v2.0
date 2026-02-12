@@ -422,10 +422,11 @@
         <div class="close-hint">PRESS [ESC] TO RETURN TO MONITORING</div>
     </div>
 
+    <script src="js/app-config.js"></script>
     <!-- SCRIPT -->
     <script>
         // BKK API URL (Google Apps Script Web App)
-        const BKK_API_URL = "https://script.google.com/macros/s/AKfycbz2wj7NG3uyvz-H152h4zAVcfm9Rh5sr4d73kZOw3hYT1BfeVkVWKwI7sTK6mXl1UoL/exec?type=bkk";
+        const BKK_API_URL = CONFIG.BKK_API_URL;
 
         // Fallback dummy data for testing
         const dummyData = {
@@ -450,6 +451,23 @@
             try {
                 const response = await fetch(BKK_API_URL + "?t=" + new Date().getTime());
                 const data = await response.json();
+
+                // DATA ADAPTATION FOR BKK-DASHBOARD (Map 'silos' to 'materials')
+                if (data.silos && !data.materials) {
+                    data.materials = data.silos.map(s => ({
+                        warehouse: s.id,
+                        name: s.material || 'EMPTY',
+                        supplier: s.vessel || '-',
+                        stock: s.stock || 0,
+                        capacity: (s.stock / (s.percentage || 1)) || 3000000, // Estimate capacity if missing
+                        percentage: (s.percentage || 0) * 100,
+                        age: s.age || 0,
+                        doh: s.doh || 0,
+                        usageDaily: s.usage || 0,
+                        remark: s.status || 'OK'
+                    }));
+                }
+
                 if (data.error) {
                     console.error("API Error:", data.error);
                     return dummyData;

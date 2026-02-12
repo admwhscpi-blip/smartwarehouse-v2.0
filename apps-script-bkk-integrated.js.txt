@@ -1,0 +1,141 @@
+/**
+ * GOOGLE APPS SCRIPT - BKK INTEGRATED (OUTSTANDING & DOWNTIME)
+ * Project: Smart Warehouse V2.0
+ * Last Updated: 12 FEB 2026
+ */
+
+function doGet(e) {
+  var action = e.parameter.action || "getData"; // Default to existing functionality
+  var ssId = "17rIBNXdJOQkuizl_gJ5jGid7oqiEfJdWxUgPtz-i3As";
+  
+  try {
+    if (action === "getDowntime") {
+      return getDowntimeData(ssId, e);
+    } else {
+      return getOutstandingBKKData(ssId, e);
+    }
+  } catch (err) {
+    return createOutput({error: err.toString()}, e);
+  }
+}
+
+/**
+ * FEATURE 1: OUTSTANDING BKK (Existing)
+ */
+function getOutstandingBKKData(ssId, e) {
+  var sheetName = "Monitoring bongkaran";
+  var ss = SpreadsheetApp.openById(ssId);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) throw new Error("Sheet '" + sheetName + "' not found");
+
+  // 1. INTAKE DATA (B2:C6)
+  var intakeRange = sheet.getRange("B2:C6").getValues();
+  var intakeData = [
+    { name: intakeRange[0][0], status: intakeRange[1][0], material: intakeRange[2][0] },
+    { name: intakeRange[0][1], status: intakeRange[1][1], material: intakeRange[2][1] }
+  ];
+
+  // 2. SILO DATA (D7:I14)
+  var siloRaw = sheet.getRange("D7:I14").getValues();
+  var silos = [];
+  var siloNames = ["BK1", "BK2", "BK3", "BK4", "BK5", "BK6"];
+  for (var col = 0; col < 6; col++) {
+    silos.push({
+      id: siloNames[col],
+      material: siloRaw[0][col],
+      vessel: siloRaw[1][col], stock: siloRaw[2][col], percentage: siloRaw[3][col],
+      age: siloRaw[4][col], usage: siloRaw[5][col], doh: siloRaw[6][col], status: siloRaw[7][col]
+    });
+  }
+
+  // 3. TRUCK DATA (Row 22 Down)
+  var lastRow = sheet.getLastRow();
+  var truckData = [];
+  if (lastRow >= 22) {
+    var numRows = lastRow - 22 + 1;
+    var dataRange = sheet.getRange(22, 3, numRows, 6).getValues();
+    for (var i = 0; i < dataRange.length; i++) {
+      var row = dataRange[i];
+      if (!row[0] && !row[1]) continue;
+      var mixedStr = (row[1] || "").toString();
+      var dateMatch = mixedStr.match(/(\d{2}[-./]\d{2}[-./]\d{2,4})/);
+      var date = dateMatch ? dateMatch[0] : "";
+      var parts = mixedStr.split(date);
+      truckData.push({
+        material: row[0], sequence: parts[0].trim(), date: date,
+        nopol: parts.length > 1 ? parts[1].trim() : "",
+        netto: row[2], type: row[3], grade: row[4], aging: row[5]
+      });
+    }
+  }
+
+  return createOutput({ timestamp: new Date().toISOString(), intake: intakeData, silos: silos, trucks: truckData }, e);
+}
+
+/**
+ * FEATURE 2: BKK DOWNTIME (NEW)
+ */
+function getDowntimeData(ssId, e) {
+  var sheetName = "DOWNTIME";
+  var ss = SpreadsheetApp.openById(ssId);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) throw new Error("Sheet '" + sheetName + "' not found");
+
+  var lastRow = sheet.getLastRow();
+  var downtimeData = [];
+  
+  if (lastRow >= 5) {
+    var numRows = lastRow - 5 + 1;
+    // A to Y = 25 Columns
+    var data = sheet.getRange(5, 1, numRows, 25).getValues();
+    
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      if (!row[0]) continue; // Skip if Date (Col A) is empty
+      
+      downtimeData.push({
+        tanggal: row[0],            // A
+        intake_direct: row[1],      // B
+        petugas: row[2],            // C
+        scada: row[3],              // D
+        shift: row[4],              // E
+        nopol: row[5],              // F
+        jenis_truck: row[6],        // G
+        bruto: row[7],              // H
+        netto: row[8],              // I
+        material: row[9],           // J
+        sloc: row[10],              // K
+        pt_ts1: row[11],            // L
+        pt_ts2: row[12],            // M
+        pt_total: row[13],          // N
+        pb_start: row[14],          // O
+        pb_finish: row[15],         // P
+        pb_total: row[16],          // Q
+        manuver_mulai: row[17],     // R
+        manuver_selesai: row[18],   // S
+        manuver_total: row[19],     // T
+        qc_start: row[20],          // U
+        qc_finish: row[21],         // V
+        qc_total: row[22],          // W
+        tenaga: row[23],            // X
+        moisture: row[24]           // Y
+      });
+    }
+  }
+
+  return createOutput({ timestamp: new Date().toISOString(), data: downtimeData }, e);
+}
+
+/**
+ * Helper to create JSON/JSONP Output
+ */
+function createOutput(result, e) {
+  var jsonString = JSON.stringify(result);
+  if (e.parameter.callback) {
+    return ContentService.createTextOutput(e.parameter.callback + "(" + jsonString + ")")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    return ContentService.createTextOutput(jsonString)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}

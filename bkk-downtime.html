@@ -4,54 +4,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BKK DOWNTIME - SMART WAREHOUSE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@500&display=swap"
+    <title>SLICTHER // BKK DOWNTIME ANALYS</title>
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CHARTS -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: rgba(20, 20, 25, 0.7);
+            --neon-blue: #00f3ff;
+            --neon-green: #00ff88;
+            --neon-red: #ff003c;
+            --neon-gold: #ffcc00;
+            --text-main: #e0e0e0;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         body {
-            background: #050505;
-            color: #fff;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 243, 255, 0.05) 0%, transparent 40%);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
+            background: rgba(10, 10, 11, 0.9);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo-text {
+            font-family: 'Orbitron';
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .brand-bkk {
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+
+        .main-container {
+            padding: 80px 20px 20px 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            grid-template-rows: 150px 1fr;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .glass-panel {
+            background: var(--bg-panel);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            font-family: 'Orbitron';
+            font-size: 0.75rem;
+            color: var(--neon-gold);
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metric-card {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
             text-align: center;
         }
 
-        h1 {
-            font-family: 'Orbitron';
-            color: #ff003c;
-            letter-spacing: 5px;
+        .metric-val {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1;
         }
 
-        .back-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            border: 1px solid #00f3ff;
-            color: #00f3ff;
-            text-decoration: none;
+        .metric-label {
             font-family: 'Orbitron';
-            font-size: 0.8rem;
+            font-size: 0.6rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            text-decoration: none;
             transition: 0.3s;
         }
 
-        .back-btn:hover {
-            background: #00f3ff;
+        .btn-back:hover {
+            background: var(--neon-red);
             color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px;
+            color: var(--neon-blue);
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 5000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
 
 <body>
-    <div style="font-size: 5rem; color: #ff003c; margin-bottom: 20px;">
-        <i class="fas fa-tools"></i>
+    <div id="loading" class="loading-overlay">
+        <div style="font-family:'Orbitron'; color:var(--neon-blue);">CONNECTING TO BKK-DOWNTIME STREAM...</div>
     </div>
-    <h1>BKK-DOWNTIME</h1>
-    <p>HALAMAN KOSONG - DALAM PENGEMBANGAN</p>
-    <a href="homepage-v1.html" class="back-btn">KEMBALI KE HOME</a>
+
+    <div class="header">
+        <div class="logo-text">
+            <span class="brand-bkk">BKK-DOWNTIME</span> <span style="font-size:0.7rem; color:#666;">// ANALYS</span>
+        </div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <div id="refresh-time" style="font-family:'Orbitron'; font-size:0.7rem; color:#555;">LAST SYNC: NEVER</div>
+            <a href="homepage-v1.html" class="btn-back">EXIT</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="dashboard-grid">
+            <!-- METRICS TOP -->
+            <div class="glass-panel metric-card">
+                <div class="metric-val" id="avg-pb-total" style="color:var(--neon-green);">00:00</div>
+                <div class="metric-label">AVG BONGKAR TIME (PB)</div>
+            </div>
+            <div class="glass-panel metric-card">
+                <div class="metric-val" id="avg-qc-total" style="color:var(--neon-gold);">00:00</div>
+                <div class="metric-label">AVG QC WAITING (DT)</div>
+            </div>
+            <div class="glass-panel metric-card">
+                <div class="metric-val" id="avg-moisture" style="color:var(--neon-blue);">0.0%</div>
+                <div class="metric-label">AVERAGE MOISTURE</div>
+            </div>
+
+            <!-- TREND CHART -->
+            <div class="glass-panel" style="grid-column: span 2;">
+                <div class="panel-header">
+                    <span>CYCLE TIME PERFORMANCE (LAST 10 TRUCKS)</span>
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div id="chart-downtime" style="flex:1;"></div>
+            </div>
+
+            <!-- DATA TABLE -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <span>LIVE LOG: DOWNTIME BKK</span>
+                    <span style="color:var(--neon-green)">● ONLINE</span>
+                </div>
+                <div class="scroll-area">
+                    <table id="table-downtime">
+                        <thead>
+                            <tr>
+                                <th>NOPOL</th>
+                                <th>MATERIAL</th>
+                                <th>PB TIME</th>
+                                <th>QC TIME</th>
+                                <th>MOISTURE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app-config.js"></script>
+    <script src="js/bkk-downtime.js"></script>
 </body>
 
 </html>
