@@ -1,6 +1,10 @@
 const BKKDowntimeApp = {
     aggregatedData: [],
-    filterMode: 'overall', // overall, material
+    intake71Data: {},
+    materialBreakdown: {},
+    truckTypeData: {},
+    directGudangData: {},
+    filterMode: 'overall',
     selectedMaterial: '',
     timeView: 'daily',
     charts: {},
@@ -43,6 +47,10 @@ const BKKDowntimeApp = {
                 delete window[cb];
                 if (result && result.data && result.data.length > 0) {
                     this.aggregatedData = result.data;
+                    this.intake71Data = result.intake71 || {};
+                    this.materialBreakdown = result.materialBreakdown || {};
+                    this.truckTypeData = result.truckTypes || {};
+                    this.directGudangData = result.directGudang || {};
                     this.availableMaterials = result.materials || [];
                     this.populateMaterialSelect();
                     this.renderDashboard();
@@ -100,43 +108,144 @@ const BKKDowntimeApp = {
     },
 
     /**
-     * RENDER ENGINE V7
+     * RENDER ENGINE V8
      */
     renderDashboard: function () {
         this.renderKPIs();
         this.renderVolumeTrend();
         this.renderDistribution();
-        this.renderProcessCharts();
+        this.renderSBMvsPKMChart();
+        this.renderDirectGudang();
     },
 
     renderKPIs: function () {
+        const emptyIds = ['val-netto', 'val-trucks', 'val-intake71-eff', 'val-active-min', 'val-idle-min',
+            'val-net-discharge', 'val-manuver-dt', 'val-qc-hold', 'val-intake71-ton', 'val-intake71-trucks',
+            'val-direct-netto', 'val-direct-trucks', 'val-net-pct', 'val-man-pct', 'val-qc-pct', 'val-idle-pct'];
         if (this.aggregatedData.length === 0) {
-            ['val-netto', 'val-trucks', 'val-cycle', 'val-efficiency'].forEach(id => {
-                document.getElementById(id).innerText = '-';
-                document.getElementById(id).style.color = '#444';
+            emptyIds.forEach(id => { const el = document.getElementById(id); if (el) { el.innerText = '-'; } });
+            ['material-breakdown', 'truck-type-breakdown', 'direct-material-breakdown', 'direct-truck-types'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.innerHTML = '';
             });
             return;
         }
 
-        ['val-netto', 'val-trucks', 'val-cycle', 'val-efficiency'].forEach(id => {
-            document.getElementById(id).style.color = ''; // Reset color
-        });
-
         const totals = this.aggregatedData.reduce((acc, d) => {
             acc.netto += d.netto;
             acc.trucks += d.trucks;
-            acc.cycleTotal += (d.avgCycle * d.trucks);
             return acc;
-        }, { netto: 0, trucks: 0, cycleTotal: 0 });
+        }, { netto: 0, trucks: 0 });
 
         document.getElementById('val-netto').innerText = Math.round(totals.netto).toLocaleString();
         document.getElementById('val-trucks').innerText = totals.trucks;
 
-        const avgCycle = totals.cycleTotal / totals.trucks;
-        document.getElementById('val-cycle').innerText = this.formatMinutesToTime(avgCycle);
+        // Material Breakdown sub-cards
+        const matEl = document.getElementById('material-breakdown');
+        if (matEl && this.materialBreakdown) {
+            const sorted = Object.entries(this.materialBreakdown).sort((a, b) => b[1] - a[1]);
+            matEl.innerHTML = sorted.map(([name, val]) => `
+                <div style="display:flex; justify-content:space-between; padding:3px 6px; margin-bottom:3px; background:rgba(0,243,255,0.05); border-radius:4px; border-left:2px solid rgba(0,243,255,0.3);">
+                    <span style="font-family:'Rajdhani'; font-size:0.6rem; color:#aab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;">${name}</span>
+                    <span style="font-family:'Orbitron'; font-size:0.55rem; font-weight:700; color:var(--neon-blue);">${Math.round(val).toLocaleString()}</span>
+                </div>`).join('');
+        }
 
-        const efficiency = Math.max(0, Math.min(100, (45 / avgCycle) * 100));
-        document.getElementById('val-efficiency').innerText = `${Math.round(efficiency)}%`;
+        // Truck Type Breakdown sub-cards
+        const ttEl = document.getElementById('truck-type-breakdown');
+        if (ttEl && this.truckTypeData) {
+            const totalTrucks = Object.values(this.truckTypeData).reduce((s, c) => s + c, 0);
+            const sorted = Object.entries(this.truckTypeData).sort((a, b) => b[1] - a[1]);
+            ttEl.innerHTML = sorted.map(([name, count]) => {
+                const pct = totalTrucks > 0 ? ((count / totalTrucks) * 100).toFixed(1) : 0;
+                return `
+                <div style="display:flex; justify-content:space-between; padding:3px 6px; margin-bottom:3px; background:rgba(255,204,0,0.05); border-radius:4px; border-left:2px solid rgba(255,204,0,0.3);">
+                    <span style="font-family:'Rajdhani'; font-size:0.6rem; color:#aab;">${name}</span>
+                    <span style="font-family:'Orbitron'; font-size:0.55rem; font-weight:700; color:var(--neon-gold);">${count} <span style="font-size:0.45rem; opacity:0.7;">(${pct}%)</span></span>
+                </div>`;
+            }).join('');
+        }
+
+        // INTAKE 71 Data
+        const i71 = this.intake71Data || {};
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        const setBar = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = Math.min(100, pct) + '%'; };
+
+        const proc = i71.processMin || 0;
+        const net = i71.netDischargeMin || 0;
+        const man = i71.manuverMin || 0;
+        const qc = i71.qcMin || 0;
+        const loss = i71.lossMin || 0;
+        const idlePct = i71.idlePct || 0;
+        const netPct = proc > 0 ? Math.round((net / proc) * 100) : 0;
+        const manPct = proc > 0 ? Math.round((man / proc) * 100) : 0;
+        const qcPct = proc > 0 ? Math.round((qc / proc) * 100) : 0;
+
+        setVal('val-intake71-eff', (i71.efficiencyPct || 0) + '%');
+        setVal('val-intake71-trucks', (i71.trucks || 0) + ' trucks');
+        setVal('val-active-min', proc.toLocaleString() + ' min');
+        setVal('val-net-discharge', net.toLocaleString() + ' min');
+        setVal('val-net-pct', '(' + netPct + '%)');
+        setVal('val-manuver-dt', man.toLocaleString() + ' min');
+        setVal('val-man-pct', '(' + manPct + '%)');
+        setVal('val-qc-hold', qc.toLocaleString() + ' min');
+        setVal('val-qc-pct', '(' + qcPct + '%)');
+        setVal('val-intake71-ton', ((i71.nettoKg || 0) / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' Ton');
+        setVal('val-idle-min', loss.toLocaleString() + ' min');
+        setVal('val-idle-pct', idlePct + '%');
+
+        // Animate progress bars
+        setTimeout(() => {
+            setBar('bar-net', netPct);
+            setBar('bar-man', manPct);
+            setBar('bar-qc', qcPct);
+        }, 100);
+
+        // Yield vs Loss donut chart
+        const yieldVal = i71.efficiencyPct || 0;
+        const lossVal = idlePct;
+        if (this.charts.yieldLoss) this.charts.yieldLoss.destroy();
+        this.charts.yieldLoss = new ApexCharts(document.getElementById('chart-yield-loss'), {
+            series: [yieldVal, lossVal],
+            labels: ['YIELD', 'LOSS'],
+            chart: { type: 'donut', height: 200 },
+            colors: ['#00ff88', '#ff003c'],
+            stroke: { show: false },
+            plotOptions: { pie: { donut: { size: '70%', labels: { show: true, name: { fontFamily: 'Orbitron', fontSize: '10px', color: '#ccc' }, value: { fontFamily: 'Orbitron', fontSize: '16px', color: '#fff', formatter: val => val + '%' }, total: { show: true, label: 'YIELD', fontFamily: 'Orbitron', fontSize: '9px', color: '#8892b0', formatter: () => yieldVal + '%' } } } } },
+            legend: { show: false },
+            tooltip: { enabled: false }
+        });
+        this.charts.yieldLoss.render();
+
+        // Direct Gudang KPIs
+        const dg = this.directGudangData || {};
+        setVal('val-direct-netto', (dg.totalNetto || 0).toLocaleString());
+        setVal('val-direct-trucks', dg.totalTrucks || 0);
+
+        // Direct Material Breakdown
+        const dmEl = document.getElementById('direct-material-breakdown');
+        if (dmEl && dg.materials) {
+            const sorted = Object.entries(dg.materials).sort((a, b) => b[1] - a[1]);
+            dmEl.innerHTML = sorted.map(([name, val]) => `
+                <div style="display:flex; justify-content:space-between; padding:3px 6px; margin-bottom:3px; background:rgba(188,19,254,0.05); border-radius:4px; border-left:2px solid rgba(188,19,254,0.3);">
+                    <span style="font-family:'Rajdhani'; font-size:0.6rem; color:#aab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;">${name}</span>
+                    <span style="font-family:'Orbitron'; font-size:0.55rem; font-weight:700; color:var(--neon-purple);">${Math.round(val).toLocaleString()}</span>
+                </div>`).join('');
+        }
+
+        // Direct Truck Types
+        const dtEl = document.getElementById('direct-truck-types');
+        if (dtEl && dg.truckTypes) {
+            const totalDGTrucks = Object.values(dg.truckTypes).reduce((s, c) => s + c, 0);
+            const sorted = Object.entries(dg.truckTypes).sort((a, b) => b[1] - a[1]);
+            dtEl.innerHTML = sorted.map(([name, count]) => {
+                const pct = totalDGTrucks > 0 ? ((count / totalDGTrucks) * 100).toFixed(1) : 0;
+                return `
+                <div style="display:flex; justify-content:space-between; padding:3px 6px; margin-bottom:3px; background:rgba(188,19,254,0.05); border-radius:4px; border-left:2px solid rgba(188,19,254,0.3);">
+                    <span style="font-family:'Rajdhani'; font-size:0.6rem; color:#aab;">${name}</span>
+                    <span style="font-family:'Orbitron'; font-size:0.55rem; font-weight:700; color:var(--neon-purple);">${count} <span style="font-size:0.45rem; opacity:0.7;">(${pct}%)</span></span>
+                </div>`;
+            }).join('');
+        }
     },
 
     renderVolumeTrend: function () {
@@ -219,50 +328,102 @@ const BKKDowntimeApp = {
         this.charts.dist.render();
     },
 
-    renderProcessCharts: function () {
-        if (this.aggregatedData.length === 0) {
-            const emptyHtml = `<div style="display:flex; height:100%; align-items:center; justify-content:center; color:#444; font-family:Orbitron; font-size:0.7rem;">SELECT PERIOD & CLICK RUN</div>`;
-            document.getElementById("chart-process-a").innerHTML = emptyHtml;
-            document.getElementById("chart-process-b").innerHTML = emptyHtml;
+    renderSBMvsPKMChart: function () {
+        const i71 = this.intake71Data || {};
+        const container = document.querySelector("#chart-sbm-pkm-71");
+        if (!container) return;
+
+        if (this.aggregatedData.length === 0 || !i71.materials) {
+            container.innerHTML = `<div style="display:flex; height:100%; align-items:center; justify-content:center; color:#444; font-family:Orbitron; font-size:0.7rem;">NO DATA</div>`;
             return;
         }
 
-        const totalTrucks = this.aggregatedData.reduce((acc, d) => acc + d.trucks, 0);
-        const avg = this.aggregatedData.reduce((acc, d) => {
-            acc.pt += (d.procs.pt * d.trucks);
-            acc.pb += (d.procs.pb * d.trucks);
-            acc.man += (d.procs.man * d.trucks);
-            acc.qc += (d.procs.qc * d.trucks);
-            return acc;
-        }, { pt: 0, pb: 0, man: 0, qc: 0 });
+        let sbmTotal = 0;
+        let pkmTotal = 0;
+        let otherTotal = 0;
 
-        const dataA = [(avg.pt / totalTrucks).toFixed(1), (avg.pb / totalTrucks).toFixed(1)];
-        const dataB = [(avg.man / totalTrucks).toFixed(1), (avg.qc / totalTrucks).toFixed(1)];
+        Object.entries(i71.materials).forEach(([name, val]) => {
+            const upper = name.toUpperCase();
+            if (upper.includes("SBM")) sbmTotal += val;
+            else if (upper.includes("PKM")) pkmTotal += val;
+            else otherTotal += val;
+        });
 
-        const optionsA = {
-            series: [{ name: 'Avg Duration', data: dataA }],
-            chart: { type: 'bar', height: 280, toolbar: { show: false } },
-            plotOptions: { bar: { columnWidth: '45%', distributed: true, borderRadius: 6 } },
-            colors: ['#00f3ff', '#00ff88'],
-            xaxis: { categories: ['TIMBANG', 'BONGKAR'], labels: { style: { colors: '#fff', fontFamily: 'Orbitron', fontSize: '9px' } } },
-            legend: { show: false }, tooltip: { theme: 'dark' }
+        const options = {
+            series: [Math.round(sbmTotal), Math.round(pkmTotal), Math.round(otherTotal)],
+            labels: ['SBM', 'PKM', 'OTHERS'],
+            chart: { type: 'pie', height: 380 },
+            colors: ['#00f3ff', '#ffcc00', '#64748b'],
+            stroke: { show: false },
+            legend: { position: 'bottom', labels: { colors: '#fff' }, fontFamily: 'Orbitron' },
+            dataLabels: { enabled: true, formatter: (val) => val.toFixed(1) + "%" },
+            tooltip: { theme: 'dark', y: { formatter: val => val.toLocaleString() + ' KG' } }
         };
 
-        const optionsB = {
-            series: [{ name: 'Avg Duration', data: dataB }],
-            chart: { type: 'bar', height: 280, toolbar: { show: false } },
-            plotOptions: { bar: { columnWidth: '45%', distributed: true, borderRadius: 6 } },
-            colors: ['#bc13fe', '#ff003c'],
-            xaxis: { categories: ['MANUVER', 'QC DOWNTIME'], labels: { style: { colors: '#fff', fontFamily: 'Orbitron', fontSize: '9px' } } },
-            legend: { show: false }, tooltip: { theme: 'dark' }
+        if (this.charts.sbmPkm) this.charts.sbmPkm.destroy();
+        this.charts.sbmPkm = new ApexCharts(container, options);
+        this.charts.sbmPkm.render();
+    },
+
+    renderDirectGudang: function () {
+        const emptyHtml = `<div style="display:flex; height:100%; align-items:center; justify-content:center; color:#444; font-family:Orbitron; font-size:0.7rem;">NO DIRECT DATA</div>`;
+        const dg = this.directGudangData || {};
+        const daily = dg.daily || [];
+
+        if (daily.length === 0) {
+            ['chart-direct-volume', 'chart-direct-material'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.innerHTML = emptyHtml;
+            });
+            return;
+        }
+
+        // --- Daily Volume Bar Chart ---
+        const dates = daily.map(d => d.date);
+        const nettos = daily.map(d => d.netto);
+        const truckCounts = daily.map(d => d.trucks);
+
+        const volOpts = {
+            series: [
+                { name: 'NETTO (KG)', type: 'bar', data: nettos },
+                { name: 'TRUCKS', type: 'line', data: truckCounts }
+            ],
+            chart: { height: 330, toolbar: { show: false } },
+            colors: ['#bc13fe', '#ffcc00'],
+            stroke: { width: [0, 3], curve: 'smooth' },
+            plotOptions: { bar: { columnWidth: '60%', borderRadius: 4 } },
+            xaxis: { categories: dates, labels: { style: { colors: '#64748b', fontSize: '9px', fontFamily: 'Orbitron' } } },
+            yaxis: [
+                { labels: { formatter: val => (val / 1000).toFixed(0) + 'T', style: { colors: '#64748b' } } },
+                { opposite: true, labels: { style: { colors: '#ffcc00' } } }
+            ],
+            grid: { borderColor: 'rgba(255,255,255,0.05)' },
+            tooltip: { theme: 'dark' },
+            legend: { labels: { colors: '#fff' }, fontFamily: 'Orbitron', fontSize: '9px' }
         };
 
-        if (this.charts.procA) this.charts.procA.destroy();
-        if (this.charts.procB) this.charts.procB.destroy();
-        this.charts.procA = new ApexCharts(document.querySelector("#chart-process-a"), optionsA);
-        this.charts.procB = new ApexCharts(document.querySelector("#chart-process-b"), optionsB);
-        this.charts.procA.render();
-        this.charts.procB.render();
+        if (this.charts.directVol) this.charts.directVol.destroy();
+        this.charts.directVol = new ApexCharts(document.getElementById('chart-direct-volume'), volOpts);
+        this.charts.directVol.render();
+
+        // --- Material Distribution Donut ---
+        const mats = dg.materials || {};
+        const matEntries = Object.entries(mats).sort((a, b) => b[1] - a[1]);
+        const purpleShades = ['#bc13fe', '#9b59b6', '#8e44ad', '#7d3c98', '#6c3483', '#5b2c6f', '#4a235a'];
+
+        const matOpts = {
+            series: matEntries.map(([, v]) => Math.round(v)),
+            labels: matEntries.map(([k]) => k),
+            chart: { type: 'donut', height: 310 },
+            colors: matEntries.map((_, i) => purpleShades[i % purpleShades.length]),
+            stroke: { show: false },
+            legend: { position: 'bottom', labels: { colors: '#fff' }, fontFamily: 'Orbitron', fontSize: '9px' },
+            plotOptions: { pie: { donut: { size: '70%' } } },
+            tooltip: { theme: 'dark', y: { formatter: val => val.toLocaleString() + ' KG' } }
+        };
+
+        if (this.charts.directMat) this.charts.directMat.destroy();
+        this.charts.directMat = new ApexCharts(document.getElementById('chart-direct-material'), matOpts);
+        this.charts.directMat.render();
     },
 
     showDrillDown: function (label) {
@@ -283,6 +444,30 @@ const BKKDowntimeApp = {
     },
 
     // HELPERS
+    toggleFullscreen: function () {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log("Fullscreen Error:", err);
+            });
+            document.body.classList.add('fullscreen-active');
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            document.body.classList.remove('fullscreen-active');
+        }
+
+        const fsChangeHandler = () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('fullscreen-active');
+                window.dispatchEvent(new Event('resize'));
+                document.removeEventListener('fullscreenchange', fsChangeHandler);
+            }
+        };
+        document.addEventListener('fullscreenchange', fsChangeHandler);
+
+        // Trigger resize for ApexCharts
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
+    },
+
     getWeekStr: function (date) {
         const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));

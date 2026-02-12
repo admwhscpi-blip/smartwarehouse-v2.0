@@ -1,8 +1,8 @@
 /**
- * GOOGLE APPS SCRIPT - BKK INTEGRATED TURBO V7.2 (ROBUST ANALYTICS)
+ * GOOGLE APPS SCRIPT - BKK INTEGRATED TURBO V7.4 (CORRECT PARSING)
  * Project: Smart Warehouse V2.0
- * Last Updated: 12 FEB 2026 - 19:47
- * Fix: Increased scanning range & forced JSONP error response
+ * Last Updated: 12 FEB 2026 - 20:32
+ * Fix: parseTime filters sentinel 23:34 value, caps duration at 120min
  */
 
 function doGet(e) {
@@ -12,14 +12,217 @@ function doGet(e) {
   try {
     if (action === "getDowntimeQuery") {
       return getDowntimeQuery(ssId, e);
-    } 
+    }
+    else if (action === "debugRaw") {
+      return debugRawData(ssId, e);
+    }
     else {
       return getOutstandingBKKTurbo(ssId, e);
     }
   } catch (err) {
-    // Pastikan error tetap dikirim dalam format JSONP jika diminta
     return createOutput({error: err.toString(), status: "error"}, e);
   }
+}
+
+/**
+ * DEBUG: Dump raw cell values, types, and headers from DOWNTIME sheet
+ */
+function debugRawData(ssId, e) {
+  var ss = SpreadsheetApp.openById(ssId);
+  var sheet = ss.getSheetByName("DOWNTIME");
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  
+  // Get headers (rows 1-4, all columns)
+  var headerRange = sheet.getRange(1, 1, Math.min(5, lastRow), Math.min(lastCol, 25));
+  var headers = headerRange.getValues();
+  
+  // Get 5 sample data rows (from row 5 onward)
+  var sampleStart = 5;
+  var sampleCount = Math.min(5, lastRow - sampleStart + 1);
+  var sampleRows = [];
+  if (sampleCount > 0) {
+    var rawSample = sheet.getRange(sampleStart, 1, sampleCount, Math.min(lastCol, 25)).getValues();
+    for (var i = 0; i < rawSample.length; i++) {
+      var row = [];
+      for (var j = 0; j < rawSample[i].length; j++) {
+        var cell = rawSample[i][j];
+        row.push({
+          col: j,
+          val: cell instanceof Date ? cell.toISOString() : String(cell),
+          type: cell instanceof Date ? "Date" : typeof cell
+        });
+      }
+      sampleRows.push(row);
+    }
+  }
+  
+  return createOutput({
+    lastRow: lastRow,
+    lastCol: lastCol,
+    headers: headers.map(function(r) { return r.map(String); }),
+    sampleRows: sampleRows
+  }, e);
+}
+
+/**
+ * ROBUST DATE PARSER — handles Date objects, text "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd", serial numbers
+ */
+function parseDate(val) {
+  if (!val) return null;
+  
+  // Already a Date object from Sheets
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    return val;
+  }
+  
+  var s = val.toString().trim();
+  if (!s || s === "-" || s === "0") return null;
+  
+  // Try dd/MM/yyyy or dd-MM-yyyy or dd.MM.yyyy
+  var m1 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m1) {
+    var day = parseInt(m1[1], 10);
+    var mon = parseInt(m1[2], 10);
+    var yr  = parseInt(m1[3], 10);
+    if (mon >= 1 && mon <= 12 && day >= 1 && day <= 31 && yr >= 2000) {
+      return new Date(yr, mon - 1, day);
+    }
+  }
+  
+  // Try yyyy-MM-dd
+  var m2 = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m2) {
+    var yr2  = parseInt(m2[1], 10);
+    var mon2 = parseInt(m2[2], 10);
+    var day2 = parseInt(m2[3], 10);
+    if (mon2 >= 1 && mon2 <= 12 && day2 >= 1 && day2 <= 31 && yr2 >= 2000) {
+      return new Date(yr2, mon2 - 1, day2);
+    }
+  }
+  
+  // Try Google Sheets serial date number (e.g. 45658)
+  var num = parseFloat(s);
+  if (!isNaN(num) && num > 40000 && num < 60000) {
+    // Google Sheets epoch: Dec 30, 1899
+    var epoch = new Date(1899, 11, 30);
+    epoch.setDate(epoch.getDate() + num);
+    return epoch;
+  }
+  
+  // Last resort: try native Date.parse
+  var d = new Date(s);
+  if (!isNaN(d.getTime()) && d.getFullYear() >= 2000) {
+    return d;
+  }
+  
+  return null;
+}
+
+/**
+ * ROBUST NETTO PARSER — handles Indonesian locale (42.560 or 1.234,56) and English (42560.50)
+ */
+function parseNetto(val) {
+  if (val === null || val === undefined || val === "" || val === "-") return 0;
+  
+  // Already a number
+  if (typeof val === "number") return val;
+  
+  var s = val.toString().trim();
+  if (!s) return 0;
+  
+  // Remove spaces
+  s = s.replace(/\s/g, "");
+  
+  // Detect format by analyzing dots and commas
+  var hasDot   = s.indexOf(".") !== -1;
+  var hasComma = s.indexOf(",") !== -1;
+  
+  if (hasDot && hasComma) {
+    // Both present: determine which is the decimal separator
+    var lastDot   = s.lastIndexOf(".");
+    var lastComma = s.lastIndexOf(",");
+    
+    if (lastComma > lastDot) {
+      // Format: 1.234,56 (Indonesian) — dot is thousands, comma is decimal
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      // Format: 1,234.56 (English) — comma is thousands, dot is decimal
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma && !hasDot) {
+    // Only comma: could be "1,234" (thousands) or "0,5" (decimal)
+    var parts = s.split(",");
+    if (parts.length === 2 && parts[1].length === 3) {
+      // Likely thousands separator: 1,234 → 1234
+      s = s.replace(/,/g, "");
+    } else {
+      // Likely decimal: 0,5 → 0.5 or 42560,50 → 42560.50
+      s = s.replace(",", ".");
+    }
+  } else if (hasDot && !hasComma) {
+    // Only dot: could be "42.560" (thousands) or "42560.50" (decimal)
+    var dotParts = s.split(".");
+    if (dotParts.length === 2 && dotParts[1].length === 3 && dotParts[0].length >= 2) {
+      // Likely thousands separator: 42.560 → 42560
+      s = s.replace(/\./g, "");
+    } else if (dotParts.length > 2) {
+      // Multiple dots = thousands separators: 1.234.567 → 1234567
+      s = s.replace(/\./g, "");
+    }
+    // else: single dot with non-3-digit decimal part — keep as decimal: 42560.5
+  }
+  
+  var result = parseFloat(s);
+  return isNaN(result) ? 0 : result;
+}
+
+/**
+ * ROBUST TIME/DURATION PARSER V7.4
+ * Google Sheets stores durations as 1899-era Date objects.
+ * The sentinel/placeholder value is ~23:34:52 (GMT+7) = 1414 minutes — MUST be filtered out.
+ * Real truck process durations should be 0-120 minutes max.
+ */
+function parseTime(t) {
+  if (!t || t === "-" || t === "0" || t === 0) return 0;
+  
+  // Date object from Sheets (time/duration stored as Date)
+  if (t instanceof Date) {
+    if (isNaN(t.getTime())) return 0;
+    
+    // Extract hours and minutes
+    // Google Sheets time values: use getHours/getMinutes (local timezone on Apps Script server)
+    var h = t.getHours();
+    var m = t.getMinutes();
+    var s = t.getSeconds();
+    var totalMin = (h * 60) + m + (s / 60);
+    
+    // Filter out sentinel/placeholder value (~23:34 = 1414 min)
+    // and any unrealistic duration (>120 min for a single truck process)
+    if (totalMin > 120) return 0;
+    
+    return totalMin;
+  }
+  
+  var str = t.toString().trim();
+  if (!str) return 0;
+  
+  // Format "H:MM:SS" or "H:MM"
+  var parts = str.split(":");
+  if (parts.length === 3) {
+    var totalMin = (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10) + (parseInt(parts[2], 10) / 60);
+    return totalMin > 120 ? 0 : totalMin; // Filter unrealistic values
+  }
+  if (parts.length === 2) {
+    var totalMin = (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+    return totalMin > 120 ? 0 : totalMin;
+  }
+  
+  // Plain number (already in minutes)
+  var num = parseFloat(str.replace(",", "."));
+  if (isNaN(num)) return 0;
+  return num > 120 ? 0 : num;
 }
 
 function getDowntimeQuery(ssId, e) {
@@ -31,7 +234,6 @@ function getDowntimeQuery(ssId, e) {
   var matFilter = (e.parameter.material || "").toUpperCase();
 
   var lastRow = sheet.getLastRow();
-  // V7.2: Tingkatkan scan ke 10.000 baris agar data lama tidak terlewat
   var totalRowsToScan = Math.min(10000, lastRow - 5 + 1); 
   var startRow = Math.max(5, lastRow - totalRowsToScan + 1);
   
@@ -40,25 +242,53 @@ function getDowntimeQuery(ssId, e) {
   var rawData = sheet.getRange(startRow, 1, totalRowsToScan, 25).getValues();
   var dailyAgg = {}; 
   var materials = new Set();
+  var debugInfo = { totalRows: totalRowsToScan, dateSkipped: 0, dateParsed: 0, monthFiltered: 0 };
+  
+  // ======== BREAKDOWNS ========
+  var materialNetto = {};   // { "PKM FATTY": 12345, ... }
+  var truckTypeCounts = {}; // { "TRAILER": 10, ... }
+  
+  // ======== INTAKE 71 collectors ========
+  var intake71Trucks = [];  // for idle gap calculation (timestamps only)
+  var i71TotalNetto = 0;
+  var i71TotalBongkar = 0;  // BONGKAR TOTAL column (pb_m)
+  var i71TotalMan = 0;      // MANUVER TOTAL column (man_m)
+  var i71TotalQC = 0;       // QC TOTAL column (qc_m)
+  var i71TruckCount = 0;
+  var i71MaterialNetto = {};
+  
+  // ======== DIRECT GUDANG collectors ========
+  var directDailyAgg = {};
+  var directMaterialNetto = {};
+  var directTruckTypes = {};
+  var directTotalNetto = 0;
+  var directTotalTrucks = 0;
   
   for (var i = 0; i < rawData.length; i++) {
     var rawMat = (rawData[i][9] || "").toString().trim().toUpperCase();
     if(rawMat) materials.add(rawMat);
     
-    var rowDate = rawData[i][0];
-    if (!(rowDate instanceof Date)) continue;
+    var rowDate = parseDate(rawData[i][0]);
+    if (!rowDate) { debugInfo.dateSkipped++; continue; }
+    debugInfo.dateParsed++;
     
     var m = rowDate.getMonth() + 1;
     var y = rowDate.getFullYear();
-    
     if (targetMonth && targetYear) {
-      if (m !== targetMonth || y !== targetYear) continue;
+      if (m !== targetMonth || y !== targetYear) { debugInfo.monthFiltered++; continue; }
     }
-    
     if (matFilter && rawMat !== matFilter) continue;
     
     var dateKey = Utilities.formatDate(rowDate, "GMT+7", "yyyy-MM-dd");
+    var rowNetto = parseNetto(rawData[i][8]);
+    var type = (rawData[i][1] || "").toUpperCase();
+    var truckType = (rawData[i][6] || "").toString().trim().toUpperCase() || "UNKNOWN";
     
+    // ---- Material & truck type breakdowns ----
+    if (rawMat) { materialNetto[rawMat] = (materialNetto[rawMat] || 0) + rowNetto; }
+    truckTypeCounts[truckType] = (truckTypeCounts[truckType] || 0) + 1;
+    
+    // ---- Daily aggregation (all) ----
     if (!dailyAgg[dateKey]) {
       dailyAgg[dateKey] = {
         date: dateKey, netto: 0, trucks: 0, cycleMin: 0,
@@ -66,13 +296,9 @@ function getDowntimeQuery(ssId, e) {
         pt: 0, pb: 0, man: 0, qc: 0
       };
     }
-    
     var d = dailyAgg[dateKey];
-    var rowNetto = parseFloat(rawData[i][8]) || 0;
     d.netto += rowNetto;
     d.trucks++;
-    
-    var type = (rawData[i][1] || "").toUpperCase();
     if (type.includes("INTAKE")) d.intakeNetto += rowNetto;
     else d.directNetto += rowNetto;
     
@@ -80,12 +306,93 @@ function getDowntimeQuery(ssId, e) {
     var pb_m = parseTime(rawData[i][16]);
     var man_m = parseTime(rawData[i][19]);
     var qc_m = parseTime(rawData[i][22]);
-    
     d.pt += pt_m; d.pb += pb_m; d.man += man_m; d.qc += qc_m;
     d.cycleMin += (pt_m + pb_m + man_m + qc_m);
+    
+    // ---- INTAKE 71 specific ----
+    if (type.includes("INTAKE 71")) {
+      i71TotalNetto += rowNetto;
+      i71TotalBongkar += pb_m;  // Read duration from BONGKAR TOTAL column
+      i71TotalMan += man_m;     // Read duration from MANUVER TOTAL column
+      i71TotalQC += qc_m;       // Read duration from QC TOTAL column
+      i71TruckCount++;
+      if (rawMat) { i71MaterialNetto[rawMat] = (i71MaterialNetto[rawMat] || 0) + rowNetto; }
+      
+      // Collect timestamps ONLY for idle gap (loss) calculation
+      var bMulai = rawData[i][14];   // BONGKAR MULAI (start time)
+      var bSelesai = rawData[i][15]; // BONGKAR SELESAI (finish time)
+      if (bMulai instanceof Date && bSelesai instanceof Date &&
+          !isNaN(bMulai.getTime()) && !isNaN(bSelesai.getTime())) {
+        var startMin = bMulai.getHours() * 60 + bMulai.getMinutes() + bMulai.getSeconds() / 60;
+        var endMin = bSelesai.getHours() * 60 + bSelesai.getMinutes() + bSelesai.getSeconds() / 60;
+        if (startMin <= 1380 && endMin <= 1380 && endMin > startMin) {
+          intake71Trucks.push({ dateKey: dateKey, startMin: startMin, endMin: endMin });
+        }
+      }
+    }
+    
+    // ---- DIRECT GUDANG specific ----
+    if (type.includes("DIRECT")) {
+      directTotalNetto += rowNetto;
+      directTotalTrucks++;
+      if (rawMat) { directMaterialNetto[rawMat] = (directMaterialNetto[rawMat] || 0) + rowNetto; }
+      directTruckTypes[truckType] = (directTruckTypes[truckType] || 0) + 1;
+      
+      if (!directDailyAgg[dateKey]) {
+        directDailyAgg[dateKey] = { date: dateKey, netto: 0, trucks: 0, pt: 0, pb: 0, man: 0, qc: 0 };
+      }
+      var dd = directDailyAgg[dateKey];
+      dd.netto += rowNetto;
+      dd.trucks++;
+      dd.pt += pt_m; dd.pb += pb_m; dd.man += man_m; dd.qc += qc_m;
+    }
   }
   
-  var result = Object.keys(dailyAgg).sort().map(k => {
+  // ======== INTAKE 71 IDLE LOSS (gap between trucks) ========
+  var byDate = {};
+  for (var i = 0; i < intake71Trucks.length; i++) {
+    var dk = intake71Trucks[i].dateKey;
+    if (!byDate[dk]) byDate[dk] = [];
+    byDate[dk].push(intake71Trucks[i]);
+  }
+  
+  var totalLossMin = 0;
+  var dateKeys = Object.keys(byDate);
+  for (var di = 0; di < dateKeys.length; di++) {
+    var tks = byDate[dateKeys[di]];
+    tks.sort(function(a, b) { return a.startMin - b.startMin; });
+    for (var t = 0; t < tks.length - 1; t++) {
+      var gap = tks[t + 1].startMin - tks[t].endMin;
+      if (gap > 0 && gap < 120) totalLossMin += gap;
+    }
+  }
+  
+  // processMin from BONGKAR TOTAL column (NOT calculated from timestamps)
+  var processMin = Math.round(i71TotalBongkar);
+  var manuverMin = Math.round(i71TotalMan);
+  var qcMin = Math.round(i71TotalQC);
+  var netDischarge = Math.max(0, processMin - manuverMin - qcMin);
+  var lossMin = Math.round(totalLossMin);
+  
+  var effPct = (processMin + lossMin > 0) 
+    ? Math.round((processMin / (processMin + lossMin)) * 100) : 0;
+  var idlePct = 100 - effPct;
+  
+  var intake71 = {
+    processMin: processMin,           // BONGKAR TOTAL (includes manuver+QC)
+    netDischargeMin: netDischarge,     // clean bongkar = total - manuver - QC
+    manuverMin: manuverMin,            // MANUVER TOTAL
+    qcMin: qcMin,                      // QC TOTAL
+    lossMin: lossMin,                  // idle gap between trucks
+    efficiencyPct: effPct,             // yield %
+    idlePct: idlePct,                  // idle loss %
+    trucks: i71TruckCount,
+    nettoKg: Math.round(i71TotalNetto),
+    materials: i71MaterialNetto
+  };
+  
+  // ======== BUILD RESULT ========
+  var result = Object.keys(dailyAgg).sort().map(function(k) {
     var s = dailyAgg[k];
     return {
       date: s.date,
@@ -96,17 +403,35 @@ function getDowntimeQuery(ssId, e) {
         intake: Math.round((s.intakeNetto / s.netto) * 100) || 0, 
         direct: Math.round((s.directNetto / s.netto) * 100) || 0 
       },
-      procs: {
-        pt: s.pt / s.trucks, pb: s.pb / s.trucks, man: s.man / s.trucks, qc: s.qc / s.trucks
-      }
+      procs: { pt: s.pt / s.trucks, pb: s.pb / s.trucks, man: s.man / s.trucks, qc: s.qc / s.trucks }
+    };
+  });
+  
+  // Direct daily data
+  var directDaily = Object.keys(directDailyAgg).sort().map(function(k) {
+    var s = directDailyAgg[k];
+    return {
+      date: s.date, netto: Math.round(s.netto), trucks: s.trucks,
+      procs: { pt: s.pt / s.trucks, pb: s.pb / s.trucks, man: s.man / s.trucks, qc: s.qc / s.trucks }
     };
   });
 
   return createOutput({
     status: "success",
     data: result,
+    materialBreakdown: materialNetto,
+    truckTypes: truckTypeCounts,
+    intake71: intake71,
+    directGudang: {
+      totalNetto: Math.round(directTotalNetto),
+      totalTrucks: directTotalTrucks,
+      daily: directDaily,
+      materials: directMaterialNetto,
+      truckTypes: directTruckTypes
+    },
     materials: Array.from(materials).sort(),
-    scannedRows: totalRowsToScan
+    scannedRows: totalRowsToScan,
+    debug: debugInfo
   }, e);
 }
 
@@ -141,13 +466,6 @@ function getOutstandingBKKTurbo(ssId, e) {
   }
 
   return createOutput({ intake: intakeData, silos: silos, trucks: truckData }, e);
-}
-
-function parseTime(t) {
-  if (!t || t === "-") return 0;
-  if (t instanceof Date) return (t.getHours() * 60) + t.getMinutes();
-  var p = t.toString().split(':');
-  return p.length >= 2 ? (parseInt(p[0]) * 60) + parseInt(p[1]) : parseFloat(t) || 0;
 }
 
 function createOutput(result, e) {
