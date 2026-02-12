@@ -1,8 +1,8 @@
 /**
- * GOOGLE APPS SCRIPT - BKK INTEGRATED TURBO (OUTSTANDING & DOWNTIME)
+ * GOOGLE APPS SCRIPT - BKK INTEGRATED TURBO V7.2 (ROBUST ANALYTICS)
  * Project: Smart Warehouse V2.0
- * Last Updated: 12 FEB 2026
- * Optimization: Bulk Data Fetching (Reduces roundtrips to Spreadsheet)
+ * Last Updated: 12 FEB 2026 - 19:47
+ * Fix: Increased scanning range & forced JSONP error response
  */
 
 function doGet(e) {
@@ -10,138 +10,152 @@ function doGet(e) {
   var ssId = "17rIBNXdJOQkuizl_gJ5jGid7oqiEfJdWxUgPtz-i3As";
   
   try {
-    if (action === "getDowntime") {
-      return getDowntimeData(ssId, e);
-    } else {
+    if (action === "getDowntimeQuery") {
+      return getDowntimeQuery(ssId, e);
+    } 
+    else {
       return getOutstandingBKKTurbo(ssId, e);
     }
   } catch (err) {
-    return createOutput({error: err.toString()}, e);
+    // Pastikan error tetap dikirim dalam format JSONP jika diminta
+    return createOutput({error: err.toString(), status: "error"}, e);
   }
 }
 
-/**
- * OPTIMIZED: OUTSTANDING BKK (Turbo Mode)
- */
-function getOutstandingBKKTurbo(ssId, e) {
-  var sheetName = "Monitoring bongkaran";
+function getDowntimeQuery(ssId, e) {
   var ss = SpreadsheetApp.openById(ssId);
-  var sheet = ss.getSheetByName(sheetName);
-  if (!sheet) throw new Error("Sheet '" + sheetName + "' not found");
+  var sheet = ss.getSheetByName("DOWNTIME");
+  
+  var targetMonth = parseInt(e.parameter.month); 
+  var targetYear = parseInt(e.parameter.year);   
+  var matFilter = (e.parameter.material || "").toUpperCase();
 
   var lastRow = sheet.getLastRow();
-  // ONE SINGLE CALL: Ambil semua data sekaligus untuk efisiensi
-  var allValues = sheet.getRange(1, 1, lastRow, 9).getValues();
+  // V7.2: Tingkatkan scan ke 10.000 baris agar data lama tidak terlewat
+  var totalRowsToScan = Math.min(10000, lastRow - 5 + 1); 
+  var startRow = Math.max(5, lastRow - totalRowsToScan + 1);
+  
+  if (totalRowsToScan <= 0) return createOutput({data: [], materials: [], status: "empty_sheet"}, e);
+  
+  var rawData = sheet.getRange(startRow, 1, totalRowsToScan, 25).getValues();
+  var dailyAgg = {}; 
+  var materials = new Set();
+  
+  for (var i = 0; i < rawData.length; i++) {
+    var rawMat = (rawData[i][9] || "").toString().trim().toUpperCase();
+    if(rawMat) materials.add(rawMat);
+    
+    var rowDate = rawData[i][0];
+    if (!(rowDate instanceof Date)) continue;
+    
+    var m = rowDate.getMonth() + 1;
+    var y = rowDate.getFullYear();
+    
+    if (targetMonth && targetYear) {
+      if (m !== targetMonth || y !== targetYear) continue;
+    }
+    
+    if (matFilter && rawMat !== matFilter) continue;
+    
+    var dateKey = Utilities.formatDate(rowDate, "GMT+7", "yyyy-MM-dd");
+    
+    if (!dailyAgg[dateKey]) {
+      dailyAgg[dateKey] = {
+        date: dateKey, netto: 0, trucks: 0, cycleMin: 0,
+        intakeNetto: 0, directNetto: 0,
+        pt: 0, pb: 0, man: 0, qc: 0
+      };
+    }
+    
+    var d = dailyAgg[dateKey];
+    var rowNetto = parseFloat(rawData[i][8]) || 0;
+    d.netto += rowNetto;
+    d.trucks++;
+    
+    var type = (rawData[i][1] || "").toUpperCase();
+    if (type.includes("INTAKE")) d.intakeNetto += rowNetto;
+    else d.directNetto += rowNetto;
+    
+    var pt_m = parseTime(rawData[i][13]);
+    var pb_m = parseTime(rawData[i][16]);
+    var man_m = parseTime(rawData[i][19]);
+    var qc_m = parseTime(rawData[i][22]);
+    
+    d.pt += pt_m; d.pb += pb_m; d.man += man_m; d.qc += qc_m;
+    d.cycleMin += (pt_m + pb_m + man_m + qc_m);
+  }
+  
+  var result = Object.keys(dailyAgg).sort().map(k => {
+    var s = dailyAgg[k];
+    return {
+      date: s.date,
+      netto: Math.round(s.netto),
+      trucks: s.trucks,
+      avgCycle: s.cycleMin / s.trucks,
+      dist: { 
+        intake: Math.round((s.intakeNetto / s.netto) * 100) || 0, 
+        direct: Math.round((s.directNetto / s.netto) * 100) || 0 
+      },
+      procs: {
+        pt: s.pt / s.trucks, pb: s.pb / s.trucks, man: s.man / s.trucks, qc: s.qc / s.trucks
+      }
+    };
+  });
 
-  // 1. INTAKE DATA (B2:C4) 
+  return createOutput({
+    status: "success",
+    data: result,
+    materials: Array.from(materials).sort(),
+    scannedRows: totalRowsToScan
+  }, e);
+}
+
+function getOutstandingBKKTurbo(ssId, e) {
+  var ss = SpreadsheetApp.openById(ssId);
+  var sheet = ss.getSheetByName("Monitoring bongkaran");
+  var allValues = sheet.getRange(1, 1, 250, 9).getValues();
+
   var intakeData = [
     { name: allValues[1][1], status: allValues[2][1], material: allValues[3][1] },
     { name: allValues[1][2], status: allValues[2][2], material: allValues[3][2] }
   ];
 
-  // 2. SILO DATA (D7:I14) 
   var silos = [];
-  var siloNames = ["BK1", "BK2", "BK3", "BK4", "BK5", "BK6"];
   for (var col = 0; col < 6; col++) {
-    var c = 3 + col; // Column D (index 3)
+    var c = 3 + col; 
     silos.push({
-      id: siloNames[col],
-      material: allValues[6][c],
-      vessel: allValues[7][c], 
-      stock: allValues[8][c], 
-      percentage: allValues[9][c],
-      age: allValues[10][c], 
-      usage: allValues[11][c], 
-      doh: allValues[12][c], 
-      status: allValues[13][c]
+      id: ["BK1","BK2","BK3","BK4","BK5","BK6"][col], 
+      material: allValues[6][c], vessel: allValues[7][c], 
+      stock: allValues[8][c], percentage: allValues[9][c],
+      age: allValues[10][c], status: allValues[13][c]
     });
   }
 
-  // 3. TRUCK DATA (Row 22 Down)
   var truckData = [];
   for (var i = 21; i < allValues.length; i++) {
-    var row = allValues[i];
-    if (!row[2] && !row[3]) continue; 
-    
-    var mixedStr = (row[3] || "").toString();
-    var dateMatch = mixedStr.match(/(\d{2}[-./]\d{2}[-./]\d{2,4})/);
-    var date = dateMatch ? dateMatch[0] : "";
-    var parts = mixedStr.split(date);
-    
+    if (!allValues[i][2] && !allValues[i][3]) continue; 
     truckData.push({
-      material: row[2], sequence: parts[0].trim(), date: date,
-      nopol: parts.length > 1 ? parts[1].trim() : "",
-      netto: row[4], type: row[5], grade: row[6], aging: row[7]
+      material: allValues[i][2], netto: allValues[i][4], type: allValues[i][5], aging: allValues[i][7],
+      nopol: (allValues[i][3] || "").toString().split(/\d{2}[-./]/)[1]?.trim() || allValues[i][3]
     });
   }
 
-  return createOutput({ timestamp: new Date().toISOString(), intake: intakeData, silos: silos, trucks: truckData }, e);
+  return createOutput({ intake: intakeData, silos: silos, trucks: truckData }, e);
 }
 
-/**
- * FEATURE 2: BKK DOWNTIME (NEW)
- */
-function getDowntimeData(ssId, e) {
-  var sheetName = "DOWNTIME";
-  var ss = SpreadsheetApp.openById(ssId);
-  var sheet = ss.getSheetByName(sheetName);
-  if (!sheet) throw new Error("Sheet '" + sheetName + "' not found");
-
-  var lastRow = sheet.getLastRow();
-  var downtimeData = [];
-  
-  if (lastRow >= 5) {
-    var numRows = lastRow - 5 + 1;
-    // Bulk fetch (Cols A-Y)
-    var data = sheet.getRange(5, 1, numRows, 25).getValues();
-    
-    for (var i = 0; i < data.length; i++) {
-      var row = data[i];
-      if (!row[0]) continue;
-      
-      downtimeData.push({
-        tanggal: row[0],
-        intake_direct: row[1],
-        petugas: row[2],
-        scada: row[3],
-        shift: row[4],
-        nopol: row[5],
-        jenis_truck: row[6],
-        bruto: row[7],
-        netto: row[8],
-        material: row[9],
-        sloc: row[10],
-        pt_ts1: row[11],
-        pt_ts2: row[12],
-        pt_total: row[13],
-        pb_start: row[14],
-        pb_finish: row[15],
-        pb_total: row[16],
-        manuver_mulai: row[17],
-        manuver_selesai: row[18],
-        manuver_total: row[19],
-        qc_start: row[20],
-        qc_finish: row[21],
-        qc_total: row[22],
-        tenaga: row[23],
-        moisture: row[24]
-      });
-    }
-  }
-
-  return createOutput({ timestamp: new Date().toISOString(), data: downtimeData }, e);
+function parseTime(t) {
+  if (!t || t === "-") return 0;
+  if (t instanceof Date) return (t.getHours() * 60) + t.getMinutes();
+  var p = t.toString().split(':');
+  return p.length >= 2 ? (parseInt(p[0]) * 60) + parseInt(p[1]) : parseFloat(t) || 0;
 }
 
-/**
- * Helper Output
- */
 function createOutput(result, e) {
   var jsonString = JSON.stringify(result);
   if (e.parameter.callback) {
     return ContentService.createTextOutput(e.parameter.callback + "(" + jsonString + ")")
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   } else {
-    return ContentService.createTextOutput(jsonString)
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(jsonString).setMimeType(ContentService.MimeType.JSON);
   }
 }

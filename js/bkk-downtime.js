@@ -1,82 +1,72 @@
 const BKKDowntimeApp = {
-    data: [],
+    aggregatedData: [],
     filterMode: 'overall', // overall, material
     selectedMaterial: '',
-    timeView: 'daily', // daily, weekly, monthly
+    timeView: 'daily',
     charts: {},
-    processedData: {},
     availableMaterials: [],
 
     init: async function () {
-        console.log("Initializing CORE COMMAND V3.0...");
-        await this.fetchData();
-        // Auto refresh every 5 minutes
-        setInterval(() => this.fetchData(), 300000);
+        console.log("Initializing SEARCH-FIRST V7.1...");
+
+        // Auto-set current month and year
+        const now = new Date();
+        document.getElementById('select-month').value = now.getMonth() + 1;
+        document.getElementById('select-year').value = now.getFullYear();
+
+        // V7: Sembunyikan loading screen agar parameter langsung muncul!
+        if (document.getElementById('loading')) {
+            document.getElementById('loading').classList.add('hidden');
+        }
+        this.renderDashboard();
     },
 
-    fetchData: function () {
+    /**
+     * V6 CORE: APPLY FILTERS & FETCH AGGREGATED DATA
+     */
+    applyFilters: function () {
         return new Promise((resolve) => {
-            const cb = 'bkk_cmd_' + Math.round(Math.random() * 100000);
-            window[cb] = (result) => {
-                delete window[cb];
-                const scriptNode = document.getElementById(cb);
-                if (scriptNode) scriptNode.remove();
+            const btnText = document.getElementById('btn-run-text');
+            if (btnText) btnText.innerText = "PROCESSING...";
+            document.getElementById('loading').classList.remove('hidden');
 
-                if (result && result.data) {
-                    this.data = this.preprocessData(result.data);
-                    this.extractMaterials();
-                    this.processLogics();
+            const month = document.getElementById('select-month').value;
+            const year = document.getElementById('select-year').value;
+            const material = this.filterMode === 'material' ? document.getElementById('select-material').value : '';
+
+            console.log(`[V7 DEBUG] Running Query: Month=${month}, Year=${year}, Material=${material}`);
+
+            const cb = 'bkk_v6_' + Math.round(Math.random() * 100000);
+            window[cb] = (result) => {
+                console.log("[V7 DEBUG] Data Received:", result);
+                if (btnText) btnText.innerText = "RUN ANALYTICS";
+                delete window[cb];
+                if (result && result.data && result.data.length > 0) {
+                    this.aggregatedData = result.data;
+                    this.availableMaterials = result.materials || [];
+                    this.populateMaterialSelect();
                     this.renderDashboard();
-                    document.getElementById('sync-label').innerText = `SYNCED: ${new Date().toLocaleTimeString()}`;
+                    document.getElementById('sync-label').innerText = `SYNCED (V7): ${new Date().toLocaleTimeString()}`;
                 } else {
-                    console.error("Invalid data format received:", result);
-                    document.getElementById('sync-label').innerText = "DATA ERROR";
+                    console.warn("[V7 DEBUG] Result empty or invalid:", result);
+                    this.aggregatedData = [];
+                    this.renderDashboard(); // Render empty state with msg
+                    alert("DATA TIDAK DITEMUKAN: Periksa apakah ada data pada periode " + month + "/" + year + " di 10.000 baris terbaru.");
                 }
                 document.getElementById('loading').classList.add('hidden');
                 resolve();
             };
 
-            const sep = CONFIG.BKK_DOWNTIME_API_URL.includes('?') ? '&' : '?';
+            const baseUrl = CONFIG.BKK_DOWNTIME_API_URL.split('?')[0];
+            const matParam = material ? `&material=${encodeURIComponent(material)}` : '';
             const script = document.createElement('script');
-            script.id = cb;
-            script.src = `${CONFIG.BKK_DOWNTIME_API_URL}${sep}callback=${cb}&t=${new Date().getTime()}`;
-            script.onerror = () => {
-                console.error("JSONP Fetch Failed");
-                document.getElementById('sync-label').innerText = "SYNC FAILED";
-                document.getElementById('loading').classList.add('hidden');
-                resolve();
-            };
+            script.src = `${baseUrl}?action=getDowntimeQuery&month=${month}&year=${year}${matParam}&callback=${cb}&t=${Date.now()}`;
+            console.log("[V7 DEBUG] Script Source:", script.src);
             document.body.appendChild(script);
         });
     },
 
-    preprocessData: function (raw) {
-        return raw.map(d => {
-            const dateObj = new Date(d.tanggal);
-            const validDate = isNaN(dateObj.getTime()) ? new Date() : dateObj;
-
-            return {
-                ...d,
-                dateObj: validDate,
-                dateStr: validDate.toISOString().split('T')[0],
-                weekStr: this.getWeekStr(validDate),
-                monthStr: validDate.toISOString().substring(0, 7),
-                nettoVal: parseFloat(d.netto) || 0,
-                ptMin: this.parseTimeToMinutes(d.pt_total),
-                pbMin: this.parseTimeToMinutes(d.pb_total),
-                manuverMin: this.parseTimeToMinutes(d.manuver_total),
-                qcMin: this.parseTimeToMinutes(d.qc_total),
-                cycleMin: this.parseTimeToMinutes(d.pt_total) + this.parseTimeToMinutes(d.pb_total) +
-                    this.parseTimeToMinutes(d.manuver_total) + this.parseTimeToMinutes(d.qc_total)
-            };
-        });
-    },
-
-    extractMaterials: function () {
-        const matSet = new Set();
-        this.data.forEach(d => { if (d.material) matSet.add(d.material.trim().toUpperCase()); });
-        this.availableMaterials = Array.from(matSet).sort();
-
+    populateMaterialSelect: function () {
         const select = document.getElementById('select-material');
         const currentVal = select.value;
         select.innerHTML = '<option value="">SELECT MATERIAL...</option>';
@@ -86,57 +76,6 @@ const BKKDowntimeApp = {
         select.value = currentVal;
     },
 
-    getWeekStr: function (date) {
-        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
-    },
-
-    processLogics: function () {
-        // Filter data based on mode
-        let filtered = this.data;
-        if (this.filterMode === 'material' && this.selectedMaterial) {
-            filtered = this.data.filter(d => (d.material || "").toUpperCase() === this.selectedMaterial);
-        }
-
-        const groups = { daily: {}, weekly: {}, monthly: {} };
-
-        filtered.forEach(d => {
-            const keys = { daily: d.dateStr, weekly: d.weekStr, monthly: d.monthStr };
-            const key = keys[this.timeView];
-
-            if (!groups[this.timeView][key]) {
-                groups[this.timeView][key] = {
-                    key: key,
-                    nettoTotal: 0,
-                    truckCount: 0,
-                    ptTotal: 0, pbTotal: 0, manuverTotal: 0, qcTotal: 0, cycleTotal: 0,
-                    intakeNetto: 0, directNetto: 0,
-                    items: []
-                };
-            }
-
-            const g = groups[this.timeView][key];
-            g.nettoTotal += d.nettoVal;
-            g.truckCount++;
-            g.ptTotal += d.ptMin;
-            g.pbTotal += d.pbMin;
-            g.manuverTotal += d.manuverMin;
-            g.qcTotal += d.qcMin;
-            g.cycleTotal += d.cycleMin;
-            g.items.push(d);
-
-            const type = (d.intake_direct || "").toUpperCase();
-            if (type.includes("INTAKE")) g.intakeNetto += d.nettoVal;
-            else if (type.includes("DIRECT")) g.directNetto += d.nettoVal;
-        });
-
-        this.processedData = groups[this.timeView];
-        this.filteredData = filtered;
-    },
-
     setFilterMode: function (mode) {
         this.filterMode = mode;
         document.getElementById('btn-overall').classList.toggle('active', mode === 'overall');
@@ -144,18 +83,9 @@ const BKKDowntimeApp = {
         document.getElementById('material-filter-container').style.display = mode === 'material' ? 'block' : 'none';
 
         if (mode === 'overall') {
-            this.selectedMaterial = '';
             document.getElementById('select-material').value = '';
         }
-
-        this.processLogics();
-        this.renderDashboard();
-    },
-
-    applyMaterialFilter: function () {
-        this.selectedMaterial = document.getElementById('select-material').value.toUpperCase();
-        this.processLogics();
-        this.renderDashboard();
+        // V7: Don't auto-fetch, wait for button click
     },
 
     setTimeView: function (view) {
@@ -164,10 +94,14 @@ const BKKDowntimeApp = {
         document.getElementById('btn-weekly').classList.toggle('active', view === 'weekly');
         document.getElementById('btn-monthly').classList.toggle('active', view === 'monthly');
 
-        this.processLogics();
-        this.renderDashboard();
+        if (this.aggregatedData.length > 0) {
+            this.renderDashboard(); // Local re-render if data already exists
+        }
     },
 
+    /**
+     * RENDER ENGINE V7
+     */
     renderDashboard: function () {
         this.renderKPIs();
         this.renderVolumeTrend();
@@ -176,62 +110,77 @@ const BKKDowntimeApp = {
     },
 
     renderKPIs: function () {
-        if (this.filteredData.length === 0) {
-            ['val-netto', 'val-trucks', 'val-cycle', 'val-efficiency'].forEach(id => document.getElementById(id).innerText = '-');
+        if (this.aggregatedData.length === 0) {
+            ['val-netto', 'val-trucks', 'val-cycle', 'val-efficiency'].forEach(id => {
+                document.getElementById(id).innerText = '-';
+                document.getElementById(id).style.color = '#444';
+            });
             return;
         }
 
-        const totals = this.filteredData.reduce((acc, d) => {
-            acc.netto += d.nettoVal;
-            acc.cycle += d.cycleMin;
+        ['val-netto', 'val-trucks', 'val-cycle', 'val-efficiency'].forEach(id => {
+            document.getElementById(id).style.color = ''; // Reset color
+        });
+
+        const totals = this.aggregatedData.reduce((acc, d) => {
+            acc.netto += d.netto;
+            acc.trucks += d.trucks;
+            acc.cycleTotal += (d.avgCycle * d.trucks);
             return acc;
-        }, { netto: 0, cycle: 0 });
+        }, { netto: 0, trucks: 0, cycleTotal: 0 });
 
-        const count = this.filteredData.length;
         document.getElementById('val-netto').innerText = Math.round(totals.netto).toLocaleString();
-        document.getElementById('val-trucks').innerText = count;
-        document.getElementById('val-cycle').innerText = this.formatMinutesToTime(totals.cycle / count);
+        document.getElementById('val-trucks').innerText = totals.trucks;
 
-        // Efficiency Logic: Assume < 45 min per truck cycle is 100% efficient
-        const avgCycle = totals.cycle / count;
+        const avgCycle = totals.cycleTotal / totals.trucks;
+        document.getElementById('val-cycle').innerText = this.formatMinutesToTime(avgCycle);
+
         const efficiency = Math.max(0, Math.min(100, (45 / avgCycle) * 100));
         document.getElementById('val-efficiency').innerText = `${Math.round(efficiency)}%`;
     },
 
     renderVolumeTrend: function () {
-        const sortedKeys = Object.keys(this.processedData).sort().slice(-20);
-        const seriesData = sortedKeys.map(k => Math.round(this.processedData[k].nettoTotal));
+        if (this.aggregatedData.length === 0) {
+            document.querySelector("#chart-main-volume").innerHTML = `
+                <div style="display:flex; height:100%; align-items:center; justify-content:center; color:#444; font-family:Orbitron; font-size:1.2rem; letter-spacing:2px;">
+                    <i class="fas fa-search" style="margin-right:15px; opacity:0.5;"></i> READY TO SCAN...
+                </div>`;
+            return;
+        }
+
+        const groups = {};
+        this.aggregatedData.forEach(d => {
+            const dateObj = new Date(d.date);
+            const keys = {
+                daily: d.date,
+                weekly: this.getWeekStr(dateObj),
+                monthly: d.date.substring(0, 7)
+            };
+            const key = keys[this.timeView] || keys.daily;
+
+            if (!groups[key]) groups[key] = { netto: 0, trucks: 0 };
+            groups[key].netto += d.netto;
+            groups[key].trucks += d.trucks;
+        });
+
+        const sortedKeys = Object.keys(groups).sort();
+        const seriesData = sortedKeys.map(k => Math.round(groups[k].netto));
 
         const options = {
             series: [{ name: 'NETTO (KG)', data: seriesData }],
             chart: {
-                type: 'area',
-                height: 380,
-                toolbar: { show: false },
-                zoom: { enabled: false },
-                events: {
-                    dataPointSelection: (event, chartContext, config) => {
-                        const key = sortedKeys[config.dataPointIndex];
-                        this.showDrillDown(key, this.processedData[key]);
-                    }
-                }
+                type: 'area', height: 380, toolbar: { show: false }, zoom: { enabled: false }
             },
             dataLabels: { enabled: false },
             colors: ['#00f3ff'],
-            fill: {
-                type: 'gradient',
-                gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.1, stops: [0, 90, 100] }
-            },
+            fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
             stroke: { curve: 'smooth', width: 3 },
             xaxis: {
                 categories: sortedKeys,
                 labels: { style: { colors: '#64748b', fontSize: '10px', fontFamily: 'Orbitron' } }
             },
             yaxis: {
-                labels: {
-                    style: { colors: '#64748b' },
-                    formatter: val => (val / 1000).toFixed(0) + 'T'
-                }
+                labels: { formatter: val => (val / 1000).toFixed(0) + 'T', style: { colors: '#64748b' } }
             },
             grid: { borderColor: 'rgba(255,255,255,0.05)' },
             tooltip: { theme: 'dark' }
@@ -243,10 +192,14 @@ const BKKDowntimeApp = {
     },
 
     renderDistribution: function () {
-        const totals = this.filteredData.reduce((acc, d) => {
-            const type = (d.intake_direct || "").toUpperCase();
-            if (type.includes("INTAKE")) acc.intake += d.nettoVal;
-            else if (type.includes("DIRECT")) acc.direct += d.nettoVal;
+        if (this.aggregatedData.length === 0) {
+            document.querySelector("#chart-distribution").innerHTML = `<div style="display:flex; height:100%; align-items:center; justify-content:center; color:#444; font-family:Orbitron; font-size:0.7rem;">NO DATA</div>`;
+            return;
+        }
+
+        const totals = this.aggregatedData.reduce((acc, d) => {
+            acc.intake += (d.netto * d.dist.intake / 100);
+            acc.direct += (d.netto * d.dist.direct / 100);
             return acc;
         }, { intake: 0, direct: 0 });
 
@@ -257,8 +210,7 @@ const BKKDowntimeApp = {
             colors: ['#00f3ff', '#ffcc00'],
             stroke: { show: false },
             legend: { position: 'bottom', labels: { colors: '#fff' }, fontFamily: 'Orbitron' },
-            dataLabels: { enabled: true, formatter: val => val.toFixed(1) + "%" },
-            plotOptions: { pie: { donut: { size: '75%', background: 'transparent' } } },
+            plotOptions: { pie: { donut: { size: '75%' } } },
             tooltip: { theme: 'dark', y: { formatter: val => val.toLocaleString() + ' KG' } }
         };
 
@@ -268,34 +220,41 @@ const BKKDowntimeApp = {
     },
 
     renderProcessCharts: function () {
-        const count = this.filteredData.length;
-        if (count === 0) return;
+        if (this.aggregatedData.length === 0) {
+            const emptyHtml = `<div style="display:flex; height:100%; align-items:center; justify-content:center; color:#444; font-family:Orbitron; font-size:0.7rem;">SELECT PERIOD & CLICK RUN</div>`;
+            document.getElementById("chart-process-a").innerHTML = emptyHtml;
+            document.getElementById("chart-process-b").innerHTML = emptyHtml;
+            return;
+        }
 
-        const avg = this.filteredData.reduce((acc, d) => {
-            acc.pt += d.ptMin; acc.pb += d.pbMin; acc.man += d.manuverMin; acc.qc += d.qcMin;
+        const totalTrucks = this.aggregatedData.reduce((acc, d) => acc + d.trucks, 0);
+        const avg = this.aggregatedData.reduce((acc, d) => {
+            acc.pt += (d.procs.pt * d.trucks);
+            acc.pb += (d.procs.pb * d.trucks);
+            acc.man += (d.procs.man * d.trucks);
+            acc.qc += (d.procs.qc * d.trucks);
             return acc;
         }, { pt: 0, pb: 0, man: 0, qc: 0 });
 
+        const dataA = [(avg.pt / totalTrucks).toFixed(1), (avg.pb / totalTrucks).toFixed(1)];
+        const dataB = [(avg.man / totalTrucks).toFixed(1), (avg.qc / totalTrucks).toFixed(1)];
+
         const optionsA = {
-            series: [{ name: 'Avg Duration', data: [(avg.pt / count).toFixed(1), (avg.pb / count).toFixed(1)] }],
+            series: [{ name: 'Avg Duration', data: dataA }],
             chart: { type: 'bar', height: 280, toolbar: { show: false } },
             plotOptions: { bar: { columnWidth: '45%', distributed: true, borderRadius: 6 } },
             colors: ['#00f3ff', '#00ff88'],
-            xaxis: { categories: ['TIMBANG (PT)', 'BONGKAR (PB)'], labels: { style: { colors: '#fff', fontFamily: 'Orbitron', fontSize: '9px' } } },
-            yaxis: { title: { text: 'Minutes', style: { color: '#666' } }, labels: { style: { colors: '#666' } } },
-            legend: { show: false },
-            tooltip: { theme: 'dark' }
+            xaxis: { categories: ['TIMBANG', 'BONGKAR'], labels: { style: { colors: '#fff', fontFamily: 'Orbitron', fontSize: '9px' } } },
+            legend: { show: false }, tooltip: { theme: 'dark' }
         };
 
         const optionsB = {
-            series: [{ name: 'Avg Duration', data: [(avg.man / count).toFixed(1), (avg.qc / count).toFixed(1)] }],
+            series: [{ name: 'Avg Duration', data: dataB }],
             chart: { type: 'bar', height: 280, toolbar: { show: false } },
             plotOptions: { bar: { columnWidth: '45%', distributed: true, borderRadius: 6 } },
             colors: ['#bc13fe', '#ff003c'],
             xaxis: { categories: ['MANUVER', 'QC DOWNTIME'], labels: { style: { colors: '#fff', fontFamily: 'Orbitron', fontSize: '9px' } } },
-            yaxis: { title: { text: 'Minutes', style: { color: '#666' } }, labels: { style: { colors: '#666' } } },
-            legend: { show: false },
-            tooltip: { theme: 'dark' }
+            legend: { show: false }, tooltip: { theme: 'dark' }
         };
 
         if (this.charts.procA) this.charts.procA.destroy();
@@ -306,56 +265,29 @@ const BKKDowntimeApp = {
         this.charts.procB.render();
     },
 
-    showDrillDown: function (label, group) {
+    showDrillDown: function (label) {
         const modal = document.getElementById('modal-drill');
-        const header = document.getElementById('modal-header');
-        const body = document.getElementById('modal-content-body');
-
         modal.style.display = 'flex';
-        header.innerText = `LOGS: ${label} (${Math.round(group.nettoTotal).toLocaleString()} KG)`;
-
-        let html = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>TRUCK</th>
-                        <th>MATERIAL</th>
-                        <th>NETTO (KG)</th>
-                        <th>INTAKE/DIR</th>
-                        <th>CYCLE</th>
-                        <th>PB BONGKAR</th>
-                    </tr>
-                </thead>
-                <tbody>
+        document.getElementById('modal-header').innerText = `SUMMARY: ${label}`;
+        document.getElementById('modal-content-body').innerHTML = `
+            <div style="text-align:center; padding:50px; color:#666; font-family:Orbitron;">
+                <i class="fas fa-bolt" style="font-size:3rem; color:var(--neon-gold); margin-bottom:20px;"></i><br>
+                DIRECT ANALYTICS V7 ACTIVE<br>
+                <span style="font-size:0.8rem; color:#444;">Detailed logs are hidden for maximum performance.</span>
+            </div>
         `;
-
-        group.items.forEach(d => {
-            html += `
-                <tr class="tr-hover">
-                    <td style="font-weight:700">${d.nopol}</td>
-                    <td style="color:var(--neon-gold)">${d.material}</td>
-                    <td style="color:var(--neon-blue)">${Math.round(d.nettoVal).toLocaleString()}</td>
-                    <td>${d.intake_direct}</td>
-                    <td style="color:var(--neon-green)">${this.formatMinutesToTime(d.cycleMin)}</td>
-                    <td style="color:var(--neon-red)">${d.pb_total || '-'}</td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table>`;
-        body.innerHTML = html;
     },
 
     closeModal: function () {
         document.getElementById('modal-drill').style.display = 'none';
     },
 
-    parseTimeToMinutes: function (timeStr) {
-        if (!timeStr || timeStr === "-") return 0;
-        const parts = timeStr.toString().split(':');
-        if (parts.length === 3) return (parseInt(parts[0]) * 60) + parseInt(parts[1]) + (parseInt(parts[2]) / 60);
-        if (parts.length === 2) return parseInt(parts[0]) + (parseInt(parts[1]) / 60);
-        return parseFloat(timeStr) || 0;
+    // HELPERS
+    getWeekStr: function (date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const weekNo = Math.ceil((((d - new Date(Date.UTC(d.getUTCFullYear(), 0, 1))) / 86400000) + 1) / 7);
+        return `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
     },
 
     formatMinutesToTime: function (totalMin) {

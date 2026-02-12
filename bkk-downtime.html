@@ -259,6 +259,11 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            display: none !important;
         }
 
         .loader-ring {
@@ -347,8 +352,34 @@
             </div>
 
             <div id="material-filter-container" style="display:none;">
-                <select id="select-material" class="modern-select" onchange="BKKDowntimeApp.applyMaterialFilter()">
+                <select id="select-material" class="modern-select" onchange="BKKDowntimeApp.applyFilters()">
                     <option value="">SELECT MATERIAL...</option>
+                </select>
+            </div>
+
+            <!-- PERIOD SELECTORS V6 -->
+            <div style="display:flex; gap:10px;">
+                <select id="select-month" class="modern-select" style="min-width:140px;"
+                    onchange="BKKDowntimeApp.applyFilters()">
+                    <option value="1">JANUARY</option>
+                    <option value="2">FEBRUARY</option>
+                    <option value="3">MARCH</option>
+                    <option value="4">APRIL</option>
+                    <option value="5">MAY</option>
+                    <option value="6">JUNE</option>
+                    <option value="7">JULY</option>
+                    <option value="8">AUGUST</option>
+                    <option value="9">SEPTEMBER</option>
+                    <option value="10">OCTOBER</option>
+                    <option value="11">NOVEMBER</option>
+                    <option value="12">DECEMBER</option>
+                </select>
+                <select id="select-year" class="modern-select" style="min-width:100px;"
+                    onchange="BKKDowntimeApp.applyFilters()">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
                 </select>
             </div>
 
@@ -360,6 +391,11 @@
                 <button id="btn-monthly" class="switch-btn"
                     onclick="BKKDowntimeApp.setTimeView('monthly')">MONTHLY</button>
             </div>
+
+            <!-- TRIGGER BUTTON V7 -->
+            <button id="btn-run-analytics" class="btn-run" onclick="BKKDowntimeApp.applyFilters()">
+                <i class="fas fa-play"></i> <span id="btn-run-text">RUN ANALYTICS</span>
+            </button>
         </div>
 
         <div style="display:flex; gap:20px; align-items:center;">
