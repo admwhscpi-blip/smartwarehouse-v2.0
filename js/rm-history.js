@@ -318,7 +318,16 @@ const HistoryApp = {
         const sorted = [...latest.materials].sort((a, b) => b.totalVal - a.totalVal).slice(0, 10);
         const options = {
             series: [{ name: 'STOCK WEIGHT', data: sorted.map(s => Math.round(s.totalVal / 1000)) }],
-            chart: { type: 'bar', height: '100%', toolbar: { show: false } },
+            chart: {
+                type: 'bar', height: '100%', toolbar: { show: false },
+                events: {
+                    dataPointSelection: (event, chartContext, config) => {
+                        const matName = sorted[config.dataPointIndex].name;
+                        const material = this.data.materials.find(m => m.name === matName);
+                        if (material) this.showDetail(material);
+                    }
+                }
+            },
             plotOptions: { bar: { borderRadius: 4, horizontal: true } },
             colors: ['#00ff88'],
             xaxis: { categories: sorted.map(s => s.name.substring(0, 12)), labels: { style: { colors: '#64748b' } } },
