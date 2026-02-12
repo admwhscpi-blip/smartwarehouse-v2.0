@@ -134,36 +134,52 @@ const HistoryApp = {
     setupSearch: function () {
         const input = document.getElementById('matSearch');
         if (!input) return;
+
         let resDiv = document.getElementById('searchResults');
         if (!resDiv) {
             resDiv = document.createElement('div');
             resDiv.id = 'searchResults';
-            resDiv.style.position = 'absolute';
-            resDiv.style.top = '100%';
-            resDiv.style.left = '0';
-            resDiv.style.width = '100%';
-            resDiv.style.background = '#0a0a0a';
-            resDiv.style.border = '1px solid var(--neon-blue)';
-            resDiv.style.zIndex = '2000';
-            resDiv.style.display = 'none';
-            resDiv.style.borderRadius = '0 0 10px 10px';
+            resDiv.className = 'search-results-dropdown';
             input.parentElement.appendChild(resDiv);
         }
+
         input.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
-            if (query.length < 2) { resDiv.style.display = 'none'; return; }
-            const matches = this.data.materials.filter(m => m.name.toLowerCase().includes(query));
+            console.log("Search Query:", query);
+
+            if (query.length < 2) {
+                resDiv.style.display = 'none';
+                return;
+            }
+
+            if (!HistoryApp.data || !HistoryApp.data.materials) {
+                console.error("Data materials not loaded yet");
+                return;
+            }
+
+            const matches = HistoryApp.data.materials.filter(m => m.name.toLowerCase().includes(query));
             resDiv.innerHTML = '';
+
             matches.slice(0, 10).forEach(m => {
                 const div = document.createElement('div');
                 div.style.padding = '10px 20px';
                 div.style.cursor = 'pointer';
-                div.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                div.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
                 div.innerHTML = `<div style="color:var(--neon-gold); font-size:0.85rem; font-family:'Orbitron';">${m.name}</div>`;
-                div.onclick = () => { this.showDetail(m); input.value = m.name; resDiv.style.display = 'none'; };
+                div.onclick = () => {
+                    console.log("Material Selected from Search:", m.name);
+                    HistoryApp.showDetail(m);
+                    input.value = m.name;
+                    resDiv.style.display = 'none';
+                };
                 resDiv.appendChild(div);
             });
             resDiv.style.display = matches.length > 0 ? 'block' : 'none';
+        });
+
+        // Close search list when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== input) resDiv.style.display = 'none';
         });
     },
 
@@ -175,7 +191,7 @@ const HistoryApp = {
 
     renderGlobalStock: function () {
         const ctx = document.querySelector("#chartAllStock");
-        if (!ctx || this.history.length === 0) return;
+        if (!ctx || !this.history || this.history.length === 0) return;
 
         let displayHistory = this.history;
         if (this.selectedPeriod !== 'all') {
@@ -218,22 +234,14 @@ const HistoryApp = {
             const p = pre > 0 ? ((delta / pre) * 100).toFixed(1) : 0;
             const free = 26000 - cur;
             const sign = delta >= 0 ? '+' : '';
-            const color = delta >= 0 ? '#00ff88' : '#ff003c';
 
             annotations.push({
-                x: labels[i],
-                y: 26000,
-                marker: { size: 0 },
+                x: labels[i], y: 26000, marker: { size: 0 },
                 label: {
-                    borderColor: 'transparent',
-                    offsetY: -55,
+                    borderColor: 'transparent', offsetY: -55,
                     style: {
-                        color: '#fff',
-                        background: 'rgba(5,5,5,0.95)',
-                        fontSize: '10px',
-                        fontWeight: 900,
-                        fontFamily: 'Orbitron',
-                        padding: { left: 8, right: 8, top: 4, bottom: 4 }
+                        color: '#fff', background: 'rgba(5,5,5,0.95)', fontSize: '10px',
+                        fontWeight: 900, fontFamily: 'Orbitron', padding: { left: 8, right: 8, top: 4, bottom: 4 }
                     },
                     text: `${free.toLocaleString()}\n${sign}${delta.toLocaleString()}\n${sign}${p}%`
                 }
@@ -244,7 +252,7 @@ const HistoryApp = {
             series: [{ name: 'STOCK LEVEL', type: 'column', data: stockData }, { name: 'TOTAL CAPACITY', type: 'line', data: capacityData }],
             chart: {
                 height: '100%', type: 'line', toolbar: { show: false },
-                events: { dataPointSelection: (e, cc, cfg) => { this.showGlobalDetailAtDate(points[cfg.dataPointIndex].date); } }
+                events: { dataPointSelection: (e, cc, cfg) => { if (cfg.dataPointIndex !== -1) HistoryApp.showGlobalDetailAtDate(points[cfg.dataPointIndex].date); } }
             },
             annotations: { points: annotations },
             stroke: { width: [0, 2], curve: 'smooth', dashArray: [0, 8] },
@@ -265,22 +273,7 @@ const HistoryApp = {
                 max: 30000
             },
             grid: { borderColor: 'rgba(255,255,255,0.05)' },
-            tooltip: {
-                theme: 'dark', shared: true,
-                y: {
-                    formatter: function (val, { series, seriesIndex, dataPointIndex }) {
-                        if (seriesIndex === 0 && dataPointIndex > 0) {
-                            const pVal = series[seriesIndex][dataPointIndex - 1];
-                            const d = val - pVal;
-                            const p = pVal > 0 ? ((d / pVal) * 100).toFixed(1) : 0;
-                            const s = d >= 0 ? '+' : '';
-                            return `${val.toLocaleString()} TON <br><span style="color:${d >= 0 ? '#00ff88' : '#ff003c'}">(${s}${d.toLocaleString()} / ${s}${p}%)</span>`;
-                        }
-                        return `${val.toLocaleString()} TON`;
-                    }
-                }
-            },
-            legend: { show: true, position: 'top', horizontalAlign: 'right', labels: { colors: '#fff' } }
+            tooltip: { theme: 'dark', shared: true }
         };
 
         if (this.charts.global) this.charts.global.destroy();
@@ -313,18 +306,21 @@ const HistoryApp = {
     },
 
     renderFastMoving: function () {
-        if (this.history.length === 0) return;
+        if (!this.history || this.history.length === 0) return;
         const latest = this.history[this.history.length - 1];
         const sorted = [...latest.materials].sort((a, b) => b.totalVal - a.totalVal).slice(0, 10);
+
         const options = {
             series: [{ name: 'STOCK WEIGHT', data: sorted.map(s => Math.round(s.totalVal / 1000)) }],
             chart: {
                 type: 'bar', height: '100%', toolbar: { show: false },
                 events: {
                     dataPointSelection: (event, chartContext, config) => {
+                        if (config.dataPointIndex === -1) return;
                         const matName = sorted[config.dataPointIndex].name;
-                        const material = this.data.materials.find(m => m.name === matName);
-                        if (material) this.showDetail(material);
+                        console.log("Chart Bar Selected:", matName);
+                        const material = HistoryApp.data.materials.find(m => m.name === matName);
+                        if (material) HistoryApp.showDetail(material);
                     }
                 }
             },
@@ -334,27 +330,42 @@ const HistoryApp = {
             yaxis: { labels: { style: { colors: '#64748b' } } },
             grid: { borderColor: 'rgba(255,255,255,0.05)' }
         };
+
+        const container = document.getElementById('chartFastMoving');
+        if (!container) return;
         if (this.charts.fast) this.charts.fast.destroy();
-        this.charts.fast = new ApexCharts(document.querySelector("#chartFastMoving"), options);
+        this.charts.fast = new ApexCharts(container, options);
         this.charts.fast.render();
     },
 
     showDetail: function (mat) {
+        console.log("Triggering showDetail for:", mat.name);
         this.selectedMaterial = mat;
-        document.getElementById('detailPlaceholder').style.display = 'none';
+
+        const placeholder = document.getElementById('detailPlaceholder');
+        if (placeholder) placeholder.style.display = 'none';
+
         const panel = document.getElementById('global-diff-detail');
         if (panel) panel.style.display = 'none';
+
         const chartSpec = document.getElementById('chartSpecific');
         if (chartSpec) chartSpec.style.display = 'block';
-        document.getElementById('detailTitle').innerHTML = `<span style="color:#fff">${mat.name}</span> // TREND`;
+
+        const title = document.getElementById('detailTitle');
+        if (title) title.innerHTML = `<span style="color:#fff">${mat.name}</span> // TREND`;
+
+        if (!this.history || this.history.length === 0) return;
+
         const points = this.history.map(h => {
             const found = h.materials.find(m => m.name === mat.name);
             return found ? parseFloat((found.totalVal / 1000).toFixed(2)) : 0;
         });
+
         const labels = this.history.map(h => {
             const d = new Date(h.date);
             return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
         });
+
         const options = {
             series: [{ name: 'STOCK LEVEL', data: points }],
             chart: { type: 'area', height: '100%', toolbar: { show: false } },
@@ -364,8 +375,11 @@ const HistoryApp = {
             yaxis: { labels: { style: { colors: '#64748b' } } },
             grid: { borderColor: 'rgba(255,255,255,0.05)' }
         };
+
+        const container = document.getElementById('chartSpecific');
+        if (!container) return;
         if (this.charts.specific) this.charts.specific.destroy();
-        this.charts.specific = new ApexCharts(document.querySelector("#chartSpecific"), options);
+        this.charts.specific = new ApexCharts(container, options);
         this.charts.specific.render();
     }
 };
