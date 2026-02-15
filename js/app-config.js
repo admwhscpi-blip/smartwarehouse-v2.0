@@ -3,7 +3,7 @@ const CONFIG = {
     BIN_SWEEPING_API_URL: "https://script.google.com/macros/s/AKfycbynVL7SFG8TBeTbu2PjO2eGIgM1JkQcV8nT3zsoi6zWc4cArJ23VQfTgjtLyyTZCQFM/exec",
     DOWNTIME_API_URL: "https://script.google.com/macros/s/AKfycbxDerZpvftORq993r2EfGnG7gpALFWsXxA21mWe-xMzHCE-5wmJpDJXKNl29hgW-GQz/exec",
     BKK_API_URL: "https://script.google.com/macros/s/AKfycbw-YyDZiZFi7wrs9X6a1Bnp05E_cWHY15Cw-cKRfbO2lWoXkJMPysEe2uh1AJBsvXkN/exec?action=getData",
-    BKK_DOWNTIME_API_URL: "https://script.google.com/macros/s/AKfycbw-YyDZiZFi7wrs9X6a1Bnp05E_cWHY15Cw-cKRfbO2lWoXkJMPysEe2uh1AJBsvXkN/exec?action=getDowntimeQuery",
+    BKK_DOWNTIME_API_URL: "https://script.google.com/macros/s/AKfycbxoGGX-vndrgGnxsr29NFTzSMHjnKYNgBPf8cHjShJvWFTcTi5tgCx8JH9S6c7PeTqV/exec?action=getDowntimeQuery",
 
     // Konfigurasi konversi satuan
     UNIT_DIVIDER: 1000,

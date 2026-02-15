@@ -162,14 +162,21 @@ function parseTime(t) {
 
 function getDowntimeQuery(ssId, e) {
   var ss = SpreadsheetApp.openById(ssId);
-  var sheet = ss.getSheetByName("DOWNTIME");
   
   var targetMonth = parseInt(e.parameter.month); 
   var targetYear = parseInt(e.parameter.year);   
   var matFilter = (e.parameter.material || "").toUpperCase();
+  
+  // ======== V12.0: DYNAMIC SHEET SELECTION ========
+  var isNewFormat = (targetYear > 2026) || (targetYear === 2026 && targetMonth >= 2);
+  var sheetName = isNewFormat ? "DT NEW" : "DOWNTIME";
+  var sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) return createOutput({data: [], materials: [], status: "error", message: "Sheet " + sheetName + " not found"}, e);
+  
   var lastRow = sheet.getLastRow();
-  var totalRowsToScan = Math.min(10000, lastRow - 5 + 1); 
-  var startRow = Math.max(5, lastRow - totalRowsToScan + 1);
+  var startRow = isNewFormat ? 4 : 5; 
+  var totalRowsToScan = Math.max(0, lastRow - startRow + 1);
   
   if (totalRowsToScan <= 0) return createOutput({data: [], materials: [], status: "empty_sheet"}, e);
 
@@ -177,11 +184,9 @@ function getDowntimeQuery(ssId, e) {
   var dailyAgg = {}; 
   var materials = new Set();
   
-  // ======== V11.5 SEPARATED COLLECTORS ========
+  // ======== collectors ========
   var materialNetto = {};   
-  var intakeTruckTypes = {}; // V11.5: Clean separation
-  var directTruckTypes = {}; // V11.5: Clean separation
-  var intake71Trucks = [];  // for idle gap analysis
+  var intakeTruckTypes = {}; 
   var i71TotalNetto = 0;
   var i71TotalMan = 0;      
   var i71TotalQC = 0;       
@@ -192,356 +197,402 @@ function getDowntimeQuery(ssId, e) {
   var i71MaxSpeed = 0;
   var i71TotalSpeedSum = 0;
   var i71SpeedValidCount = 0;
-  var intakeSubTypes = {};  // V14: TILTING vs MANUAL breakdown
-  var i71DailyDetail = {};  // V14: per-day active/idle/off
-  var workerStats = {};     // V14: worker count breakdown
+  var intakeSubTypes = {};  
+  var i71DailyDetail = {};  
+  var workerStats = {};     
   
+  var directTotalNetto = 0;
+  var directTotalTrucks = 0;
   var directDailyAgg = {};
   var directMaterialNetto = {};
   var directTruckTypes = {};
-  var directTotalNetto = 0;
-  var directTotalTrucks = 0;
-  
+
+  var totalIdleNew = 0;
+  var totalOffNew = 0;
+  var intake71Trucks = []; 
+
+  // ======== HELPERS ========
+  var ssTZ = ss.getSpreadsheetTimeZone();
+
+  var getShiftAt = function(epoch) {
+    var hh = new Date(epoch).getHours();
+    if (hh >= 7 && hh < 15) return "1";
+    if (hh >= 15 && hh < 23) return "2";
+    return "3";
+  };
+
+  var distributeMinutes = function(startE, endE, collectors) {
+    if (startE >= endE) return;
+    var cur = startE;
+    while (cur < endE) {
+      var d_obj = new Date(cur);
+      var hh = d_obj.getHours();
+      var shiftId = "1";
+      var nextBoundary = 0;
+      if (hh >= 7 && hh < 15) { 
+        shiftId = "1"; 
+        nextBoundary = new Date(d_obj.getFullYear(), d_obj.getMonth(), d_obj.getDate(), 15, 0, 0).getTime(); 
+      } else if (hh >= 15 && hh < 23) { 
+        shiftId = "2"; 
+        nextBoundary = new Date(d_obj.getFullYear(), d_obj.getMonth(), d_obj.getDate(), 23, 0, 0).getTime(); 
+      } else {
+        shiftId = "3";
+        if (hh >= 23) nextBoundary = new Date(d_obj.getFullYear(), d_obj.getMonth(), d_obj.getDate() + 1, 7, 0, 0).getTime();
+        else nextBoundary = new Date(d_obj.getFullYear(), d_obj.getMonth(), d_obj.getDate(), 7, 0, 0).getTime();
+      }
+      var chunkEnd = Math.min(endE, nextBoundary);
+      var mins = (chunkEnd - cur) / 60000;
+      collectors[shiftId] = (collectors[shiftId] || 0) + mins;
+      cur = chunkEnd;
+    }
+  };
+
+  var lastValidFinish = null;
+
+  // ======== MAIN SCAN LOOP ========
   for (var i = 0; i < rawData.length; i++) {
-    var rawMat = (rawData[i][9] || "").toString().trim().toUpperCase();
-    if(rawMat) materials.add(rawMat);
-    
-    var rowDate = parseDate(rawData[i][0]);
+    var rowDate, type, rowNetto, rawMat, truckType, actualShift, rowWorkers;
+    var startTs, endTs, mStart, mEnd, qStart, qEnd;
+
+    if (isNewFormat) {
+      rowDate = parseDate(rawData[i][0]);
+      type = (rawData[i][1] || "").toString().toUpperCase();
+      actualShift = (rawData[i][4] || "").toString();
+      truckType = (rawData[i][6] || "").toString().trim().toUpperCase() || "UNKNOWN";
+      rowNetto = parseNetto(rawData[i][8]);
+      rawMat = (rawData[i][9] || "").toString().trim().toUpperCase();
+      
+      startTs = rawData[i][11]; // L: START PANGGIL
+      mStart = rawData[i][12];  // M: START BONGKAR
+      qStart = rawData[i][13];  // N: HOLD QC
+      qEnd = rawData[i][14];    // O: RE-START QC
+      mEnd = rawData[i][15];    // P: MANUVER AKHIR
+      endTs = rawData[i][16];   // Q: FINISH
+      
+      var kraniName = (rawData[i][2] || "").toString().trim(); // C
+      var scadaName = (rawData[i][3] || "").toString().trim(); // D
+      var idleRem = (rawData[i][18] || "").toString().trim();  // S
+      var offRem = (rawData[i][20] || "").toString().trim();   // U
+      rowWorkers = parseInt(rawData[i][21]) || 0;              // V
+    } else {
+      rowDate = parseDate(rawData[i][0]);
+      type = (rawData[i][1] || "").toString().toUpperCase();
+      actualShift = (rawData[i][4] || "").toString();
+      truckType = (rawData[i][6] || "").toString().trim().toUpperCase() || "UNKNOWN";
+      rowNetto = parseNetto(rawData[i][8]);
+      rawMat = (rawData[i][9] || "").toString().trim().toUpperCase();
+      
+      endTs = rawData[i][15];
+      startTs = rawData[i][14];
+      mStart = rawData[i][17];
+      mEnd = rawData[i][18];
+      qStart = rawData[i][20];
+      qEnd = rawData[i][21];
+      rowWorkers = parseInt(rawData[i][23]) || 0;
+    }
+
+    if (rawMat) {
+      materials.add(rawMat);
+      materialNetto[rawMat] = (materialNetto[rawMat] || 0) + rowNetto;
+    }
     if (!rowDate) continue;
     
-    var m = rowDate.getMonth() + 1;
-    var y = rowDate.getFullYear();
+    var m_ = rowDate.getMonth() + 1;
+    var y_ = rowDate.getFullYear();
     if (targetMonth && targetYear) {
-      if (m !== targetMonth || y !== targetYear) continue;
+      if (m_ !== targetMonth || y_ !== targetYear) continue;
     }
     if (matFilter && rawMat.indexOf(matFilter) !== 0) continue;
     
     var dateKey = Utilities.formatDate(rowDate, "GMT+7", "yyyy-MM-dd");
-    var rowNetto = parseNetto(rawData[i][8]);
-    var type = (rawData[i][1] || "").toUpperCase();
-    var truckType = (rawData[i][6] || "").toString().trim().toUpperCase() || "UNKNOWN";
     
-    // ---- Material & truck type breakdowns (V7.4) ----
-    if (rawMat) { materialNetto[rawMat] = (materialNetto[rawMat] || 0) + rowNetto; }
-    
-      // ---- Global Daily aggregation ----
     if (!dailyAgg[dateKey]) {
       dailyAgg[dateKey] = {
-        date: dateKey, netto: 0, trucks: 0, cycleMin: 0,
+        date: dateKey, netto: 0, trucks: 0, 
         intakeNetto: 0, directNetto: 0,
         shiftData: {
-          "1": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 },
-          "2": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 },
-          "3": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 }
+          "1": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, workerRows: 0, trucks: 0, wt: 0, bk: 0, qct: 0, mnv: 0, fn: 0, remIdle: [], remOff: [], krani: [], scada: [] },
+          "2": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, workerRows: 0, trucks: 0, wt: 0, bk: 0, qct: 0, mnv: 0, fn: 0, remIdle: [], remOff: [], krani: [], scada: [] },
+          "3": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, workerRows: 0, trucks: 0, wt: 0, bk: 0, qct: 0, mnv: 0, fn: 0, remIdle: [], remOff: [], krani: [], scada: [] }
         }
       };
     }
     var d = dailyAgg[dateKey];
     d.netto += rowNetto;
     d.trucks++;
-    if (type.indexOf("INTAKE") !== -1) d.intakeNetto += rowNetto;
-    else d.directNetto += rowNetto;
     
-    var pt_m = parseTime(rawData[i][13]);
-    var pb_m = parseTime(rawData[i][16]);
-    
-    // V11.4: Use only PB (Proses Bongkar) for duration
-    var rowDur = pb_m;
-    d.cycleMin += rowDur;
-
-    // --- NEW SHIFT BREAKDOWN LOGIC (V15) ---
-    var endTs = rawData[i][15]; // Bongkar Selesai
-    var startTs = rawData[i][14]; // Bongkar Mulai
-    var actualShift = (rawData[i][4] || "").toString(); // Col E
-    
-    if (endTs instanceof Date && !isNaN(endTs.getTime())) {
-      var h = endTs.getHours();
-      var m = endTs.getMinutes();
-      var timeTotal = h + (m/60);
-      // Shift 1: 07:01 - 15:00, Shift 2: 15:01 - 23:00, Shift 3: Else
-      if (timeTotal > 7 && timeTotal <= 15) actualShift = "1";
-      else if (timeTotal > 15 && timeTotal <= 23) actualShift = "2";
-      else actualShift = "3";
-    } else {
-      // Logic for shift based on Col E if no finish time
-      if (actualShift.includes("1")) actualShift = "1";
-      else if (actualShift.includes("2")) actualShift = "2";
-      else if (actualShift.includes("3")) actualShift = "3";
-      else actualShift = "1"; // Default
-    }
-    
-    var sd = d.shiftData[actualShift] || d.shiftData["1"]; // Fallback
-    sd.trucks++;
-    var rowWorkers = parseInt(rawData[i][23]) || 0; // Col X
-    sd.workers += rowWorkers;
-
     var isI71 = (type.indexOf("INTAKE 71") !== -1);
     var isDG = (type.indexOf("DIRECT GUDANG") !== -1);
 
-    if (rawMat.indexOf("SBM") !== -1) {
-      if (isI71) sd.sbm_ins += rowNetto;
-      else if (isDG) sd.sbm_dg += rowNetto;
-    } else if (rawMat.indexOf("PKM") !== -1) {
-      if (isI71) sd.pkm_ins += rowNetto;
-      else if (isDG) sd.pkm_dg += rowNetto;
-    }
-    
-    // V11.9: Strict Path & synchronized logic
-    if ((isI71 || isDG) && truckType && truckType !== "UNKNOWN") {
-      var targetColl = isI71 ? intakeTruckTypes : directTruckTypes;
-      
-      if (!targetColl[truckType]) {
-        targetColl[truckType] = { trucks: 0, netto: 0, duration: 0, min: 9999, max: 0, validDurCount: 0 };
-      }
-      var tts = targetColl[truckType];
-      tts.trucks++; 
-      tts.netto += rowNetto;
-      
-      // V11.8+11.9: Strict non-zero handling for Min/Avg
-      if (rowDur > 0) {
-        tts.duration += rowDur;
-        tts.validDurCount++;
-        if (rowDur < tts.min) tts.min = rowDur;
-        if (rowDur > tts.max) tts.max = rowDur;
-      }
-    }
+    if (isI71) d.intakeNetto += rowNetto;
+    else d.directNetto += rowNetto;
 
-    // ---- INTAKE 71 specific with V12 Logic ----
+    // INTAKE 71 DETAILED ANALYSIS
     if (isI71) {
-      if (startTs instanceof Date && endTs instanceof Date && !isNaN(startTs.getTime()) && !isNaN(endTs.getTime())) {
-        var day = rowDate.getDate();
-        var absStart = ((day - 1) * 24 * 60) + (startTs.getHours() * 60) + startTs.getMinutes() + (startTs.getSeconds() / 60);
-        var absEnd = ((day - 1) * 24 * 60) + (endTs.getHours() * 60) + endTs.getMinutes() + (endTs.getSeconds() / 60);
-        
-        var duration = absEnd - absStart;
-        if (duration > 0 && duration < 600) {
-          i71TotalNetto += rowNetto;
-          i71TruckCount++;
-          
-          // V13.2: BULLETPROOF Manuver/QC parsing
-          var rowMan = 0;
-          var rowQC = 0;
-          var manS = rawData[i][17];
-          var manE = rawData[i][18];
-          if (manS instanceof Date && manE instanceof Date && !isNaN(manS.getTime()) && !isNaN(manE.getTime())) {
-            var manDiff = ((manE.getHours() * 60) + manE.getMinutes() + (manE.getSeconds() / 60)) -
-                          ((manS.getHours() * 60) + manS.getMinutes() + (manS.getSeconds() / 60));
-            if (manDiff > 0 && manDiff < 600) rowMan = manDiff;
-          }
-          var qcS = rawData[i][20];
-          var qcE = rawData[i][21];
-          if (qcS instanceof Date && qcE instanceof Date && !isNaN(qcS.getTime()) && !isNaN(qcE.getTime())) {
-            var qcDiff = ((qcE.getHours() * 60) + qcE.getMinutes() + (qcE.getSeconds() / 60)) -
-                         ((qcS.getHours() * 60) + qcS.getMinutes() + (qcS.getSeconds() / 60));
-            if (qcDiff > 0 && qcDiff < 600) rowQC = qcDiff;
-          }
-          var manQcSum = rowMan + rowQC;
-          if (manQcSum > duration && manQcSum > 0) {
-            var scale = duration / manQcSum;
-            rowMan = rowMan * scale;
-            rowQC = rowQC * scale;
-          }
-          
-          i71TotalMan += rowMan;
-          i71TotalQC += rowQC;
-          i71ActiveTotalGenerated += duration;
+      var baseEpoch = new Date(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate()).getTime();
+      
+      var getEpochAtTime = function(val) {
+         if (val === null || val === undefined || val === "" || val === "-") return null;
+         if (val instanceof Date) {
+            // ROBUST: Use formatDate to bypass Jakarta LMT 26-min drift on 1899 dates
+            var clockStr = Utilities.formatDate(val, ssTZ, "HH:mm:ss");
+            var p = clockStr.split(":");
+            var mins = (parseInt(p[0]) * 60) + parseInt(p[1]) + (parseInt(p[2]) / 60);
+            return baseEpoch + (mins * 60000);
+         }
+         var minutes = parseTime(val); 
+         return baseEpoch + (minutes * 60000);
+      };
 
-          // Add to shift dur
-          sd.active += duration;
-          sd.qc += rowQC;
-          sd.man += rowMan;
-          
-          var truckSpeed = duration > 0 ? (rowNetto / 1000) / (duration / 60) : 0;
-          if (truckSpeed > 0) {
-            if (truckSpeed < i71MinSpeed) i71MinSpeed = truckSpeed;
-            if (truckSpeed > i71MaxSpeed) i71MaxSpeed = truckSpeed;
-            i71TotalSpeedSum += truckSpeed;
-            i71SpeedValidCount++;
-          }
-          
-          if (rawMat) { i71MaterialNetto[rawMat] = (i71MaterialNetto[rawMat] || 0) + rowNetto; }
-          
-          intake71Trucks.push({ 
-            start: absStart, end: absEnd, mat: rawMat, day: day, shift: actualShift,
-            code: (rawData[i][10] || "").toString().trim().toUpperCase() 
-          });
-          
-          // V14: Intake sub-type (TILTING vs MANUAL)
-          var subType = (rawData[i][1] || "").toString().toUpperCase().indexOf("TILTING") !== -1 ? "TILTING" : "MANUAL";
-          if (!intakeSubTypes[subType]) intakeSubTypes[subType] = { trucks: 0, netto: 0, duration: 0 };
-          intakeSubTypes[subType].trucks++;
-          intakeSubTypes[subType].netto += rowNetto;
-          intakeSubTypes[subType].duration += duration;
-          
-          // V14: Daily detail for intake
-          if (!i71DailyDetail[dateKey]) i71DailyDetail[dateKey] = { date: dateKey, netto: 0, trucks: 0, activeMin: 0 };
-          i71DailyDetail[dateKey].netto += rowNetto;
-          i71DailyDetail[dateKey].trucks++;
-          i71DailyDetail[dateKey].activeMin += duration;
-          
-          // V14: Worker count stats (col 23)
-          var wCount = parseInt(rawData[i][23]) || 0;
-          if (wCount > 0) {
-            var wKey = wCount.toString();
-            if (!workerStats[wKey]) workerStats[wKey] = { count: wCount, totalNetto: 0, trucks: 0, totalDur: 0 };
-            workerStats[wKey].totalNetto += rowNetto;
-            workerStats[wKey].trucks++;
-            workerStats[wKey].totalDur += duration;
-          }
+      var epochPanggil = getEpochAtTime(startTs);
+      var epochFinish = getEpochAtTime(endTs);
+      
+      if (epochPanggil !== null && epochFinish !== null) {
+        if (epochFinish < epochPanggil) epochFinish += 24 * 3600000;
+
+        i71TotalNetto += rowNetto;
+        i71TruckCount++;
+
+        var activePerShift = { "1": 0, "2": 0, "3": 0 };
+        distributeMinutes(epochPanggil, epochFinish, activePerShift);
+        ["1","2","3"].forEach(function(sid) { d.shiftData[sid].active += activePerShift[sid]; });
+        i71ActiveTotalGenerated += (epochFinish - epochPanggil) / 60000;
+
+        var actualShiftLoop = getShiftAt(epochFinish);
+        var sd = d.shiftData[actualShiftLoop];
+        sd.trucks++;
+        if (rowWorkers > 0) { sd.workers += rowWorkers; sd.workerRows++; }
+
+        if (rawMat.indexOf("SBM") !== -1) {
+          if (isI71) sd.sbm_ins += rowNetto; else if (isDG) sd.sbm_dg += rowNetto;
+        } else if (rawMat.indexOf("PKM") !== -1) {
+          if (isI71) sd.pkm_ins += rowNetto; else if (isDG) sd.pkm_dg += rowNetto;
         }
+
+        var idleDur = 0, offDur = 0;
+        if (isNewFormat) {
+          var idleTimeRaw = rawData[i][17]; // R: TIME IDLE
+          var offTimeRaw = rawData[i][19];  // T: TIME OFF
+          
+          // Start of downtime is Finish (Q) of current row, or last valid finish
+          var eStart = epochFinish || lastValidFinish;
+          
+          // IDLE ANALYSIS (R - Q)
+          if (idleTimeRaw !== "" && idleTimeRaw !== "-" && eStart) {
+            var eIdle = getEpochAtTime(idleTimeRaw);
+            if (eIdle !== null) {
+              if (eIdle < eStart) eIdle += 24 * 3600000;
+              var dur = (eIdle - eStart) / 60000;
+              if (dur > 0) {
+                idleDur = dur;
+                var collI = { "1": 0, "2": 0, "3": 0 };
+                distributeMinutes(eStart, eIdle, collI);
+                ["1","2","3"].forEach(function(sid) { d.shiftData[sid].idle += collI[sid]; totalIdleNew += collI[sid]; });
+                var sIdRemI = getShiftAt(eStart);
+                d.shiftData[sIdRemI].remIdle.push({ t: idleRem, d: dur, s: eStart, e: eIdle, type: 'IDLE' });
+              }
+            }
+          }
+          
+          // OFF ANALYSIS (T - Q)
+          if (offTimeRaw !== "" && offTimeRaw !== "-" && eStart) {
+            var eOff = getEpochAtTime(offTimeRaw);
+            if (eOff !== null) {
+              if (eOff < eStart) eOff += 24 * 3600000;
+              var dur = (eOff - eStart) / 60000;
+              if (dur > 0) {
+                offDur = dur;
+                var collO = { "1": 0, "2": 0, "3": 0 };
+                distributeMinutes(eStart, eOff, collO);
+                ["1","2","3"].forEach(function(sid) { d.shiftData[sid].off += collO[sid]; totalOffNew += collO[sid]; });
+                var sIdRemO = getShiftAt(eStart);
+                d.shiftData[sIdRemO].remOff.push({ t: offRem, d: dur, s: eStart, e: eOff, type: 'OFF' });
+              }
+            }
+          }
+          
+          if (kraniName && sd.krani.indexOf(kraniName) === -1) sd.krani.push(kraniName);
+          if (scadaName && sd.scada.indexOf(scadaName) === -1) sd.scada.push(scadaName);
+
+          // Sub-durations breakdown ratios (Using Epochs for Midnight Safety)
+          var eL = getEpochAtTime(startTs), eM = getEpochAtTime(mStart), eN = getEpochAtTime(qStart), eO = getEpochAtTime(qEnd), eP = getEpochAtTime(mEnd), eQ = getEpochAtTime(endTs);
+          var fixS = function(p, c) { return (p !== null && c !== null && c < p) ? c + 24*3600000 : c; };
+          eM = fixS(eL, eM); eN = fixS(eM, eN); eO = fixS(eN, eO); eP = fixS(eO, eP); eQ = fixS(eP, eQ);
+          
+          var dP = (eM && eL) ? (eM-eL) : 0, dB = (eN && eM) ? (eN-eM) : 0, dQ = (eO && eN) ? (eO-eN) : 0, dM = (eP && eO) ? (eP-eO) : 0, dF = (eQ && eP) ? (eQ-eP) : 0;
+          var totalBreakdown = Math.max(0.1, (dP + dB + dQ + dM + dF) / 60000);
+          var rWt = (dP/60000)/totalBreakdown, rBk = (dB/60000)/totalBreakdown, rQc = (dQ/60000)/totalBreakdown, rMnv = (dM/60000)/totalBreakdown, rFn = (dF/60000)/totalBreakdown;
+
+          ["1","2","3"].forEach(function(sid) {
+            var a = activePerShift[sid];
+            d.shiftData[sid].wt += a * rWt; d.shiftData[sid].bk += a * rBk; d.shiftData[sid].qct += a * rQc; d.shiftData[sid].mnv += a * rMnv; d.shiftData[sid].fn += a * rFn;
+          });
+        } else {
+          var rowMan = 0, rowQC = 0;
+          if (mStart instanceof Date && mEnd instanceof Date) rowMan = (mEnd.getTime() - mStart.getTime()) / 60000;
+          if (qStart instanceof Date && qEnd instanceof Date) rowQC = (qEnd.getTime() - qStart.getTime()) / 60000;
+          var sc = 1, dur = (epochFinish - epochPanggil) / 60000;
+          if (rowMan + rowQC > dur) sc = dur / (rowMan + rowQC);
+          i71TotalMan += rowMan * sc; i71TotalQC += rowQC * sc; sd.qc += rowQC * sc; sd.man += rowMan * sc;
+          intake71Trucks.push({ start: epochPanggil / 60000, end: epochFinish / 60000, mat: rawMat, day: rowDate.getDate(), shift: actualShiftLoop, code: (rawData[i][10] || "").toString().trim().toUpperCase() });
+        }
+
+        var durationMins = (epochFinish - epochPanggil) / 60000;
+        var truckSpeed = durationMins > 0 ? (rowNetto / 1000) / (durationMins / 60) : 0;
+        if (truckSpeed > 0) {
+          if (truckSpeed < i71MinSpeed) i71MinSpeed = truckSpeed;
+          if (truckSpeed > i71MaxSpeed) i71MaxSpeed = truckSpeed;
+          i71TotalSpeedSum += truckSpeed; i71SpeedValidCount++;
+        }
+        if (rawMat) i71MaterialNetto[rawMat] = (i71MaterialNetto[rawMat] || 0) + rowNetto;
+        
+        var subType = (rawData[i][1] || "").toString().toUpperCase().indexOf("TILTING") !== -1 ? "TILTING" : "MANUAL";
+        if (!intakeSubTypes[subType]) intakeSubTypes[subType] = { trucks: 0, netto: 0, duration: 0 };
+        intakeSubTypes[subType].trucks++;
+        intakeSubTypes[subType].netto += rowNetto;
+        intakeSubTypes[subType].duration += durationMins;
+        
+        if (!i71DailyDetail[dateKey]) i71DailyDetail[dateKey] = { date: dateKey, netto: 0, trucks: 0, activeMin: 0, idleMin:0, offMin:0 };
+        i71DailyDetail[dateKey].netto += rowNetto;
+        i71DailyDetail[dateKey].trucks++;
+        i71DailyDetail[dateKey].activeMin += durationMins;
+        if (isNewFormat) {
+          i71DailyDetail[dateKey].idleMin += idleDur;
+          i71DailyDetail[dateKey].offMin += offDur;
+        }
+        if (rowWorkers > 0) {
+          var wKey = rowWorkers.toString();
+          if (!workerStats[wKey]) workerStats[wKey] = { count: rowWorkers, totalNetto: 0, trucks: 0, totalDur: 0 };
+          workerStats[wKey].totalNetto += rowNetto;
+          workerStats[wKey].trucks++;
+          workerStats[wKey].totalDur += durationMins;
+        }
+        
+        // Update last valid finish for next gaps
+        if (epochFinish) lastValidFinish = epochFinish;
       }
-    }
-    
-    // ---- DIRECT GUDANG collectors (V7.4) ----
+    } // END IF IS I71
+
     if (isDG) {
       directTotalNetto += rowNetto;
       directTotalTrucks++;
-      if (rawMat) { directMaterialNetto[rawMat] = (directMaterialNetto[rawMat] || 0) + rowNetto; }
-      
-      if (!directDailyAgg[dateKey]) {
-        directDailyAgg[dateKey] = { date: dateKey, netto: 0, trucks: 0 };
-      }
+      if (rawMat) directMaterialNetto[rawMat] = (directMaterialNetto[rawMat] || 0) + rowNetto;
+      if (!directDailyAgg[dateKey]) directDailyAgg[dateKey] = { date: dateKey, netto: 0, trucks: 0 };
       var dd = directDailyAgg[dateKey];
       dd.netto += rowNetto;
       dd.trucks++;
     }
-  }
-  
-  // ======== INTAKE 71 FAST NORMALIZATION LOGIC (V14.0) ========
-  var now = new Date();
+  } // END MAIN SCAN FOR LOOP
+
+  // ======== NORMALIZATION & CALENDAR LOGIC ========
   var daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
   var totalMonthMin;
+  var now = new Date();
   if (now.getFullYear() === targetYear && (now.getMonth() + 1) === targetMonth) {
     totalMonthMin = ((now.getDate() - 1) * 1440) + (now.getHours() * 60) + now.getMinutes();
   } else {
     totalMonthMin = daysInMonth * 1440;
   }
   
-  var idleMin = 0;
-  var offMin = 0;
-  
-  if (intake71Trucks.length > 0) {
-    intake71Trucks.sort(function(a, b) { return a.start - b.start; });
-    
-    // 1. Initial Gap Analysis (Procedural & Fast)
-    offMin += intake71Trucks[0].start; // Before first truck
-    
-    for (var j = 0; j < intake71Trucks.length - 1; j++) {
-      var curr = intake71Trucks[j];
-      var next = intake71Trucks[j+1];
-      var gap = next.start - curr.end;
-      if (gap > 0) {
-        if (curr.mat === next.mat && curr.code === next.code) idleMin += gap;
-        else offMin += gap;
-      }
+  var finalIdle = 0, finalOff = 0;
+  if (isNewFormat) {
+    finalIdle = totalIdleNew;
+    finalOff = totalOffNew;
+    var totalUsed = i71ActiveTotalGenerated + finalIdle + finalOff;
+    if (totalUsed > totalMonthMin) {
+       var scale = totalMonthMin / totalUsed;
+       finalIdle *= scale; finalOff *= scale;
     }
-    
-    var lastEnd = intake71Trucks[intake71Trucks.length - 1].end;
-    if (totalMonthMin > lastEnd) offMin += (totalMonthMin - lastEnd);
   } else {
-    offMin = totalMonthMin;
-  }
+    var idleLegacy = 0, offLegacy = 0;
+    if (intake71Trucks.length > 0) {
+      intake71Trucks.sort(function(a, b) { return a.start - b.start; });
+      offLegacy += intake71Trucks[0].start;
+      for (var j = 0; j < intake71Trucks.length - 1; j++) {
+        var gap = intake71Trucks[j+1].start - intake71Trucks[j].end;
+        if (gap > 0) {
+          if (intake71Trucks[j].mat === intake71Trucks[j+1].mat && intake71Trucks[j].code === intake71Trucks[j+1].code) idleLegacy += gap;
+          else offLegacy += gap;
+        }
+      }
+      var lastEnd = intake71Trucks[intake71Trucks.length - 1].end;
+      if (totalMonthMin > lastEnd) offLegacy += (totalMonthMin - lastEnd);
+    } else { offLegacy = totalMonthMin; }
 
-  // 2. CRITICAL FIX: Mathematical Normalization (V14.0)
-  // If (Active + Idle + Off) > total calendar time, scale the gaps down.
-  // This is the FAST way to lock duration to 24h without heavy loops.
-  var rawTotal = i71ActiveTotalGenerated + idleMin + offMin;
-  var finalActive = i71ActiveTotalGenerated;
-  var finalIdle = idleMin;
-  var finalOff = offMin;
-
-  if (rawTotal > totalMonthMin) {
-    var leftover = Math.max(0, totalMonthMin - finalActive);
-    var gapRatio = (idleMin + offMin) > 0 ? (idleMin / (idleMin + offMin)) : 0.5;
-    finalIdle = leftover * gapRatio;
-    finalOff = leftover - finalIdle;
-  }
-
-  // 3. Simple Shift Distribution (Capped at 480)
-  Object.values(dailyAgg).forEach(function(d) {
-    ["1", "2", "3"].forEach(function(s) {
-      var sd = d.shiftData[s];
-      sd.active = Math.min(480, sd.active);
-      var rem = 480 - sd.active;
-      // Proportional split for this shift
-      var sRatio = (finalIdle + finalOff) > 0 ? (finalIdle / (finalIdle + finalOff)) : 0.5;
-      sd.idle = Math.round(rem * sRatio);
-      sd.off = 480 - sd.active - sd.idle;
-    });
-  });
-
-  // Build daily detail
-  var i71DailyArr = [];
-  Object.keys(i71DailyDetail).forEach(function(dk) {
-    var dd = i71DailyDetail[dk];
-    var dObj = dailyAgg[dk];
-    if (dObj) {
-      var sh = dObj.shiftData;
-      dd.activeMin = sh["1"].active + sh["2"].active + sh["3"].active;
-      dd.idleMin = sh["1"].idle + sh["2"].idle + sh["3"].idle;
-      dd.offMin = sh["1"].off + sh["2"].off + sh["3"].off;
-      dd.tonPerHour = dd.activeMin > 0 ? (dd.netto / 1000) / (dd.activeMin / 60) : 0;
+    var rawTotal = i71ActiveTotalGenerated + idleLegacy + offLegacy;
+    if (rawTotal > totalMonthMin) {
+      var leftover = Math.max(0, totalMonthMin - i71ActiveTotalGenerated);
+      var gapRatio = (idleLegacy + offLegacy) > 0 ? (idleLegacy / (idleLegacy + offLegacy)) : 0.5;
+      finalIdle = leftover * gapRatio;
+      finalOff = leftover - finalIdle;
+    } else {
+      finalIdle = idleLegacy; finalOff = offLegacy;
     }
-    i71DailyArr.push(dd);
-  });
-  i71DailyArr.sort(function(a,b) { return a.date.localeCompare(b.date); });
-  
-  var intake71 = {
-    activeTotal: Math.round(finalActive),
-    netDischarge: Math.round(Math.max(0, finalActive - i71TotalMan - i71TotalQC)),
-    manuverTotal: Math.round(i71TotalMan),
-    qcTotal: Math.round(i71TotalQC),
-    idleLoss: Math.round(finalIdle),
-    offSetup: Math.round(finalOff),
-    activePct: (finalActive / totalMonthMin) * 100,
-    trucks: i71TruckCount,
-    nettoKg: Math.round(i71TotalNetto),
-    materials: i71MaterialNetto,
-    avgSpeed: i71SpeedValidCount > 0 ? (i71TotalSpeedSum / i71SpeedValidCount) : 0,
-    minSpeed: i71MinSpeed === 9999 ? 0 : i71MinSpeed,
-    maxSpeed: i71MaxSpeed,
-    totalMonthMin: totalMonthMin,
-    intakeSubTypes: intakeSubTypes,
-    dailyDetail: i71DailyArr,
-    workerStats: workerStats
-  };
-  
-  // ======== BUILD RESULT (PRESERVED) ========
+
+    Object.values(dailyAgg).forEach(function(dObj) {
+      ["1", "2", "3"].forEach(function(s) {
+        var sdObj = dObj.shiftData[s];
+        var rem = 480 - sdObj.active;
+        var sRatio = (finalIdle + finalOff) > 0 ? (finalIdle / (finalIdle + finalOff)) : 0.5;
+        sdObj.idle = Math.max(0, Math.round(rem * sRatio));
+        sdObj.off = Math.max(0, 480 - sdObj.active - sdObj.idle);
+      });
+    });
+  }
+
+  // ======== BUILD RESULT ========
   var result = Object.values(dailyAgg).sort(function(a,b) { return a.date.localeCompare(b.date); }).map(function(s) {
     return {
-      date: s.date,
-      netto: Math.round(s.netto),
-      trucks: s.trucks,
-      avgCycle: s.cycleMin / s.trucks,
-      dist: { 
-        intake: Math.round((s.intakeNetto / s.netto) * 100) || 0, 
-        direct: Math.round((s.directNetto / s.netto) * 100) || 0 
-      },
-      shiftData: s.shiftData // V15: Detailed shift analysis
+      date: s.date, netto: Math.round(s.netto), trucks: s.trucks,
+      dist: { intake: Math.round((s.intakeNetto / s.netto) * 100) || 0, direct: Math.round((s.directNetto / s.netto) * 100) || 0 },
+      shiftData: s.shiftData 
     };
   });
   
-  var directDaily = Object.keys(directDailyAgg).sort().map(function(k) {
-    var s = directDailyAgg[k];
-    return { date: s.date, netto: Math.round(s.netto), trucks: s.trucks };
+  var i71DailyArr = Object.values(i71DailyDetail).sort(function(a,b) { return a.date.localeCompare(b.date); }).map(function(dd) {
+    if (!isNewFormat) {
+       var dObj = dailyAgg[dd.date];
+       if (dObj) {
+         dd.idleMin = dObj.shiftData["1"].idle + dObj.shiftData["2"].idle + dObj.shiftData["3"].idle;
+         dd.offMin = dObj.shiftData["1"].off + dObj.shiftData["2"].off + dObj.shiftData["3"].off;
+       }
+    }
+    dd.tonPerHour = dd.activeMin > 0 ? (dd.netto / 1000) / (dd.activeMin / 60) : 0;
+    return dd;
   });
 
   return createOutput({
     status: "success",
     data: result,
     materialBreakdown: materialNetto,
-    truckTypes: intakeTruckTypes, // V11.5: Specifically Intake
-    intake71: intake71,
+    truckTypes: intakeTruckTypes,
+    intake71: {
+      activeTotal: Math.round(i71ActiveTotalGenerated),
+      netDischarge: Math.round(Math.max(0, i71ActiveTotalGenerated - i71TotalMan - i71TotalQC)),
+      manuverTotal: Math.round(i71TotalMan),
+      qcTotal: Math.round(i71TotalQC),
+      idleLoss: Math.round(finalIdle),
+      offSetup: Math.round(finalOff),
+      trucks: i71TruckCount,
+      nettoKg: Math.round(i71TotalNetto),
+      materials: i71MaterialNetto,
+      avgSpeed: i71SpeedValidCount > 0 ? (i71TotalSpeedSum / i71SpeedValidCount) : 0,
+      minSpeed: i71MinSpeed === 9999 ? 0 : i71MinSpeed,
+      maxSpeed: i71MaxSpeed,
+      totalMonthMin: totalMonthMin,
+      intakeSubTypes: intakeSubTypes,
+      dailyDetail: i71DailyArr,
+      workerStats: workerStats
+    },
     directGudang: {
-      totalNetto: Math.round(directTotalNetto),
-      totalTrucks: directTotalTrucks,
-      daily: directDaily,
-      materials: directMaterialNetto,
-      truckTypes: directTruckTypes // V11.5: Specifically Direct
+      totalNetto: Math.round(directTotalNetto), totalTrucks: directTotalTrucks,
+      daily: Object.values(directDailyAgg).sort(function(a,b){return a.date.localeCompare(b.date);}),
+      materials: directMaterialNetto, truckTypes: directTruckTypes
     },
     materials: Array.from(materials).sort()
   }, e);
 }
+
 
 function getOutstandingBKKTurbo(ssId, e) {
   var ss = SpreadsheetApp.openById(ssId);

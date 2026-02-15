@@ -912,104 +912,189 @@ const BKKDowntimeApp = {
         const s2 = shifts["2"] || { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 };
         const s3 = shifts["3"] || { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 };
 
-        const fmt = (n) => (n / 1000).toFixed(1);
-        const fmtM = (n) => Math.round(n);
+        const fmt = (n) => (n === 0) ? "" : (n / 1000).toFixed(1) + " T";
+        const fmtM = (n) => (n === 0) ? "" : Math.round(n) + " M";
+
+        const hasNewBreakdown = (s1.wt !== undefined && (s1.wt + s1.bk + s1.qct + s1.mnv + s1.fn) > 0);
+
+        // Identify active shifts
+        const activeShifts = ["1", "2", "3"].filter(id => {
+            const s = shifts[id];
+            if (!s) return false;
+            const hasVolume = (s.sbm_ins + s.sbm_dg + s.pkm_ins + s.pkm_dg) > 0;
+            const hasDur = (s.active + s.idle + s.off) > 0;
+            const hasRem = (s.remIdle && s.remIdle.length) || (s.remOff && s.remOff.length);
+            return hasVolume || hasDur || hasRem || s.trucks > 0;
+        });
+
+        // If no shifts active, default to Shift 1 to avoid empty table
+        const displayShifts = activeShifts.length > 0 ? activeShifts : ["1"];
 
         let html = `
         <table class="comparison-table">
             <thead>
                 <tr>
                     <th style="text-align:left;">OPERATIONAL METRICS</th>
-                    <th>SHIFT 1</th>
-                    <th>SHIFT 2</th>
-                    <th>SHIFT 3</th>
+                    ${displayShifts.map(id => `<th>SHIFT ${id}</th>`).join("")}
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td class="metric-name">SBM Via Intake 71</td>
-                    <td class="shift-val">${fmt(s1.sbm_ins)} T</td>
-                    <td class="shift-val">${fmt(s2.sbm_ins)} T</td>
-                    <td class="shift-val">${fmt(s3.sbm_ins)} T</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmt(shifts[id]?.sbm_ins || 0)}</td>`).join("")}
                 </tr>
                 <tr>
                     <td class="metric-name">SBM Direct Gudang</td>
-                    <td class="shift-val">${fmt(s1.sbm_dg)} T</td>
-                    <td class="shift-val">${fmt(s2.sbm_dg)} T</td>
-                    <td class="shift-val">${fmt(s3.sbm_dg)} T</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmt(shifts[id]?.sbm_dg || 0)}</td>`).join("")}
                 </tr>
                 <tr>
                     <td class="metric-name">PKM Via Intake 71</td>
-                    <td class="shift-val">${fmt(s1.pkm_ins)} T</td>
-                    <td class="shift-val">${fmt(s2.pkm_ins)} T</td>
-                    <td class="shift-val">${fmt(s3.pkm_ins)} T</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmt(shifts[id]?.pkm_ins || 0)}</td>`).join("")}
                 </tr>
                 <tr>
                     <td class="metric-name">PKM Direct Gudang</td>
-                    <td class="shift-val">${fmt(s1.pkm_dg)} T</td>
-                    <td class="shift-val">${fmt(s2.pkm_dg)} T</td>
-                    <td class="shift-val">${fmt(s3.pkm_dg)} T</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmt(shifts[id]?.pkm_dg || 0)}</td>`).join("")}
                 </tr>
                 
-                <tr style="height:10px;"><td colspan="4"></td></tr>
+                <tr style="height:10px;"><td colspan="${displayShifts.length + 1}"></td></tr>
                 
                 <tr>
                     <td class="metric-name highlight">1. Active Discharge</td>
-                    <td class="shift-val highlight">${fmtM(s1.active)} M</td>
-                    <td class="shift-val highlight">${fmtM(s2.active)} M</td>
-                    <td class="shift-val highlight">${fmtM(s3.active)} M</td>
+                    ${displayShifts.map(id => `<td class="shift-val highlight">${fmtM(shifts[id]?.active || 0)}</td>`).join("")}
+                </tr>
+                ${hasNewBreakdown ? `
+                <tr>
+                    <td class="metric-name sub-metric">- Wait Panggil (M-L)</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.wt || 0)}</td>`).join("")}
                 </tr>
                 <tr>
+                    <td class="metric-name sub-metric">- Active Bongkar (N-M)</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.bk || 0)}</td>`).join("")}
+                </tr>
+                <tr>
+                    <td class="metric-name sub-metric">- QC Process (O-N)</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.qct || 0)}</td>`).join("")}
+                </tr>
+                <tr>
+                    <td class="metric-name sub-metric">- Manuver Akhir (P-O)</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.mnv || 0)}</td>`).join("")}
+                </tr>
+                <tr>
+                    <td class="metric-name sub-metric">- Finish Delay (Q-P)</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.fn || 0)}</td>`).join("")}
+                </tr>
+                ` : `
+                <tr>
                     <td class="metric-name sub-metric">- Net Bongkar</td>
-                    <td class="shift-val">${fmtM(s1.active - s1.qc - s1.man)} M</td>
-                    <td class="shift-val">${fmtM(s2.active - s2.qc - s2.man)} M</td>
-                    <td class="shift-val">${fmtM(s3.active - s3.qc - s3.man)} M</td>
+                    ${displayShifts.map(id => {
+            const s = shifts[id] || { active: 0, qc: 0, man: 0 };
+            return `<td class="shift-val">${fmtM(s.active - s.qc - s.man)}</td>`;
+        }).join("")}
                 </tr>
                 <tr>
                     <td class="metric-name sub-metric">- DT - QC Checked</td>
-                    <td class="shift-val">${fmtM(s1.qc)} M</td>
-                    <td class="shift-val">${fmtM(s2.qc)} M</td>
-                    <td class="shift-val">${fmtM(s3.qc)} M</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.qc || 0)}</td>`).join("")}
                 </tr>
                 <tr>
                     <td class="metric-name sub-metric">- DT - Manuver Unit</td>
-                    <td class="shift-val">${fmtM(s1.man)} M</td>
-                    <td class="shift-val">${fmtM(s2.man)} M</td>
-                    <td class="shift-val">${fmtM(s3.man)} M</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${fmtM(shifts[id]?.man || 0)}</td>`).join("")}
                 </tr>
+                `}
                 <tr>
                     <td class="metric-name highlight">2. Idle Loss</td>
-                    <td class="shift-val highlight">${fmtM(s1.idle)} M</td>
-                    <td class="shift-val highlight">${fmtM(s2.idle)} M</td>
-                    <td class="shift-val highlight">${fmtM(s3.idle)} M</td>
+                    ${displayShifts.map(id => `<td class="shift-val highlight">${fmtM(shifts[id]?.idle || 0)}</td>`).join("")}
                 </tr>
                 <tr>
                     <td class="metric-name highlight">3. OFF / Set-up</td>
-                    <td class="shift-val highlight">${fmtM(s1.off)} M</td>
-                    <td class="shift-val highlight">${fmtM(s2.off)} M</td>
-                    <td class="shift-val highlight">${fmtM(s3.off)} M</td>
+                    ${displayShifts.map(id => `<td class="shift-val highlight">${fmtM(shifts[id]?.off || 0)}</td>`).join("")}
                 </tr>
                 
                 <tr class="total-row">
                     <td class="metric-name" style="color:var(--coin-accent);">TOTAL VOLUME</td>
-                    <td class="shift-val" style="color:var(--coin-accent);">${fmt(s1.sbm_ins + s1.sbm_dg + s1.pkm_ins + s1.pkm_dg)} T</td>
-                    <td class="shift-val" style="color:var(--coin-accent);">${fmt(s2.sbm_ins + s2.sbm_dg + s2.pkm_ins + s2.pkm_dg)} T</td>
-                    <td class="shift-val" style="color:var(--coin-accent);">${fmt(s3.sbm_ins + s3.sbm_dg + s3.pkm_ins + s3.pkm_dg)} T</td>
+                    ${displayShifts.map(id => {
+            const s = shifts[id] || { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0 };
+            return `<td class="shift-val" style="color:var(--coin-accent);">${fmt(s.sbm_ins + s.sbm_dg + s.pkm_ins + s.pkm_dg)}</td>`;
+        }).join("")}
                 </tr>
                 <tr class="total-row">
                     <td class="metric-name">TRUCK COUNT</td>
-                    <td class="shift-val">${s1.trucks}</td>
-                    <td class="shift-val">${s2.trucks}</td>
-                    <td class="shift-val">${s3.trucks}</td>
+                    ${displayShifts.map(id => `<td class="shift-val">${shifts[id]?.trucks || ""}</td>`).join("")}
                 </tr>
                 <tr class="total-row">
                     <td class="metric-name">WORKERS</td>
-                    <td class="shift-val">${s1.workers}</td>
-                    <td class="shift-val">${s2.workers}</td>
-                    <td class="shift-val">${s3.workers}</td>
+                    ${displayShifts.map(id => {
+            const s = shifts[id] || { workerRows: 0, workers: 0 };
+            return `<td class="shift-val">${s.workerRows > 0 ? (s.workers / s.workerRows).toFixed(1) : (s.workers || "")}</td>`;
+        }).join("")}
                 </tr>
+                ${hasNewBreakdown ? `
+                <tr class="total-row">
+                    <td class="metric-name" style="font-size:0.65rem;">KRANI BONGKAR</td>
+                    ${displayShifts.map(id => `<td class="shift-val" style="font-size:0.7rem; color:#888;">${shifts[id]?.krani?.length ? shifts[id].krani.join(", ") : ""}</td>`).join("")}
+                </tr>
+                <tr class="total-row">
+                    <td class="metric-name" style="font-size:0.65rem;">OPERATOR SCADA</td>
+                    ${displayShifts.map(id => `<td class="shift-val" style="font-size:0.7rem; color:#888;">${shifts[id]?.scada?.length ? shifts[id].scada.join(", ") : ""}</td>`).join("")}
+                </tr>
+                ` : ""}
             </tbody>
         </table>`;
+
+        // Add Remarks if any
+        let remHtml = "";
+        const formatDur = (m) => {
+            if (m < 60) return Math.round(m) + " mnt";
+            const h = Math.floor(m / 60);
+            const mm = Math.round(m % 60);
+            return h + " jam" + (mm > 0 ? " " + mm + " mnt" : "");
+        };
+
+        const formatTime = (epoch) => {
+            if (!epoch) return "??:??";
+            const date = new Date(epoch);
+            return date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0');
+        };
+
+        displayShifts.forEach(id => {
+            const s = shifts[id];
+            const rawItems = [];
+            if (s.remIdle) s.remIdle.forEach(r => rawItems.push({ type: 'IDLE', ...r, color: '#888', icon: 'fa-clock' }));
+            if (s.remOff) s.remOff.forEach(r => rawItems.push({ type: 'OFF', ...r, color: '#ff003c', icon: 'fa-power-off' }));
+
+            if (rawItems.length > 0) {
+                // Consolidation Logic
+                const grouped = {};
+                rawItems.forEach(it => {
+                    const key = `${it.type}_${it.t}`;
+                    if (!grouped[key]) grouped[key] = { ...it, totalDur: 0, count: 0, intervals: [] };
+                    grouped[key].totalDur += it.d;
+                    grouped[key].count++;
+                    if (it.s && it.e) grouped[key].intervals.push({ s: it.s, e: it.e });
+                });
+
+                remHtml += `<div style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.02); border-radius:6px; font-size:0.75rem;">
+                    <div style="font-family:'Orbitron'; color:var(--coin-accent); margin-bottom:5px; font-size:0.7rem;">SHIFT ${id} REMARKS DETAIL</div>
+                    <table style="width:100%; border-collapse:collapse;">
+                        ${Object.values(grouped).map(g => `
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <td style="padding:4px 0; color:${g.color}; vertical-align:top; width:120px;">
+                                <i class="fas ${g.icon}"></i> <b>${formatDur(g.totalDur)}</b>
+                            </td>
+                            <td style="padding:4px 0; color:#ddd;">
+                                ${g.t} ${g.count > 1 ? `<span style="color:#666;">(${g.count}x)</span>` : ""}
+                                ${g.count === 1 && g.intervals.length ? `<div style="font-size:0.65rem; color:#888;">${formatTime(g.intervals[0].s)} - ${formatTime(g.intervals[0].e)}</div>` : ""}
+                            </td>
+                        </tr>
+                        `).join("")}
+                    </table>
+                    <div style="margin-top:8px; border-top:1px dashed #444; padding-top:4px; font-size:0.7rem; color:#aaa; text-align:right;">
+                        TOTAL LOSS (S${id}): <span style="color:var(--coin-accent);">${formatDur((s.idle || 0) + (s.off || 0))}</span>
+                    </div>
+                </div>`;
+            }
+        });
+
+        if (remHtml) html += remHtml;
 
         content.innerHTML = html;
         content.scrollTop = 0;
@@ -1021,19 +1106,18 @@ const BKKDowntimeApp = {
     renderShiftGauges: function (shifts) {
         const ids = ["1", "2", "3"];
         ids.forEach(id => {
-            const chartId = `chart-gauge-s1`; // Placeholder for target ID
             const targetElId = `chart-gauge-s${id}`;
             const el = document.getElementById(targetElId);
             if (!el) return;
 
-            const s = shifts[id] || { active: 0, idle: 0, off: 0 };
+            const s = shifts[id] || { active: 0, idle: 0, off: 0, wt: 0, bk: 0, qct: 0, mnv: 0, fn: 0 };
+            const hasNew = (s.wt !== undefined && (s.wt + s.bk + s.qct + s.mnv + s.fn) > 0);
 
             // Calculate percentages based on 480 min
             const activePct = Math.min(100, (s.active / 480) * 100);
             const idlePct = Math.min(100, (s.idle / 480) * 100);
             const offPct = Math.min(100, (s.off / 480) * 100);
 
-            // V16.3: Clear dot artifacts if no data
             if (activePct + idlePct + offPct === 0) {
                 if (this.charts[`gaugeS${id}`]) {
                     this.charts[`gaugeS${id}`].destroy();
@@ -1043,21 +1127,38 @@ const BKKDowntimeApp = {
                 return;
             }
 
+            let series = [activePct, idlePct, offPct];
+            let colors = ['#bc13fe', '#888888', '#ff003c'];
+            let labels = ['Active', 'Idle', 'Off'];
+
+            if (hasNew) {
+                series = [
+                    Math.min(100, (s.bk / 480) * 100),  // Active Bongkar
+                    Math.min(100, (s.wt / 480) * 100),  // Panggil
+                    Math.min(100, (s.qct / 480) * 100), // QC
+                    Math.min(100, (s.mnv / 480) * 100), // Manuver
+                    Math.min(100, (s.idle / 480) * 100),
+                    Math.min(100, (s.off / 480) * 100)
+                ];
+                colors = ['#00ff88', '#00f3ff', '#ffcc00', '#bc13fe', '#888888', '#ff003c'];
+                labels = ['Bongkar', 'Wait', 'QC', 'Man', 'Idle', 'Off'];
+            }
+
             const options = {
-                series: [activePct, idlePct, offPct],
+                series: series,
                 chart: {
                     type: 'radialBar',
-                    height: 160,
-                    offsetY: -20,
+                    height: 180,
+                    offsetY: -10,
                     sparkline: { enabled: true }
                 },
                 plotOptions: {
                     radialBar: {
                         startAngle: -90,
                         endAngle: 90,
-                        hollow: { size: '40%' },
+                        hollow: { size: '30%' },
                         track: {
-                            background: "rgba(255,255,255,0.02)", // Much fainter
+                            background: "rgba(255,255,255,0.02)",
                             margin: 2
                         },
                         dataLabels: {
@@ -1074,9 +1175,19 @@ const BKKDowntimeApp = {
                         }
                     }
                 },
-                colors: ['#bc13fe', '#888888', '#ff003c'], // Active (Purple), Idle (Gray), Off (Red)
+                colors: colors,
                 stroke: { lineCap: 'round' },
-                labels: ['Active', 'Idle', 'Off']
+                labels: labels,
+                legend: {
+                    show: hasNew,
+                    position: 'bottom',
+                    fontSize: '8px',
+                    fontFamily: 'Rajdhani',
+                    fontWeight: 600,
+                    labels: { colors: '#888' },
+                    markers: { width: 6, height: 6 },
+                    itemMargin: { horizontal: 5, vertical: 0 }
+                }
             };
 
             // Cleanup & Render
