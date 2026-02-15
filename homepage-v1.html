@@ -4,346 +4,1041 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="auth-guard.js"></script>
-    <title>SMART WAREHOUSE V2.0 - Solusi Terpadu</title>
-
+    <title>SMART WAREHOUSE - FIXED V10 (MU + SEAMLESS FIT)</title>
     <!-- FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;600;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- STYLES -->
-    <link rel="stylesheet" href="css/rm_stock_v2.css">
-    <link rel="stylesheet" href="homepage-style.css">
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --neon-blue: #0ea5e9;
+            --neon-cyan: #06b6d4;
+            --neon-purple: #8b5cf6;
+            --neon-red: #ef4444;
+            /* For MU Banner */
+            --glass-bg: rgba(15, 17, 42, 0.85);
+            /* Slightly more opaque */
+            --glass-border: rgba(14, 165, 233, 0.3);
+            --text-glow: 0 0 10px rgba(6, 182, 212, 0.5);
+            --box-glow: 0 0 15px rgba(14, 165, 233, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.05), transparent 70%),
+                linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* === SIDEBAR NAVBAR === */
+        .sidebar {
+            width: 260px;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.95);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .brand {
+            padding: 25px 20px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, rgba(6, 182, 212, 0.05), transparent);
+        }
+
+        .brand h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            letter-spacing: 3px;
+            line-height: 1.1;
+            position: relative;
+            display: inline-block;
+        }
+
+        .brand-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.2), transparent);
+            transform: translateX(-100%);
+            animation: neon-scan 3s infinite;
+            pointer-events: none;
+        }
+
+        .brand span {
+            display: inline-block;
+            font-size: 0.65rem;
+            color: #000;
+            background: var(--neon-cyan);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-weight: 800;
+            margin-left: 5px;
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: flicker-v2 2s infinite;
+        }
+
+        .brand-sub {
+            font-size: 0.6rem;
+            color: #475569;
+            margin-top: 8px;
+            letter-spacing: 2px;
+            font-family: 'Orbitron';
+            text-transform: uppercase;
+            opacity: 0.6;
+            animation: wms-glitch 5s infinite;
+        }
+
+        @keyframes neon-scan {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            50% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes flicker-v2 {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 10px var(--neon-cyan);
+            }
+
+            50% {
+                opacity: 0.7;
+                box-shadow: none;
+            }
+        }
+
+        @keyframes wms-glitch {
+
+            0%,
+            90%,
+            100% {
+                transform: none;
+                opacity: 0.6;
+            }
+
+            92% {
+                transform: skewX(10deg);
+                opacity: 0.8;
+                color: var(--neon-cyan);
+            }
+
+            94% {
+                transform: skewX(-10deg);
+                color: var(--neon-purple);
+            }
+
+            96% {
+                transform: none;
+            }
+        }
+
+        @keyframes electric-scan {
+            0% {
+                transform: translateX(-100%) skewX(-15deg);
+            }
+
+            100% {
+                transform: translateX(200%) skewX(-15deg);
+            }
+        }
+
+        .nav-menu {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 0 10px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            text-align: left;
+            padding: 12px 15px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.3s;
+            border-radius: 6px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.4), transparent);
+            transform: translateX(-100%) skewX(-15deg);
+            transition: 0s;
+            pointer-events: none;
+        }
+
+        .nav-btn:hover::before {
+            animation: electric-scan 0.5s ease-out;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            color: var(--neon-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+            box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.1);
+        }
+
+        .nav-btn i.icon {
+            width: 20px;
+            margin-right: 10px;
+            transition: 0.3s;
+        }
+
+        .nav-btn:hover i.icon {
+            filter: drop-shadow(0 0 5px var(--neon-cyan));
+            transform: scale(1.1);
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0 0 6px 6px;
+            margin-top: -2px;
+            /* Pull up to connect */
+            border-left: 2px solid rgba(6, 182, 212, 0.1);
+        }
+
+        /* Force open class for debugging if JS fails */
+        .submenu.force-open {
+            max-height: 500px !important;
+        }
+
+        .submenu a {
+            display: block;
+            padding: 10px 15px 10px 45px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            border-left: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submenu a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent);
+            transform: translateX(-100%) skewX(-15deg);
+            pointer-events: none;
+        }
+
+        .submenu a:hover::before {
+            animation: electric-scan 0.4s ease-out;
+        }
+
+        .submenu a:hover {
+            color: #fff;
+            border-left-color: var(--neon-cyan);
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), transparent);
+            padding-left: 50px;
+            /* Slide effect */
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        /* NESTED SUBMENU STYLES */
+        .submenu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 15px 10px 45px;
+            color: #64748b;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 2px solid transparent;
+            text-align: left;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submenu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent);
+            transform: translateX(-100%) skewX(-15deg);
+            pointer-events: none;
+        }
+
+        .submenu-btn:hover::before {
+            animation: electric-scan 0.4s ease-out;
+        }
+
+        .submenu-btn:hover,
+        .submenu-btn.active {
+            color: #fff;
+            border-left-color: var(--neon-cyan);
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), transparent);
+            padding-left: 50px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .submenu-btn i {
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+
+        .submenu-btn.active i {
+            transform: rotate(90deg);
+        }
+
+        .sub-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sub-submenu a {
+            padding-left: 65px !important;
+        }
+
+        .sub-submenu a:hover {
+            padding-left: 75px !important;
+        }
+
+        /* === MAIN CONTENT === */
+        .main-content {
+            flex-grow: 1;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* === HEADER WIDGETS === */
+        .header-widgets {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 1fr 0.7fr;
+            gap: 10px;
+            height: 160px;
+        }
+
+        .cyber-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cyber-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            opacity: 0.7;
+        }
+
+        .card-header {
+            padding: 10px 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* WIDGET 1: MAP */
+        .map-visual {
+            flex-grow: 1;
+            background-image: radial-gradient(#0ea5e9 1px, transparent 1px);
+            background-size: 10px 10px;
+            opacity: 0.5;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .world-map-svg {
+            width: 80%;
+            height: 80%;
+            fill: none;
+            stroke: var(--neon-cyan);
+            stroke-width: 1;
+            filter: drop-shadow(0 0 5px var(--neon-cyan));
+        }
+
+        /* WIDGET 2: SEARCH */
+        .search-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), transparent);
+            text-align: center;
+        }
+
+        .search-main-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--neon-cyan);
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
+            letter-spacing: 1px;
+            animation: flicker-neon 3s infinite;
+        }
+
+        .search-sub-text {
+            font-size: 0.8rem;
+            color: #fff;
+            opacity: 0.9;
+            margin-bottom: 12px;
+            font-weight: 600;
+            animation: glow-pulse 2s infinite ease-in-out;
+        }
+
+        .search-hint-text {
+            font-size: 0.65rem;
+            color: #64748b;
+            border-top: 1px solid rgba(6, 182, 212, 0.1);
+            padding-top: 8px;
+            width: 90%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes flicker-neon {
+
+            0%,
+            18%,
+            22%,
+            25%,
+            53%,
+            57%,
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
+            }
+
+            20%,
+            24%,
+            55% {
+                opacity: 0.8;
+                text-shadow: none;
+            }
+        }
+
+        @keyframes glow-pulse {
+
+            0%,
+            100% {
+                opacity: 0.7;
+                transform: scale(0.98);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .access-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), transparent);
+            text-align: center;
+        }
+
+        .access-main-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--neon-purple);
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+
+        .access-sub-text {
+            font-size: 0.9rem;
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: scanner-flicker 4s infinite;
+        }
+
+        .access-hint-text {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            border-top: 1px solid rgba(139, 92, 246, 0.1);
+            padding-top: 8px;
+            width: 90%;
+            text-transform: uppercase;
+            font-family: 'Orbitron';
+        }
+
+        @keyframes scanner-flicker {
+
+            0%,
+            45%,
+            55%,
+            100% {
+                opacity: 1;
+                filter: brightness(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                filter: brightness(1.5);
+            }
+        }
+
+        .cyber-input-group {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .cyber-input {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: 'Rajdhani', sans-serif;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .cyber-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .cyber-btn {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cyber-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        /* WIDGET 3: MU BANNER (IMAGE REPLACEMENT) */
+        .mu-banner {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            position: relative;
+            background: var(--bg-dark);
+            /* Inherit border/shadow from .cyber-card */
+        }
+
+        .mu-img-full {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            mix-blend-mode: lighten;
+            transform: scale(1.15);
+            /* CROP SIDE GLOWS */
+        }
+
+
+        /* === MAIN VISUALIZATION AREA === */
+        .vis-container {
+            position: relative;
+            background: #020617;
+            /* SEAMLESS MATCHING BACKGROUND */
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* DELETED PLACEHOLDER */
+
+        .vis-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* CHANGED TO COVER FOR SEAMLESS FIT */
+            object-position: center;
+            opacity: 1;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            image-rendering: high-quality;
+            /* NO SCALE/ZOOM */
+        }
+
+        /* HOVER EFFECT REMOVED */
+
+        .vis-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        .vis-tag {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 5px 10px;
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            border-radius: 4px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+        }
+
+        /* === 3D FLOATING ELEMENTS (DECORATION) === */
+        .hud-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--neon-cyan);
+            z-index: 20;
+        }
+
+        .tl {
+            top: 10px;
+            left: 10px;
+            border-right: 0;
+            border-bottom: 0;
+        }
+
+        .tr {
+            top: 10px;
+            right: 10px;
+            border-left: 0;
+            border-bottom: 0;
+        }
+
+        .bl {
+            bottom: 10px;
+            left: 10px;
+            border-right: 0;
+            border-top: 0;
+        }
+
+        .br {
+            bottom: 10px;
+            right: 10px;
+            border-left: 0;
+            border-top: 0;
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- LOADING OVERLAY -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text-main">WAIT JURAGAN...</div>
-        <div class="loading-text-sub">SEDANG AMBIL DATA DARI SHEETS<br>(PASTIKAN JARINGAN LANCAR)</div>
-    </div>
-
-    <!-- NAVBAR -->
-    <nav class="navbar"
-        style="display: grid !important; grid-template-columns: auto 1fr; align-items: center; padding: 10px 30px !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-        <a href="homepage-v1.html" class="logo-link" style="flex-shrink: 0 !important;">
-            <div class="logo-text">
-                <span class="brand-smart">SMART WAREHOUSE</span>
-                <span class="brand-v2">V2.0</span>
-            </div>
-        </a>
-
-        <div class="nav-links"
-            style="display: grid !important; grid-template-columns: repeat(6, auto) !important; gap: 5px !important; justify-content: end !important; align-items: center !important;">
-            <!-- RM STORAGE DROPDOWN -->
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle" style="padding: 10px 12px !important;">RM STORAGE</a>
-                <div class="dropdown-content">
-                    <a href="rm-dashboard.html" class="nav-link-item">RM-STOCK</a>
-                    <a href="rm-aging.html" class="nav-link-item" style="color: #00f3ff;">RM-AGING</a>
-
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu">RM-SIMULASI</a>
-                        <div class="dropdown-submenu">
-                            <a href="rm-simulation.html" class="nav-link-sub">PREDIKTIF</a>
-                            <a href="rm-history.html" class="nav-link-sub">HISTORIS</a>
-                        </div>
-                    </div>
-
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu">RM-STAFFEL</a>
-                        <div class="dropdown-submenu">
-                            <a href="rm-staffel-masterdata.html" class="nav-link-sub">MASTER DATA</a>
-                            <a href="rm-staffel-analys.html" class="nav-link-sub">ANALYS</a>
-                        </div>
-                    </div>
-
-                    <a href="rm-downtime.html" class="nav-link-item">RM-DOWNTIME</a>
-
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu">RM-LANGSIR</a>
-                        <div class="dropdown-submenu">
-                            <a href="rm-langsiran.html" class="nav-link-sub">CONTROLLING</a>
-                            <a href="rm-transport-tracker.html" class="nav-link-sub" style="color: #ffd700;">GPS
-                                TRACKER</a>
-                        </div>
-                    </div>
-
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu" style="color:#D9FF66;">BIN SWEEPING</a>
-                        <div class="dropdown-submenu">
-                            <a href="bin-sweeping-status.html" class="nav-link-sub">STATUS OPERASIONAL</a>
-                            <a href="bin-sweeping-analys.html" class="nav-link-sub">ANALYSTIC</a>
-                        </div>
-                    </div>
-
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu" style="color:#D9FF66;">RM-KADAR AIR</a>
-                        <div class="dropdown-submenu">
-                            <a href="rm-ka-masterdata.html" class="nav-link-sub">MASTER DATA</a>
-                            <a href="rm-ka-analys.html" class="nav-link-sub">ANALYSTIC</a>
-                        </div>
-                    </div>
-
-                    <a href="rm-palletcyclelog.html" class="nav-link-item">RM-PALLETCYCLELOG</a>
-                    <a href="rm-sealmap.html" class="nav-link-item" style="color: #00f3ff;">RM-SEALMAP</a>
-                </div>
-            </div>
-
-            <!-- CPO DROPDOWN -->
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle" style="padding: 10px 12px !important;">CPO</a>
-                <div class="dropdown-content">
-                    <a href="cpo-dashboard.html" class="nav-link-item">CPO-STOCK</a>
-                    <a href="cpo-simulation.html" class="nav-link-item">CPO-SIMULASI</a>
-                    <a href="cpo-downtime.html" class="nav-link-item" style="color: #ff003c;">CPO-DOWNTIME</a>
-                </div>
-            </div>
-
-            <!-- BKK DROPDOWN -->
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle" style="padding: 10px 12px !important;">BKK</a>
-                <div class="dropdown-content">
-                    <a href="bkk-dashboard.html" class="nav-link-item">BKK-STOCK</a>
-                    <a href="bkk-simulasi.html" class="nav-link-item">BKK-SIMULASI</a>
-                    <a href="bkk-downtime.html" class="nav-link-item">BKK-DOWNTIME</a>
-                </div>
-            </div>
-
-            <!-- HUB DROPDOWN -->
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle" id="menu-hub" style="padding: 10px 12px !important;">HUB
-                    SYSTEM</a>
-                <div class="dropdown-content">
-                    <a href="material-audit-history.html" class="nav-link-item" style="color: #00f3ff;">MATERIAL AUDIT
-                        HISTORY</a>
-                    <a href="about-structure.html" class="nav-link-item">STRUKTUR ORGANISASI</a>
-
-                    <!-- NESTED SMART ADMIN -->
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu">SMART ADMIN</a>
-                        <div class="dropdown-submenu">
-                            <a href="bap4a.html" class="nav-link-sub">BAP4A</a>
-                            <a href="notulensi.html" class="nav-link-sub">NOTULENSI MEETING</a>
-                        </div>
-                    </div>
-
-                    <!-- NESTED OPERASIONAL & BIAYA -->
-                    <div class="dropdown-nested">
-                        <a href="#" class="nav-link-item has-submenu"
-                            style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">OPERASIONAL & BIAYA</a>
-                        <div class="dropdown-submenu">
-                            <a href="op-ekspedisi-masterdata.html" class="nav-link-item"
-                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">EKSPEDISI</a>
-                            <a href="op-sewa-unit-masterdata.html" class="nav-link-item"
-                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">SEWA UNIT & ALAT</a>
-                            <a href="op-kontrol-bbm-masterdata.html" class="nav-link-item"
-                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">KONTROL BBM (SOLAR)</a>
-                            <a href="op-analisa-loader-masterdata.html" class="nav-link-item"
-                                style="font-size: 0.8rem; color: #94a3b8; padding: 8px 16px;">ANALISA LOADER</a>
-                        </div>
-                    </div>
-
-                    <!-- SOP & WI CENTER -->
-                    <a href="hub-sop-wi.html" class="nav-link-item" style="color: #ffd700;">SOP & WI CENTER</a>
-                </div>
-            </div>
-
-            <!-- HR DROPDOWN -->
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle" id="menu-hr" style="padding: 10px 12px !important;">HUMAN
-                    RESOURCE</a>
-                <div class="dropdown-content">
-                    <a href="hr-absen.html" class="nav-link-item">KONTROL ABSEN</a>
-                    <a href="hr-cuti-dashboard.html" class="nav-link-item" style="color:#10b981;">KONTROL CUTI
-                        [LIVE]</a>
-                    <a href="hr-lembur-dashboard.html" class="nav-link-item" style="color:#00f3ff;">KONTROL LEMBURAN
-                        [LIVE]</a>
-                    <a href="hr-payslip.html" class="nav-link-item">ESTIMATOR PAY SLIP</a>
-                </div>
-            </div>
-
-            <!-- OUTSTANDING DROPDOWN -->
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle" style="padding: 10px 12px !important;">OUTSTANDING</a>
-                <div class="dropdown-content">
-                    <a href="outstanding-rm.html" class="nav-link-item">OUTSTANDING RM & CPO</a>
-                    <a href="outstanding-bkk.html" class="nav-link-item">OUTSTANDING BKK</a>
-                </div>
-            </div>
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="brand">
+            <div class="brand-glow"></div>
+            <h1>SMART<br>WAREHOUSE <span>V2.0</span></h1>
+            <div class="brand-sub">WAREHOUSE MANAGEMENT SYSTEM</div>
         </div>
 
-        <div class="nav-actions">
-            <!-- Buttons Removed -->
+        <div class="nav-menu">
+            <!-- 1. HOME -->
+            <div class="nav-item">
+                <a href="homepage-v1.html" class="nav-btn active">
+                    <span><i class="fas fa-home icon"></i> HOME</span>
+                </a>
+            </div>
+
+            <!-- 2. RM STORAGE -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('rm-menu')">
+                    <span><i class="fas fa-warehouse icon"></i> RM STORAGE</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="rm-menu">
+                    <a href="rm-dashboard.html">RM-STOCK</a>
+                    <a href="rm-aging.html">RM-AGING</a>
+
+                    <button class="submenu-btn" onclick="toggleMenu('rm-simulasi-menu')">
+                        <span>RM-SIMULASI</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="rm-simulasi-menu">
+                        <a href="rm-simulation.html">PREDIKTIF</a>
+                        <a href="rm-history.html">HISTORIS</a>
+                    </div>
+
+                    <button class="submenu-btn" onclick="toggleMenu('rm-staffel-menu')">
+                        <span>RM-STAFFEL</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="rm-staffel-menu">
+                        <a href="rm-staffel-masterdata.html">MASTER DATA</a>
+                        <a href="rm-staffel-analys.html">ANALYS</a>
+                    </div>
+
+                    <a href="rm-downtime.html">RM-DOWNTIME</a>
+
+                    <button class="submenu-btn" onclick="toggleMenu('rm-langsir-menu')">
+                        <span>RM-LANGSIR</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="rm-langsir-menu">
+                        <a href="rm-langsiran.html">CONTROLLING</a>
+                        <a href="rm-transport-tracker.html">GPS TRACKER</a>
+                    </div>
+
+                    <button class="submenu-btn" onclick="toggleMenu('bin-sweeping-menu')">
+                        <span>BIN SWEEPING</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="bin-sweeping-menu">
+                        <a href="bin-sweeping-status.html">STATUS OPERASIONAL</a>
+                        <a href="bin-sweeping-analys.html">ANALYSTIC</a>
+                    </div>
+
+                    <button class="submenu-btn" onclick="toggleMenu('rm-ka-menu')">
+                        <span>RM-KADAR AIR</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="rm-ka-menu">
+                        <a href="rm-ka-masterdata.html">MASTER DATA</a>
+                        <a href="rm-ka-analys.html">ANALYSTIC</a>
+                    </div>
+
+                    <a href="rm-palletcyclelog.html">RM-PALLETCYCLELOG</a>
+                    <a href="rm-sealmap.html">RM-SEALMAP</a>
+                </div>
+            </div>
+
+            <!-- 3. CPO -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('cpo-menu')">
+                    <span><i class="fas fa-tint icon"></i> CPO</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="cpo-menu">
+                    <a href="cpo-dashboard.html">CPO-STOCK</a>
+                    <a href="cpo-simulation.html">CPO-SIMULASI</a>
+                    <a href="cpo-downtime.html">CPO-DOWNTIME</a>
+                </div>
+            </div>
+
+            <!-- 4. BKK -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('bkk-menu')">
+                    <span><i class="fas fa-cubes icon"></i> BKK</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="bkk-menu">
+                    <a href="bkk-dashboard.html">BKK-STOCK</a>
+                    <a href="bkk-simulasi.html">BKK-SIMULASI</a>
+                    <a href="bkk-downtime.html">BKK-DOWNTIME</a>
+                </div>
+            </div>
+
+            <!-- 5. HUB SYSTEM -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('hub-menu')">
+                    <span><i class="fas fa-network-wired icon"></i> HUB SYSTEM</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="hub-menu">
+                    <a href="material-audit-history.html">MATERIAL AUDIT HISTORY</a>
+                    <a href="about-structure.html">STRUKTUR ORGANISASI</a>
+
+                    <button class="submenu-btn" onclick="toggleMenu('smart-admin-menu')">
+                        <span>SMART ADMIN</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="smart-admin-menu">
+                        <a href="bap4a.html">BAP4A</a>
+                        <a href="notulensi.html">NOTULENSI MEETING</a>
+                    </div>
+
+                    <button class="submenu-btn" onclick="toggleMenu('op-biaya-menu')">
+                        <span>OPERASIONAL & BIAYA</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="sub-submenu" id="op-biaya-menu">
+                        <a href="op-ekspedisi-masterdata.html">EKSPEDISI</a>
+                        <a href="op-sewa-unit-masterdata.html">SEWA UNIT & ALAT</a>
+                        <a href="op-kontrol-bbm-masterdata.html">KONTROL BBM (SOLAR)</a>
+                        <a href="op-analisa-loader-masterdata.html">ANALISA LOADER</a>
+                    </div>
+
+                    <a href="hub-sop-wi.html">SOP & WI CENTER</a>
+                </div>
+            </div>
+
+            <!-- 6. HUMAN RESOURCE -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('hr-menu')">
+                    <span><i class="fas fa-users-cog icon"></i> HUMAN RESOURCE</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="hr-menu">
+                    <a href="hr-absen.html">KONTROL ABSEN</a>
+                    <a href="hr-cuti-dashboard.html">KONTROL CUTI [LIVE]</a>
+                    <a href="hr-lembur-dashboard.html">KONTROL LEMBURAN [LIVE]</a>
+                    <a href="hr-payslip.html">ESTIMATOR PAY SLIP</a>
+                </div>
+            </div>
+
+            <!-- 7. OUTSTANDING -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('outstanding-menu')">
+                    <span><i class="fas fa-stream icon"></i> OUTSTANDING</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="outstanding-menu">
+                    <a href="outstanding-rm.html">OUTSTANDING RM & CPO</a>
+                    <a href="outstanding-bkk.html">OUTSTANDING BKK</a>
+                </div>
+            </div>
+
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
-    <main class="hero-section">
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
 
-        <!-- LEFT: TEXT CONTENT -->
-        <div class="hero-content">
-            <div class="badge-new">OPERASIONAL 24/7</div>
+        <!-- ROW 1: WIDGETS -->
+        <div class="header-widgets">
 
-            <h1 class="hero-headline">
-                SOLUSI TERPADU <br>
-                <span class="text-gradient">MANAJEMEN GUDANG</span> <br>
-                BAHAN BAKU
-            </h1>
-
-            <p class="hero-sub">
-                Monitoring real-time seluruh operasional gudang Raw Materials, Bulk Storage, dan CPO Management dengan
-                akurasi 99.7%.
-            </p>
-
-            <div class="hero-buttons">
-                <button class="btn-cta-secondary" onclick="window.location.href='search-data.html'">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    🔍 CARI DATA APA? (KLIK DISINI)
-                </button>
-                <button class="btn-cta-primary" onclick="window.location.href='login.html'" style="margin-left: 15px;">
-                    <span class="shine"></span>
-                    🔐 LOGIN
-                </button>
-            </div>
-            <!-- GLOBAL WAREHOUSE MAP - directly below CARI DATA APA, same size -->
-            <div style="margin-top: 10px;">
-                <button class="btn-cta-secondary" onclick="window.location.href='about-page.html'">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    🗺️ GLOBAL WAREHOUSE MAP
-                </button>
+            <!-- BOX 1: GLOBAL MAP -->
+            <div class="cyber-card" style="cursor:pointer;" onclick="window.location.href='about-page.html'">
+                <div class="card-header">
+                    <span>WAREHOUSE MAP</span>
+                    <i class="fas fa-globe-asia"></i>
+                </div>
+                <div class="map-visual" style="padding:0; overflow:hidden;">
+                    <img src="../../Downloads/Gemini_Generated_Image_vxqlbxvxqlbxvxql.png" alt="Warehouse Map"
+                        style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <div
+                        style="position:absolute; bottom:5px; right:10px; font-size:0.55rem; color:var(--neon-cyan); opacity:0.8; z-index:5; background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:3px;">
+                        ABOUT SYSTEM</div>
+                </div>
             </div>
 
-            <div class="partner-section">
-                <div class="partner-label">METRIK UTAMA GUDANG</div>
-                <div class="partner-logos">
-                    <!-- Cards will be injected/styled here -->
-                    <div class="metric-mini">
-                        <div class="m-val">98.7%</div>
-                        <div class="m-label">RM ACCURACY ✓</div>
-                    </div>
-                    <div class="metric-mini">
-                        <div class="m-val">85%</div>
-                        <div class="m-label">BULK FILLED</div>
-                    </div>
-                    <div class="metric-mini">
-                        <div class="m-val">GRADE A</div>
-                        <div class="m-label">CPO QUALITY</div>
-                    </div>
-                    <div class="metric-mini" style="border-right:none;">
-                        <div class="m-val" style="color:#10B981">+32%</div>
-                        <div class="m-label">EFFICIENCY</div>
+            <!-- BOX 2: SEARCH DATA -->
+            <div class="cyber-card" style="cursor:pointer;" onclick="window.location.href='search-data.html'">
+                <div class="card-header">
+                    <span>GLOBAL SEARCH</span>
+                    <i class="fas fa-search-dollar"></i>
+                </div>
+                <div class="search-container">
+                    <div class="search-main-text">MAU CARI DATA APA?</div>
+                    <div class="search-sub-text">BISA KLIK DISINI</div>
+                    <div class="search-hint-text">
+                        ATAU LIHAT NAVIGASI DI SEBELAH KIRI
+                        <i class="fas fa-chevron-left" style="font-size: 0.5rem; margin-left: 3px;"></i>
                     </div>
                 </div>
             </div>
+
+            <!-- BOX 3: ACCESS PORTAL -->
+            <div class="cyber-card" style="cursor:pointer;" onclick="window.location.href='login.html'">
+                <div class="card-header">
+                    <span>SECURITY ACCESS</span>
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="access-container">
+                    <div class="access-main-text">SILAHKAN LOGIN PAK BOS UNTUK MEMBUKA MENU</div>
+                    <div class="access-sub-text" style="color: var(--neon-purple);">HUB SYSTEM & HR</div>
+                    <div class="access-hint-text">
+                        <i class="fas fa-lock" style="font-size: 0.5rem; margin-right: 3px;"></i>
+                        AUTHORIZED PERSONNEL ONLY
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOX 4: BANNER KING EMYU IMAGE -->
+            <div class="cyber-card mu-banner">
+                <img src="assets/mu_banner_v1.jpg" alt="GGMU KING EMYU" class="mu-img-full">
+            </div>
+
         </div>
 
-        <!-- RIGHT: WAREHOUSE ANIMATION 3-SCENE -->
-        <div class="hero-visual" style="margin-top: -50px;"> <!-- Shifted Up -->
-            <div class="visual-container">
-                <!-- NO TABS (Auto Only) -->
+        <!-- ROW 2: VISUALIZATION -->
+        <div class="vis-container" id="visContainer">
+            <div class="vis-overlay">
+                <div class="vis-tag">WAREHOUSE VISUALIZATION (HD VIEW)</div>
+            </div>
 
-                <!-- SCENE 1: RM LOGISTICS (CINEMATIC IMAGE) -->
-                <div class="animation-scene active" id="scene1">
-                    <div class="scene-label">RM LOGISTICS: RENTAL NETWORK</div>
-                    <div class="cinematic-bg" style="background-image: url('assets/rm_logistics.png');"></div>
-                    <div class="holo-overlay">
-                        <div class="holo-tag" style="top: 25%; left: 30%;">RENTAL WAREHOUSE</div>
-                        <div class="holo-tag" style="top: 40%; right: 20%;">EN ROUTE: FACTORY</div>
-                    </div>
-                </div>
+            <!-- HUD DECORATIONS -->
+            <div class="hud-corner tl"></div>
+            <div class="hud-corner tr"></div>
+            <div class="hud-corner bl"></div>
+            <div class="hud-corner br"></div>
 
-                <!-- SCENE 2: BULK STORAGE (CINEMATIC IMAGE) -->
-                <div class="animation-scene" id="scene2">
-                    <div class="scene-label">BULK STORAGE: INTAKE 71A/B</div>
-                    <div class="cinematic-bg" style="background-image: url('assets/bk_intake.png');"></div>
-                    <div class="holo-overlay">
-                        <div class="holo-tag" style="top: 30%; left: 40%;">INTAKE OPERATIONAL</div>
-                        <div class="holo-tag" style="top: 60%; left: 70%;">TRUCK UNLOADING</div>
-                    </div>
-                </div>
 
-                <!-- SCENE 3: CPO TANK FARM (CINEMATIC IMAGE) -->
-                <div class="animation-scene" id="scene3">
-                    <div class="scene-label">CPO TANK FARM MONITORING</div>
-                    <div class="cinematic-bg" style="background-image: url('assets/cpo_tanks.png');"></div>
-                    <div class="holo-overlay">
-                        <div class="holo-tag" style="top: 20%; left: 20%;">TANK 01-06: ACTIVE</div>
-                        <div class="holo-tag" style="top: 50%; right: 20%;">LEVEL: 85%</div>
-                    </div>
-                </div>
-
+            <!-- Image STATIC -->
+            <div id="zoomWrapper"
+                style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                <img src="Gemini_Generated_Image_o57so7o57so7o57s.png" alt="Warehouse Visualization" class="vis-image"
+                    id="targetImg" style="display:block !important;">
             </div>
         </div>
 
     </main>
 
-    <!-- PANGLIMA SEQUENCE OVERLAY -->
-    <div class="panglima-sequence">
-        <div class="observer-group">
-            <img src="assets/observers_clean.png" class="obs-img" alt="Observers">
-            <div class="chat-container">
-                <div class="chat-line text-yellow">"JANGAN DEKAT2 ORANG INI BOY"</div>
-                <div class="chat-line text-white">"LOH KENAPA?"</div>
-                <div class="chat-line text-yellow">"JABATANNYA DI PABRIK CUKUP SEREM"</div>
-                <div class="chat-line text-white">"APAANTUCCH"</div>
-                <div class="chat-line text-yellow">"PANGLIMA FANS KING MU!"</div>
-            </div>
-        </div>
-        <div class="panglima-group">
-            <img src="assets/panglima_static_clean.png" class="panglima-img" alt="Panglima">
-            <div class="panglima-text">GLORY GLORY MAN UNITED</div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS FOR DATA LOGIC -->
-    <script src="homepage-animation.js"></script>
-    <script src="homepage-particles.js"></script> <!-- NEW: VISUAL OVERHAUL -->
     <script>
-        window.onload = () => {
-            setTimeout(() => {
-                const overlay = document.getElementById('loading-overlay');
-                if (overlay) overlay.classList.add('hidden');
-            }, 800);
+        console.log("SMART WAREHOUSE V2.0 - INITIALIZING");
 
-            // ACCESS CONTROL LOGIC
-            // Menus are visible by default as per request.
-            // Security is handled at the page level by auth-guard.js.
-            // No additional lock/unlock login needed here.
+        function handleSearch(e) {
+            if (e.key === 'Enter') {
+                window.location.href = 'search-data.html?q=' + e.target.value;
+            }
+        }
+
+        function toggleMenu(id) {
+            console.log("Toggling menu:", id);
+            let menu = document.getElementById(id);
+            if (!menu) return;
+
+            let btn = menu.previousElementSibling;
+            let isSubSub = menu.classList.contains('sub-submenu');
+
+            // 1. Close siblings at the same level
+            let container = menu.parentElement;
+            Array.from(container.children).forEach(el => {
+                if (el.classList.contains('submenu') || el.classList.contains('sub-submenu')) {
+                    if (el.id !== id) {
+                        el.style.maxHeight = null;
+                        if (el.previousElementSibling) el.previousElementSibling.classList.remove('active');
+                    }
+                }
+            });
+
+            // 2. Toggle current
+            if (menu.style.maxHeight) {
+                menu.style.maxHeight = null;
+                btn.classList.remove('active');
+            } else {
+                // If it's a sub-menu, we allow it to grow large
+                menu.style.maxHeight = (isSubSub ? "500px" : "2000px");
+                btn.classList.add('active');
+            }
+
+            // 3. Update parent height if needed (Recalculate parent's maxHeight to fit growing child)
+            if (isSubSub) {
+                let parentSubmenu = container.closest('.submenu');
+                if (parentSubmenu && !menu.style.maxHeight) {
+                    // If closing a child, we don't necessarily need to reduce parent immediately, 
+                    // but it's good practice. For simplicity, just set parent to auto/large.
+                    parentSubmenu.style.maxHeight = "2000px";
+                }
+            }
+        }
+
+        window.onload = function () {
+            console.log("Window loaded. Navigation ready.");
         };
     </script>
-
-    <style>
-        /* Security is now handled at the destination page level */
-    </style>
-
-    <!-- SVG FILTER FOR ELECTRIC EFFECT -->
-    <svg style="position: absolute; width: 0; height: 0;" width="0" height="0" version="1.1"
-        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <defs>
-            <filter id="electric-filter">
-                <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" result="noise" seed="1" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" />
-            </filter>
-            <filter id="electric-filter-hover">
-                <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="4" result="noise" seed="2">
-                    <animate attributeName="seed" from="1" to="100" dur="2s" repeatCount="indefinite" />
-                </feTurbulence>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" />
-            </filter>
-        </defs>
-    </svg>
 </body>
 
 </html>

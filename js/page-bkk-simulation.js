@@ -28,18 +28,21 @@ const BKKSim = {
 
             let materials = data.materials || [];
             if (materials.length === 0 && data.silos) {
+                // Adapt to Dashboard "bk-stock" logic
                 materials = data.silos.map(s => ({
-                    name: s.id,
+                    warehouse: s.id,
+                    material: s.material || 'EMPTY',
                     stock: s.stock || 0,
-                    cap: s.capacity || 3000000
+                    capacity: s.capacity || (s.stock / (s.percentage || 1)) || 3000000
                 }));
             }
 
             if (materials.length > 0) {
                 this.warehouses = materials.map(item => ({
                     name: item.warehouse || item.name,
+                    material: item.material || 'N/A',
                     stock: item.stock || 0,
-                    cap: item.capacity || item.cap || 0
+                    cap: item.capacity || item.cap || 3000000
                 }));
             }
         } catch (error) {
@@ -73,14 +76,32 @@ const BKKSim = {
             const isSelected = this.selectedWarehouses.includes(w.name);
             const selectionIndex = this.selectedWarehouses.indexOf(w.name) + 1;
 
+            const pct = Math.min(100, Math.max(0, (w.stock / w.cap) * 100));
+
+            // Color Logic: Red < 15%, Yellow 15-40%, Green > 40%
+            let fillColor = '#10b981'; // Default Emerald
+            if (pct < 15) fillColor = '#ef4444'; // Red
+            else if (pct < 40) fillColor = '#f59e0b'; // Yellow/Orange
+
             const div = document.createElement('div');
             div.className = `bk-select-card ${isSelected ? 'selected' : ''}`;
             div.onclick = () => this.toggleSelection(w.name);
 
             div.innerHTML = `
                 ${isSelected ? `<div class="bk-card-num">${selectionIndex}</div>` : ''}
-                <div class="bk-card-name">${w.name}</div>
-                <div class="bk-card-stock">${(w.stock / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} T</div>
+                
+                <div class="tank-visual">
+                    <div class="tank-shine"></div>
+                    <div class="tank-fill" style="height:${pct}%; --fill-color:${fillColor};"></div>
+                </div>
+
+                <div class="card-content" style="text-align:center; position:relative; z-index:5;">
+                    <div style="font-size:0.6rem; color:var(--emerald-accent); font-family:'Orbitron'; margin-bottom:2px; opacity:0.8;">${w.material}</div>
+                    <div class="bk-card-name">${w.name}</div>
+                    <div class="bk-card-stock">
+                        ${(w.stock / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} T
+                    </div>
+                </div>
             `;
             grid.appendChild(div);
         });
@@ -120,7 +141,7 @@ const BKKSim = {
         container.innerHTML = '';
 
         if (this.selectedWarehouses.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#555; padding:20px; font-style:italic;">Click warehouses on the left to add to queue</div>';
+            container.innerHTML = '<div style="text-align:center; color:#444; padding:30px; font-style:italic; font-size:0.8rem;">Click warehouses on the left to build priority</div>';
             return;
         }
 
@@ -129,10 +150,17 @@ const BKKSim = {
             div.className = 'priority-item';
             div.innerHTML = `
                 <div class="p-num">${i + 1}</div>
-                <div class="p-name">${wName}</div>
+                <div class="p-name">
+                    <i class="fas fa-warehouse" style="color:var(--emerald-accent); font-size:0.7rem; margin-right:8px;"></i>
+                    ${wName}
+                </div>
                 <div class="p-controls">
-                    <button class="p-btn" onclick="BKKSim.movePriority('${wName}', 'up')">▲</button>
-                    <button class="p-btn" onclick="BKKSim.movePriority('${wName}', 'down')">▼</button>
+                    <button class="p-btn" onclick="BKKSim.movePriority('${wName}', 'up')" title="Move Up">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    <button class="p-btn" onclick="BKKSim.movePriority('${wName}', 'down')" title="Move Down">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                 </div>
             `;
             container.appendChild(div);
