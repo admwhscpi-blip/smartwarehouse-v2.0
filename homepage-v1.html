@@ -597,6 +597,98 @@
             transition: 0.3s;
         }
 
+        /* MINI PREMIUM CLOCK FOR SIDEBAR (V16.7) */
+        .mini-clock-wrapper {
+            margin-top: 15px;
+            transform: scale(0.6);
+            transform-origin: left top;
+            width: 166%;
+            /* 1 / 0.6 */
+            margin-bottom: -40px;
+            opacity: 0.95;
+        }
+
+        .clock-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 8px 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 40px;
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            min-width: 360px;
+            height: 65px;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.1);
+        }
+
+        .clock-date-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 150px;
+            line-height: 1.1;
+        }
+
+        .clock-day {
+            font-size: 0.65rem;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+        }
+
+        .clock-date {
+            font-size: 1.3rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .clock-visual {
+            position: relative;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .clock-circle {
+            position: absolute;
+            inset: 0;
+            border: 2px solid rgba(14, 165, 233, 0.1);
+            border-radius: 50%;
+        }
+
+        .clock-progress {
+            position: absolute;
+            inset: 0;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-cyan);
+            transition: transform 1s linear;
+        }
+
+        .clock-time-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+        }
+
+        .clock-ampm {
+            font-size: 0.45rem;
+            font-weight: 800;
+            color: var(--neon-cyan);
+        }
+
+        .clock-time {
+            font-size: 1.4rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
         .cyber-input:focus {
             border-color: var(--neon-cyan);
             box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
@@ -804,6 +896,24 @@
             <div class="brand-glow"></div>
             <h1>SMART<br>WAREHOUSE <span>V2.0</span></h1>
             <div class="brand-sub">WAREHOUSE MANAGEMENT SYSTEM</div>
+
+            <!-- MINI PREMIUM CLOCK (V16.7) -->
+            <div class="mini-clock-wrapper">
+                <div class="clock-container" id="clock-widget">
+                    <div class="clock-date-group">
+                        <div class="clock-day" id="widget-day">DAY</div>
+                        <div class="clock-date" id="widget-date">DATE</div>
+                    </div>
+                    <div class="clock-visual">
+                        <div class="clock-circle"></div>
+                        <div class="clock-progress" id="widget-sec-progress"></div>
+                        <div class="clock-time-group">
+                            <div class="clock-ampm" id="widget-ampm">AM</div>
+                            <div class="clock-time" id="widget-time">00:00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="nav-menu">
@@ -1100,7 +1210,42 @@
 
         window.onload = function () {
             console.log("Window loaded. Navigation ready.");
+            startClock();
         };
+
+        function startClock() {
+            const update = () => {
+                const now = new Date();
+                const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+
+                const dayEl = document.getElementById('widget-day');
+                const dateEl = document.getElementById('widget-date');
+                if (dayEl) dayEl.innerText = days[now.getDay()];
+                if (dateEl) dateEl.innerText = `${months[now.getMonth()]} ${now.getDate()}`;
+
+                let h = now.getHours();
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12;
+                h = h ? h : 12;
+                const hStr = h;
+
+                const timeEl = document.getElementById('widget-time');
+                const ampmEl = document.getElementById('widget-ampm');
+                if (timeEl) timeEl.innerText = `${hStr}:${m}`;
+                if (ampmEl) ampmEl.innerText = ampm;
+
+                const sec = now.getSeconds();
+                const progressEl = document.getElementById('widget-sec-progress');
+                if (progressEl) {
+                    const deg = (sec / 60) * 360;
+                    progressEl.style.transform = `rotate(${deg - 45}deg)`;
+                }
+            };
+            update();
+            setInterval(update, 1000);
+        }
     </script>
 </body>
 

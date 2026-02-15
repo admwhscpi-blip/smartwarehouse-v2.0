@@ -819,46 +819,46 @@
             color: #fff;
         }
 
-        /* V16.7: ZERO-COLLISION CLOCK WIDGET STYLES */
+        /* V16.8: COMPACT ZERO-COLLISION CLOCK WIDGET */
         .clock-container {
             display: flex;
             align-items: center;
-            gap: 30px;
-            padding: 10px 30px;
+            gap: 20px;
+            padding: 8px 25px;
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(0, 243, 255, 0.2);
-            border-radius: 50px;
+            border-radius: 40px;
             font-family: 'Orbitron', sans-serif;
             color: #fff;
-            min-width: 380px;
-            height: 75px;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+            min-width: 340px;
+            height: 65px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.1);
         }
 
         .clock-date-group {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            min-width: 170px;
+            min-width: 140px;
             line-height: 1.1;
         }
 
         .clock-day {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--neon-blue);
-            letter-spacing: 2.5px;
+            letter-spacing: 2px;
         }
 
         .clock-date {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 900;
             white-space: nowrap;
         }
 
         .clock-visual {
             position: relative;
-            width: 65px;
-            height: 65px;
+            width: 55px;
+            height: 55px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -878,7 +878,7 @@
             border: 2px solid transparent;
             border-top: 2px solid var(--neon-blue);
             border-radius: 50%;
-            box-shadow: 0 0 15px var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
             transition: transform 1s linear;
         }
 
@@ -890,13 +890,13 @@
         }
 
         .clock-ampm {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             font-weight: 800;
             color: var(--neon-blue);
         }
 
         .clock-time {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 900;
             line-height: 1;
         }
@@ -1005,17 +1005,17 @@
 
         <!-- 1. CONTROL PANEL (SUPER DENSE V16.7) -->
         <div class="coin-card scanline-card"
-            style="padding:15px 35px; background: rgba(10,15,25,0.9); border: 2px solid rgba(0,243,255,0.15); border-radius: 15px; box-shadow: 0 10px 50px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: space-between;">
+            style="padding:8px 20px; background: rgba(10,15,25,0.9); border: 2px solid rgba(0,243,255,0.15); border-radius: 12px; box-shadow: 0 10px 50px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: space-between;">
 
-            <div style="display:flex; align-items:center; gap:40px;">
+            <div style="display:flex; align-items:center; gap:18px;">
                 <div
-                    style="font-family:'Orbitron'; color:#ccff00; font-size:1.4rem; font-weight:900; letter-spacing:3px; display:flex; align-items:center; white-space:nowrap; text-shadow: 0 0 15px rgba(204,255,0,0.4);">
+                    style="font-family:'Orbitron'; color:#ccff00; font-size:1.1rem; font-weight:900; letter-spacing:2px; display:flex; align-items:center; white-space:nowrap; text-shadow: 0 0 15px rgba(204,255,0,0.3);">
                     <span class="pulse-live"></span> LIVE UPDATE
                 </div>
 
-                <div style="display:flex; gap:15px; align-items:center;">
+                <div style="display:flex; gap:8px; align-items:center;">
                     <select id="select-month" class="modern-select"
-                        style="min-width:160px; font-size:0.9rem; padding: 10px 20px;">
+                        style="min-width:130px; font-size:0.8rem; padding: 6px 12px;">
                         <option value="1">JANUARI</option>
                         <option value="2">FEBRUARI</option>
                         <option value="3">MARET</option>
@@ -1030,7 +1030,7 @@
                         <option value="12">DESEMBER</option>
                     </select>
                     <select id="select-year" class="modern-select"
-                        style="min-width:110px; font-size:0.9rem; padding: 10px 20px;">
+                        style="min-width:90px; font-size:0.8rem; padding: 6px 12px;">
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
@@ -1040,18 +1040,24 @@
 
                 <div class="tech-divider"></div>
 
-                <div style="display:flex; gap:15px; align-items:center;">
+                <div style="display:flex; gap:10px; align-items:center;">
                     <div class="scope-toggle"
-                        style="background: rgba(0,243,255,0.05); padding: 5px; border-radius: 8px;">
+                        style="background: rgba(0,243,255,0.05); padding: 4px; border-radius: 8px;">
                         <button id="btn-overall" class="scope-btn active"
                             onclick="BKKDowntimeApp.setFilterMode('overall')"
-                            style="font-size:0.85rem; padding: 10px 20px;">OVERALL</button>
+                            style="font-size:0.75rem; padding: 6px 12px;">OVERALL</button>
                         <button id="btn-material" class="scope-btn" onclick="BKKDowntimeApp.setFilterMode('material')"
-                            style="font-size:0.85rem; padding: 10px 20px;">MATERIAL</button>
+                            style="font-size:0.75rem; padding: 6px 12px;">MATERIAL</button>
                     </div>
 
+                    <select id="select-material" class="modern-select hidden"
+                        style="min-width:125px; font-size:0.75rem; padding: 6px 12px;">
+                        <option value="SBM">SBM (BKK)</option>
+                        <option value="PKM">PKM (BKK)</option>
+                    </select>
+
                     <button class="btn-run-v10" onclick="BKKDowntimeApp.applyFilters()"
-                        style="padding: 12px 25px; font-size: 0.9rem;">
+                        style="padding: 9px 18px; font-size: 0.8rem;">
                         <i class="fas fa-sync-alt"></i> RUN ANALYTICS
                     </button>
                 </div>
@@ -1059,309 +1065,307 @@
 
             <div class="clock-container" id="clock-widget">
                 <div class="clock-date-group">
-                    <div class="clock-day" id="widget-day">WEDNESDAY</div>
-                    <div class="clock-date" id="widget-date">JANUARY 11</div>
+                    <div class="clock-day" id="widget-day">DAY</div>
+                    <div class="clock-date" id="widget-date">DATE</div>
                 </div>
                 <div class="clock-visual">
                     <div class="clock-circle"></div>
                     <div class="clock-progress" id="widget-sec-progress"></div>
                     <div class="clock-time-group">
-                        <div class="clock-ampm" id="widget-ampm">PM</div>
-                        <div class="clock-time" id="widget-time">09:36</div>
+                        <div class="clock-ampm" id="widget-ampm">AM</div>
+                        <div class="clock-time" id="widget-time">00:00</div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- V15: CALENDAR ANALYTICS SECTION -->
-        <div id="calendar-analytics-section" style="display:grid; grid-template-columns: 460px 1fr; gap:25px;">
-            <!-- CALENDAR BOX -->
-            <div class="coin-card" style="padding:20px;">
-                <div class="coin-header">
-                    <span style="display:flex; align-items:center; gap:10px;">
-                        <i class="fas fa-calendar-alt" style="color:var(--coin-accent); font-size:1.1rem;"></i>
-                        BKK DAILY CALENDAR
-                    </span>
-                    <span id="cal-month-year"
-                        style="font-size:0.8rem; color:var(--text-sec); font-family:'Orbitron';">MONTH YYYY</span>
-                </div>
-                <div id="calendar-grid-v15" class="calendar-grid">
-                    <!-- Grid generated by JS -->
-                    <div
-                        style="grid-column: span 7; text-align:center; padding:40px; color:#333; font-family:'Orbitron'; font-size:0.8rem;">
-                        <i class="fas fa-circle-notch fa-spin"></i> GENERATING CALENDAR ENGINE...
-                    </div>
-                </div>
-
-                <!-- V16: MINI SPEEDOMETERS PER SHIFT -->
-                <div id="mini-speedometers-v16"
-                    style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:15px; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px; height:120px; overflow:hidden;">
-                    <div id="gauge-shift-1"
-                        style="display:flex; flex-direction:column; align-items:center; width:100%;">
-                        <div
-                            style="font-size:0.55rem; color:var(--text-sec); font-family:'Orbitron'; margin-bottom:0px; letter-spacing:1px;">
-                            SHIFT 1</div>
-                        <div id="chart-gauge-s1"
-                            style="width:140px; height:100px; display:flex; justify-content:center; align-items:center;">
-                        </div>
-                    </div>
-                    <div id="gauge-shift-2"
-                        style="display:flex; flex-direction:column; align-items:center; width:100%;">
-                        <div
-                            style="font-size:0.55rem; color:var(--text-sec); font-family:'Orbitron'; margin-bottom:0px; letter-spacing:1px;">
-                            SHIFT 2</div>
-                        <div id="chart-gauge-s2"
-                            style="width:140px; height:100px; display:flex; justify-content:center; align-items:center;">
-                        </div>
-                    </div>
-                    <div id="gauge-shift-3"
-                        style="display:flex; flex-direction:column; align-items:center; width:100%;">
-                        <div
-                            style="font-size:0.55rem; color:var(--text-sec); font-family:'Orbitron'; margin-bottom:0px; letter-spacing:1px;">
-                            SHIFT 3</div>
-                        <div id="chart-gauge-s3"
-                            style="width:140px; height:100px; display:flex; justify-content:center; align-items:center;">
-                        </div>
-                    </div>
-                </div>
+    <!-- V15: CALENDAR ANALYTICS SECTION -->
+    <div id="calendar-analytics-section" style="display:grid; grid-template-columns: 460px 1fr; gap:25px;">
+        <!-- CALENDAR BOX -->
+        <div class="coin-card" style="padding:20px;">
+            <div class="coin-header">
+                <span style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-calendar-alt" style="color:var(--coin-accent); font-size:1.1rem;"></i>
+                    BKK DAILY CALENDAR
+                </span>
+                <span id="cal-month-year" style="font-size:0.8rem; color:var(--text-sec); font-family:'Orbitron';">MONTH
+                    YYYY</span>
             </div>
-            <!-- ANALYSIS BOX -->
-            <div class="coin-card" style="padding:20px; display:flex; flex-direction:column;">
-                <div class="coin-header"
-                    style="margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px;">
-                    <span style="display:flex; align-items:center; gap:10px;">
-                        <i class="fas fa-microchip" style="color:var(--coin-accent); font-size:1.1rem;"></i>
-                        DAILY ANALYSIS COMMAND
-                    </span>
-                    <span id="selected-date-label"
-                        style="font-size:0.75rem; color:var(--neon-blue); font-family:'Orbitron';">SELECT DATE</span>
-                </div>
-                <div id="analysis-content-v15"
-                    style="overflow-y:auto; flex-grow:1; max-height:500px; padding-right:5px;">
-                    <div style="text-align:center; padding:100px 20px; color:#444; font-family:'Orbitron';">
-                        <i class="fas fa-mouse-pointer"
-                            style="font-size:2.5rem; margin-bottom:15px; opacity:0.3;"></i><br>
-                        <span style="font-size:0.7rem; letter-spacing:2px; display:block; margin-bottom:10px;">WAITING
-                            FOR TARGET DATE</span>
-                        <span style="font-size:0.6rem; color:#333; font-family:'Rajdhani';">SILAKAN PILIH TANGGAL PADA
-                            KALENDER UNTUK MELIHAT RINCIAN SHIFT</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- V12: Removed legacy material-list-container -->
-
-        <!-- 2. TOTAL OVERALL SECTION -->
-        <div style="display:grid; grid-template-columns: 350px 1fr; gap:25px;">
-            <!-- Hero Metric -->
-            <div class="coin-card"
-                style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
-                <div class="coin-label" style="margin-bottom:15px; letter-spacing:2px;">VOLUME TOTAL</div>
-                <div class="coin-val-huge" id="val-grand-total">-</div>
-                <div style="font-family:'Orbitron'; color:var(--coin-accent); margin-top:10px;">INTAKE + DIRECT</div>
-            </div>
-            <!-- Daily Trend Area Chart -->
-            <div class="coin-card" style="padding:15px;">
-                <div class="coin-header" style="margin-bottom:5px;">
-                    <span>TREN VOLUME HARIAN</span>
-                    <span style="font-size:0.7rem; color:#666;">INTAKE (PURPLE) vs DIRECT (CYAN)</span>
-                </div>
-                <div id="chart-main-volume" style="width:100%; height:200px;"></div>
-            </div>
-        </div>
-
-        <!-- 3. INTAKE 71 ANALYSIS (DEEP DIVE EXPANSION) -->
-        <div class="coin-card">
-            <div class="coin-header"
-                style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; margin-bottom:20px;">
-                <span style="color:var(--text-main); font-size:1rem;"><i class="fas fa-ship"
-                        style="color:#d500f9; margin-right:10px;"></i> ANALISA MENDALAM: INTAKE 71</span>
-                <span id="val-intake-total-ton" class="coin-val-big" style="font-size:1.2rem;">- TON</span>
-            </div>
-
-            <!-- ROW A: KEY METRICS (SPEED & YIELD) -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:15px; margin-bottom:25px;">
-                <!-- MIN SPEED -->
-                <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
-                    <div class="coin-label">MIN SPEED (EST)</div>
-                    <div id="stat-min-speed" class="coin-val-big" style="color:#ff003c; font-size:1.4rem;">-</div>
-                    <div style="font-size:0.6rem; color:#666;">TON/JAM</div>
-                </div>
-                <!-- AVG SPEED -->
-                <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
-                    <div class="coin-label">RATA-RATA SPEED</div>
-                    <div id="val-speed-ton" class="coin-val-big" style="font-size:1.4rem;">-</div>
-                    <div style="font-size:0.6rem; color:#666;">TON/JAM</div>
-                </div>
-                <!-- MAX SPEED -->
-                <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
-                    <div class="coin-label">MAX SPEED</div>
-                    <div id="stat-max-speed" class="coin-val-big" style="color:#ccff00; font-size:1.4rem;">-</div>
-                    <div id="stat-max-date" style="font-size:0.6rem; color:#666;">-</div>
-                </div>
-                <!-- YIELD -->
-                <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
-                    <div class="coin-label">YIELD (EFISIENSI)</div>
-                    <div id="val-yield-pct" class="coin-val-big" style="color:#00e5ff; font-size:1.4rem;">-</div>
-                    <div style="font-size:0.6rem; color:#666;">ACTIVE VS TOTAL</div>
-                </div>
-            </div>
-
-            <!-- ROW B: DETAILED DURATION ANALYSIS (3 COLUMNS) -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-bottom:25px;">
-
-                <!-- 1. ACTIVE BREAKDOWN -->
-                <div style="border:1px solid rgba(0,255,136,0.1); border-radius:12px; padding:15px;">
-                    <div class="coin-label" style="color:#00ff88; margin-bottom:10px;">1. ACTIVE DURATION DETAIL</div>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                        <span style="font-size:1.2rem; color:#fff;" id="val-active-min">- MIN</span>
-                        <span id="val-active-pct" style="color:#00ff88; font-size:0.8rem;">-</span>
-                    </div>
-                    <!-- MICRO CHART -->
-                    <div id="chart-active-breakdown" style="height:150px; margin-top:10px;"></div>
-                    <div
-                        style="margin-top:10px; font-size:0.85rem; color:#aaa; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <div>NET BONGKAR: <span id="micro-net" style="color:#fff; font-weight:bold;">-</span></div>
-                        <div>DT MANUVER: <span id="micro-man" style="color:#fff; font-weight:bold;">-</span></div>
-                        <div>QC CHECK: <span id="micro-qc" style="color:#fff; font-weight:bold;">-</span></div>
-                    </div>
-                </div>
-
-                <!-- 2. IDLE BREAKDOWN -->
+            <div id="calendar-grid-v15" class="calendar-grid">
+                <!-- Grid generated by JS -->
                 <div
-                    style="border:1px solid rgba(255,204,0,0.1); border-radius:12px; padding:20px; display:flex; flex-direction:column; justify-content:space-between;">
-                    <div
-                        style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                        <span class="coin-label" style="color:#ffcc00; font-size:0.9rem;">2. IDLE LOSS DETAIL</span>
-                        <span id="val-idle-pct"
-                            style="color:#ffcc00; font-family:'Orbitron'; font-size:0.9rem; background:rgba(255,204,0,0.1); padding:2px 8px; border-radius:4px;">-</span>
-                    </div>
-                    <div style="font-size:1.6rem; color:#fff; font-family:'Orbitron'; font-weight:bold;"
-                        id="val-idle-min">- MIN</div>
-
-                    <div
-                        style="margin-top:20px; text-align:center; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px;">
-                        <div style="font-size:3rem; color:#ffcc00; font-family:'Orbitron'; line-height:1;"
-                            id="val-avg-gap">-</div>
-                        <div
-                            style="font-size:0.85rem; color:#888; margin-top:5px; font-family:'Rajdhani'; font-weight:bold;">
-                            MENIT / TRUCK (RATA-RATA GAP)</div>
-                        <div style="font-size:0.65rem; color:#555; margin-top:5px; font-style:italic;">*Estimasi loss
-                            waktu antar truck</div>
-                    </div>
-                </div>
-
-                <!-- 3. OFF/SETUP BREAKDOWN -->
-                <div
-                    style="border:1px solid rgba(255,0,60,0.1); border-radius:12px; padding:20px; display:flex; flex-direction:column; justify-content:space-between;">
-                    <div
-                        style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                        <span class="coin-label" style="color:#ff003c; font-size:0.9rem;">3. OFF / SETUP DETAIL</span>
-                        <span id="val-off-pct"
-                            style="color:#ff003c; font-family:'Orbitron'; font-size:0.9rem; background:rgba(255,0,60,0.1); padding:2px 8px; border-radius:4px;">-</span>
-                    </div>
-                    <div style="font-size:1.6rem; color:#fff; font-family:'Orbitron'; font-weight:bold;"
-                        id="val-off-min">- MIN</div>
-
-                    <div
-                        style="margin-top:20px; text-align:center; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px;">
-                        <div style="font-size:3rem; color:#ff003c; font-family:'Orbitron'; line-height:1;"
-                            id="val-avg-setup">-</div>
-                        <div
-                            style="font-size:0.85rem; color:#888; margin-top:5px; font-family:'Rajdhani'; font-weight:bold;">
-                            MENIT / SETUP (GANTI MATERIAL)</div>
-                        <div style="font-size:0.65rem; color:#555; margin-top:5px; font-style:italic;">*Waktu persiapan
-                            & closing</div>
-                    </div>
+                    style="grid-column: span 7; text-align:center; padding:40px; color:#333; font-family:'Orbitron'; font-size:0.8rem;">
+                    <i class="fas fa-circle-notch fa-spin"></i> GENERATING CALENDAR ENGINE...
                 </div>
             </div>
 
-            <!-- ROW C: INTAKE DAILY VOLUME & TRUCK ANALYSIS (STAIRS) -->
-            <div style="display:flex; flex-direction:column; gap:25px;">
-                <!-- 1. Full Landscape Chart -->
-                <div class="coin-card" style="margin-bottom:0; background:rgba(255,255,255,0.01);">
-                    <div class="coin-header">
-                        <span>VOLUME HARIAN INTAKE 71</span>
-                        <span style="font-size:0.75rem; color:#666;">KHUSUS JALUR INTAKE</span>
+            <!-- V16: MINI SPEEDOMETERS PER SHIFT -->
+            <div id="mini-speedometers-v16"
+                style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:15px; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px; height:120px; overflow:hidden;">
+                <div id="gauge-shift-1" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                    <div
+                        style="font-size:0.55rem; color:var(--text-sec); font-family:'Orbitron'; margin-bottom:0px; letter-spacing:1px;">
+                        SHIFT 1</div>
+                    <div id="chart-gauge-s1"
+                        style="width:140px; height:100px; display:flex; justify-content:center; align-items:center;">
                     </div>
-                    <div id="chart-intake-volume" style="height:280px;"></div>
                 </div>
-
-                <!-- 2. Truck Analysis Below -->
-                <div id="truck-analysis-intake" class="coin-card" style="background:rgba(255,255,255,0.01);">
-                    <div class="coin-header" style="margin-bottom:15px;">
-                        <span>ANALISA JENIS TRUCK (INTAKE)</span>
+                <div id="gauge-shift-2" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                    <div
+                        style="font-size:0.55rem; color:var(--text-sec); font-family:'Orbitron'; margin-bottom:0px; letter-spacing:1px;">
+                        SHIFT 2</div>
+                    <div id="chart-gauge-s2"
+                        style="width:140px; height:100px; display:flex; justify-content:center; align-items:center;">
                     </div>
-                    <div id="truck-list-intake"
-                        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:15px;">
-                        <div
-                            style="color:#444; font-family:'Orbitron'; font-size:0.9rem; text-align:center; padding:40px;">
-                            MEMUAT DATA TRUCK...</div>
+                </div>
+                <div id="gauge-shift-3" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                    <div
+                        style="font-size:0.55rem; color:var(--text-sec); font-family:'Orbitron'; margin-bottom:0px; letter-spacing:1px;">
+                        SHIFT 3</div>
+                    <div id="chart-gauge-s3"
+                        style="width:140px; height:100px; display:flex; justify-content:center; align-items:center;">
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- ANALYSIS BOX -->
+        <div class="coin-card" style="padding:20px; display:flex; flex-direction:column;">
+            <div class="coin-header"
+                style="margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px;">
+                <span style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-microchip" style="color:var(--coin-accent); font-size:1.1rem;"></i>
+                    DAILY ANALYSIS COMMAND
+                </span>
+                <span id="selected-date-label"
+                    style="font-size:0.75rem; color:var(--neon-blue); font-family:'Orbitron';">SELECT
+                    DATE</span>
+            </div>
+            <div id="analysis-content-v15" style="overflow-y:auto; flex-grow:1; max-height:500px; padding-right:5px;">
+                <div style="text-align:center; padding:100px 20px; color:#444; font-family:'Orbitron';">
+                    <i class="fas fa-mouse-pointer" style="font-size:2.5rem; margin-bottom:15px; opacity:0.3;"></i><br>
+                    <span style="font-size:0.7rem; letter-spacing:2px; display:block; margin-bottom:10px;">WAITING
+                        FOR TARGET DATE</span>
+                    <span style="font-size:0.6rem; color:#333; font-family:'Rajdhani';">SILAKAN PILIH TANGGAL
+                        PADA
+                        KALENDER UNTUK MELIHAT RINCIAN SHIFT</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- V12: Removed legacy material-list-container -->
+
+    <!-- 2. TOTAL OVERALL SECTION -->
+    <div style="display:grid; grid-template-columns: 350px 1fr; gap:25px;">
+        <!-- Hero Metric -->
+        <div class="coin-card" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
+            <div class="coin-label" style="margin-bottom:15px; letter-spacing:2px;">VOLUME TOTAL</div>
+            <div class="coin-val-huge" id="val-grand-total">-</div>
+            <div style="font-family:'Orbitron'; color:var(--coin-accent); margin-top:10px;">INTAKE + DIRECT
+            </div>
+        </div>
+        <!-- Daily Trend Area Chart -->
+        <div class="coin-card" style="padding:15px;">
+            <div class="coin-header" style="margin-bottom:5px;">
+                <span>TREN VOLUME HARIAN</span>
+                <span style="font-size:0.7rem; color:#666;">INTAKE (PURPLE) vs DIRECT (CYAN)</span>
+            </div>
+            <div id="chart-main-volume" style="width:100%; height:200px;"></div>
+        </div>
+    </div>
+
+    <!-- 3. INTAKE 71 ANALYSIS (DEEP DIVE EXPANSION) -->
+    <div class="coin-card">
+        <div class="coin-header"
+            style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; margin-bottom:20px;">
+            <span style="color:var(--text-main); font-size:1rem;"><i class="fas fa-ship"
+                    style="color:#d500f9; margin-right:10px;"></i> ANALISA MENDALAM: INTAKE 71</span>
+            <span id="val-intake-total-ton" class="coin-val-big" style="font-size:1.2rem;">- TON</span>
         </div>
 
-        <!-- 4. DIRECT GUDANG ANALYSIS -->
-        <div class="coin-card">
-            <div class="coin-header"
-                style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; margin-bottom:20px;">
-                <span style="color:var(--text-main); font-size:1rem;"><i class="fas fa-truck-loading"
-                        style="color:#00e5ff; margin-right:10px;"></i> ANALISA DIRECT GUDANG</span>
-                <span id="val-direct-total-ton" class="coin-val-big" style="font-size:1.2rem;">- TON</span>
+        <!-- ROW A: KEY METRICS (SPEED & YIELD) -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:15px; margin-bottom:25px;">
+            <!-- MIN SPEED -->
+            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
+                <div class="coin-label">MIN SPEED (EST)</div>
+                <div id="stat-min-speed" class="coin-val-big" style="color:#ff003c; font-size:1.4rem;">-</div>
+                <div style="font-size:0.6rem; color:#666;">TON/JAM</div>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:30px;">
-                <!-- Metrics -->
-                <div style="display:flex; flex-direction:column; gap:15px; justify-content:center;">
-                    <div
-                        style="display:flex; justify-content:space-between; border-bottom:1px solid #222; padding-bottom:10px;">
-                        <span class="coin-label">TOTAL NETTO</span>
-                        <span id="val-direct-netto" class="coin-val-big" style="font-size:1.4rem;">-</span>
-                    </div>
-                    <div
-                        style="display:flex; justify-content:space-between; border-bottom:1px solid #222; padding-bottom:10px;">
-                        <span class="coin-label">TRUCK COUNT</span>
-                        <span id="val-direct-trucks" class="coin-val-big"
-                            style="font-size:1.4rem; color:var(--coin-accent);">-</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span class="coin-label">AVG LOAD</span>
-                        <span id="val-direct-avg-load" class="coin-val-big"
-                            style="font-size:1.4rem; color:#00e5ff;">-</span>
-                    </div>
+            <!-- AVG SPEED -->
+            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
+                <div class="coin-label">RATA-RATA SPEED</div>
+                <div id="val-speed-ton" class="coin-val-big" style="font-size:1.4rem;">-</div>
+                <div style="font-size:0.6rem; color:#666;">TON/JAM</div>
+            </div>
+            <!-- MAX SPEED -->
+            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
+                <div class="coin-label">MAX SPEED</div>
+                <div id="stat-max-speed" class="coin-val-big" style="color:#ccff00; font-size:1.4rem;">-</div>
+                <div id="stat-max-date" style="font-size:0.6rem; color:#666;">-</div>
+            </div>
+            <!-- YIELD -->
+            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px;">
+                <div class="coin-label">YIELD (EFISIENSI)</div>
+                <div id="val-yield-pct" class="coin-val-big" style="color:#00e5ff; font-size:1.4rem;">-</div>
+                <div style="font-size:0.6rem; color:#666;">ACTIVE VS TOTAL</div>
+            </div>
+        </div>
+
+        <!-- ROW B: DETAILED DURATION ANALYSIS (3 COLUMNS) -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-bottom:25px;">
+
+            <!-- 1. ACTIVE BREAKDOWN -->
+            <div style="border:1px solid rgba(0,255,136,0.1); border-radius:12px; padding:15px;">
+                <div class="coin-label" style="color:#00ff88; margin-bottom:10px;">1. ACTIVE DURATION DETAIL
                 </div>
-                <!-- Direct Chart (Volume) -->
-                <div>
-                    <div class="coin-label" style="text-align:center;">VOLUME HARIAN</div>
-                    <div id="chart-direct-volume" style="height:180px;"></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <span style="font-size:1.2rem; color:#fff;" id="val-active-min">- MIN</span>
+                    <span id="val-active-pct" style="color:#00ff88; font-size:0.8rem;">-</span>
                 </div>
-                <!-- Material Dist -->
-                <div>
-                    <div class="coin-label" style="text-align:center;">DISTRIBUSI MATERIAL</div>
-                    <div id="chart-direct-material" style="height:180px;"></div>
+                <!-- MICRO CHART -->
+                <div id="chart-active-breakdown" style="height:150px; margin-top:10px;"></div>
+                <div
+                    style="margin-top:10px; font-size:0.85rem; color:#aaa; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div>NET BONGKAR: <span id="micro-net" style="color:#fff; font-weight:bold;">-</span></div>
+                    <div>DT MANUVER: <span id="micro-man" style="color:#fff; font-weight:bold;">-</span></div>
+                    <div>QC CHECK: <span id="micro-qc" style="color:#fff; font-weight:bold;">-</span></div>
                 </div>
             </div>
 
-            <!-- V11.2: TRUCK TYPE BREAKDOWN (DIRECT) -->
-            <div id="truck-analysis-direct"
-                style="border-top:1px solid rgba(255,255,255,0.05); padding-top:20px; margin-top:20px;">
-                <div class="coin-header">
-                    <span>ANALISA JENIS TRUCK (DIRECT PATH)</span>
+            <!-- 2. IDLE BREAKDOWN -->
+            <div
+                style="border:1px solid rgba(255,204,0,0.1); border-radius:12px; padding:20px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                    <span class="coin-label" style="color:#ffcc00; font-size:0.9rem;">2. IDLE LOSS DETAIL</span>
+                    <span id="val-idle-pct"
+                        style="color:#ffcc00; font-family:'Orbitron'; font-size:0.9rem; background:rgba(255,204,0,0.1); padding:2px 8px; border-radius:4px;">-</span>
                 </div>
-                <div id="truck-list-direct"
-                    style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px;">
+                <div style="font-size:1.6rem; color:#fff; font-family:'Orbitron'; font-weight:bold;" id="val-idle-min">-
+                    MIN</div>
+
+                <div
+                    style="margin-top:20px; text-align:center; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px;">
+                    <div style="font-size:3rem; color:#ffcc00; font-family:'Orbitron'; line-height:1;" id="val-avg-gap">
+                        -</div>
                     <div
-                        style="color:#444; font-family:'Orbitron'; font-size:0.8rem; text-align:center; margin-top:20px;">
+                        style="font-size:0.85rem; color:#888; margin-top:5px; font-family:'Rajdhani'; font-weight:bold;">
+                        MENIT / TRUCK (RATA-RATA GAP)</div>
+                    <div style="font-size:0.65rem; color:#555; margin-top:5px; font-style:italic;">*Estimasi
+                        loss
+                        waktu antar truck</div>
+                </div>
+            </div>
+
+            <!-- 3. OFF/SETUP BREAKDOWN -->
+            <div
+                style="border:1px solid rgba(255,0,60,0.1); border-radius:12px; padding:20px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                    <span class="coin-label" style="color:#ff003c; font-size:0.9rem;">3. OFF / SETUP
+                        DETAIL</span>
+                    <span id="val-off-pct"
+                        style="color:#ff003c; font-family:'Orbitron'; font-size:0.9rem; background:rgba(255,0,60,0.1); padding:2px 8px; border-radius:4px;">-</span>
+                </div>
+                <div style="font-size:1.6rem; color:#fff; font-family:'Orbitron'; font-weight:bold;" id="val-off-min">-
+                    MIN</div>
+
+                <div
+                    style="margin-top:20px; text-align:center; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px;">
+                    <div style="font-size:3rem; color:#ff003c; font-family:'Orbitron'; line-height:1;"
+                        id="val-avg-setup">-</div>
+                    <div
+                        style="font-size:0.85rem; color:#888; margin-top:5px; font-family:'Rajdhani'; font-weight:bold;">
+                        MENIT / SETUP (GANTI MATERIAL)</div>
+                    <div style="font-size:0.65rem; color:#555; margin-top:5px; font-style:italic;">*Waktu
+                        persiapan
+                        & closing</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW C: INTAKE DAILY VOLUME & TRUCK ANALYSIS (STAIRS) -->
+        <div style="display:flex; flex-direction:column; gap:25px;">
+            <!-- 1. Full Landscape Chart -->
+            <div class="coin-card" style="margin-bottom:0; background:rgba(255,255,255,0.01);">
+                <div class="coin-header">
+                    <span>VOLUME HARIAN INTAKE 71</span>
+                    <span style="font-size:0.75rem; color:#666;">KHUSUS JALUR INTAKE</span>
+                </div>
+                <div id="chart-intake-volume" style="height:280px;"></div>
+            </div>
+
+            <!-- 2. Truck Analysis Below -->
+            <div id="truck-analysis-intake" class="coin-card" style="background:rgba(255,255,255,0.01);">
+                <div class="coin-header" style="margin-bottom:15px;">
+                    <span>ANALISA JENIS TRUCK (INTAKE)</span>
+                </div>
+                <div id="truck-list-intake"
+                    style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:15px;">
+                    <div style="color:#444; font-family:'Orbitron'; font-size:0.9rem; text-align:center; padding:40px;">
                         MEMUAT DATA TRUCK...</div>
                 </div>
             </div>
         </div>
 
-        <!-- 5. PRODUCTIVITY & INSIGHTS (SIDE BY SIDE) -->
-        <!-- 5. DYNAMIC EVALUATION SECTION (V14) -->
-        <div id="section-eval-prod" style="margin-top:20px;"></div>
+    </div>
+
+    <!-- 4. DIRECT GUDANG ANALYSIS -->
+    <div class="coin-card">
+        <div class="coin-header"
+            style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; margin-bottom:20px;">
+            <span style="color:var(--text-main); font-size:1rem;"><i class="fas fa-truck-loading"
+                    style="color:#00e5ff; margin-right:10px;"></i> ANALISA DIRECT GUDANG</span>
+            <span id="val-direct-total-ton" class="coin-val-big" style="font-size:1.2rem;">- TON</span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:30px;">
+            <!-- Metrics -->
+            <div style="display:flex; flex-direction:column; gap:15px; justify-content:center;">
+                <div
+                    style="display:flex; justify-content:space-between; border-bottom:1px solid #222; padding-bottom:10px;">
+                    <span class="coin-label">TOTAL NETTO</span>
+                    <span id="val-direct-netto" class="coin-val-big" style="font-size:1.4rem;">-</span>
+                </div>
+                <div
+                    style="display:flex; justify-content:space-between; border-bottom:1px solid #222; padding-bottom:10px;">
+                    <span class="coin-label">TRUCK COUNT</span>
+                    <span id="val-direct-trucks" class="coin-val-big"
+                        style="font-size:1.4rem; color:var(--coin-accent);">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="coin-label">AVG LOAD</span>
+                    <span id="val-direct-avg-load" class="coin-val-big"
+                        style="font-size:1.4rem; color:#00e5ff;">-</span>
+                </div>
+            </div>
+            <!-- Direct Chart (Volume) -->
+            <div>
+                <div class="coin-label" style="text-align:center;">VOLUME HARIAN</div>
+                <div id="chart-direct-volume" style="height:180px;"></div>
+            </div>
+            <!-- Material Dist -->
+            <div>
+                <div class="coin-label" style="text-align:center;">DISTRIBUSI MATERIAL</div>
+                <div id="chart-direct-material" style="height:180px;"></div>
+            </div>
+        </div>
+
+        <!-- V11.2: TRUCK TYPE BREAKDOWN (DIRECT) -->
+        <div id="truck-analysis-direct"
+            style="border-top:1px solid rgba(255,255,255,0.05); padding-top:20px; margin-top:20px;">
+            <div class="coin-header">
+                <span>ANALISA JENIS TRUCK (DIRECT PATH)</span>
+            </div>
+            <div id="truck-list-direct"
+                style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px;">
+                <div style="color:#444; font-family:'Orbitron'; font-size:0.8rem; text-align:center; margin-top:20px;">
+                    MEMUAT DATA TRUCK...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. PRODUCTIVITY & INSIGHTS (SIDE BY SIDE) -->
+    <!-- 5. DYNAMIC EVALUATION SECTION (V14) -->
+    <div id="section-eval-prod" style="margin-top:20px;"></div>
 
     </div>
 
