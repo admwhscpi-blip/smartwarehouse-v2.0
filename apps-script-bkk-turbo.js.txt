@@ -224,11 +224,16 @@ function getDowntimeQuery(ssId, e) {
     // ---- Material & truck type breakdowns (V7.4) ----
     if (rawMat) { materialNetto[rawMat] = (materialNetto[rawMat] || 0) + rowNetto; }
     
-  // ---- Global Daily aggregation ----
+      // ---- Global Daily aggregation ----
     if (!dailyAgg[dateKey]) {
       dailyAgg[dateKey] = {
         date: dateKey, netto: 0, trucks: 0, cycleMin: 0,
-        intakeNetto: 0, directNetto: 0
+        intakeNetto: 0, directNetto: 0,
+        shiftData: {
+          "1": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 },
+          "2": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 },
+          "3": { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 }
+        }
       };
     }
     var d = dailyAgg[dateKey];
@@ -243,11 +248,45 @@ function getDowntimeQuery(ssId, e) {
     // V11.4: Use only PB (Proses Bongkar) for duration
     var rowDur = pb_m;
     d.cycleMin += rowDur;
+
+    // --- NEW SHIFT BREAKDOWN LOGIC (V15) ---
+    var endTs = rawData[i][15]; // Bongkar Selesai
+    var startTs = rawData[i][14]; // Bongkar Mulai
+    var actualShift = (rawData[i][4] || "").toString(); // Col E
+    
+    if (endTs instanceof Date && !isNaN(endTs.getTime())) {
+      var h = endTs.getHours();
+      var m = endTs.getMinutes();
+      var timeTotal = h + (m/60);
+      // Shift 1: 07:01 - 15:00, Shift 2: 15:01 - 23:00, Shift 3: Else
+      if (timeTotal > 7 && timeTotal <= 15) actualShift = "1";
+      else if (timeTotal > 15 && timeTotal <= 23) actualShift = "2";
+      else actualShift = "3";
+    } else {
+      // Logic for shift based on Col E if no finish time
+      if (actualShift.includes("1")) actualShift = "1";
+      else if (actualShift.includes("2")) actualShift = "2";
+      else if (actualShift.includes("3")) actualShift = "3";
+      else actualShift = "1"; // Default
+    }
+    
+    var sd = d.shiftData[actualShift] || d.shiftData["1"]; // Fallback
+    sd.trucks++;
+    var rowWorkers = parseInt(rawData[i][23]) || 0; // Col X
+    sd.workers += rowWorkers;
+
+    var isI71 = (type.indexOf("INTAKE 71") !== -1);
+    var isDG = (type.indexOf("DIRECT GUDANG") !== -1);
+
+    if (rawMat.indexOf("SBM") !== -1) {
+      if (isI71) sd.sbm_ins += rowNetto;
+      else if (isDG) sd.sbm_dg += rowNetto;
+    } else if (rawMat.indexOf("PKM") !== -1) {
+      if (isI71) sd.pkm_ins += rowNetto;
+      else if (isDG) sd.pkm_dg += rowNetto;
+    }
     
     // V11.9: Strict Path & synchronized logic
-    var isI71 = (type.indexOf("INTAKE 71") !== -1);
-    var isDG = (type === "DIRECT GUDANG");
-    
     if ((isI71 || isDG) && truckType && truckType !== "UNKNOWN") {
       var targetColl = isI71 ? intakeTruckTypes : directTruckTypes;
       
@@ -268,10 +307,7 @@ function getDowntimeQuery(ssId, e) {
     }
 
     // ---- INTAKE 71 specific with V12 Logic ----
-    if (type.indexOf("INTAKE 71") !== -1) {
-      var startTs = rawData[i][14]; // Bongkar Mulai
-      var endTs = rawData[i][15];   // Bongkar Selesai
-      
+    if (isI71) {
       if (startTs instanceof Date && endTs instanceof Date && !isNaN(startTs.getTime()) && !isNaN(endTs.getTime())) {
         var day = rowDate.getDate();
         var absStart = ((day - 1) * 24 * 60) + (startTs.getHours() * 60) + startTs.getMinutes() + (startTs.getSeconds() / 60);
@@ -309,6 +345,11 @@ function getDowntimeQuery(ssId, e) {
           i71TotalMan += rowMan;
           i71TotalQC += rowQC;
           i71ActiveTotalGenerated += duration;
+
+          // Add to shift dur
+          sd.active += duration;
+          sd.qc += rowQC;
+          sd.man += rowMan;
           
           var truckSpeed = duration > 0 ? (rowNetto / 1000) / (duration / 60) : 0;
           if (truckSpeed > 0) {
@@ -321,12 +362,12 @@ function getDowntimeQuery(ssId, e) {
           if (rawMat) { i71MaterialNetto[rawMat] = (i71MaterialNetto[rawMat] || 0) + rowNetto; }
           
           intake71Trucks.push({ 
-            start: absStart, end: absEnd, mat: rawMat, day: day,
+            start: absStart, end: absEnd, mat: rawMat, day: day, shift: actualShift,
             code: (rawData[i][10] || "").toString().trim().toUpperCase() 
           });
           
           // V14: Intake sub-type (TILTING vs MANUAL)
-          var subType = type.indexOf("TILTING") !== -1 ? "TILTING" : "MANUAL";
+          var subType = (rawData[i][1] || "").toString().toUpperCase().indexOf("TILTING") !== -1 ? "TILTING" : "MANUAL";
           if (!intakeSubTypes[subType]) intakeSubTypes[subType] = { trucks: 0, netto: 0, duration: 0 };
           intakeSubTypes[subType].trucks++;
           intakeSubTypes[subType].netto += rowNetto;
@@ -352,12 +393,10 @@ function getDowntimeQuery(ssId, e) {
     }
     
     // ---- DIRECT GUDANG collectors (V7.4) ----
-    if (type.includes("DIRECT")) {
+    if (isDG) {
       directTotalNetto += rowNetto;
       directTotalTrucks++;
       if (rawMat) { directMaterialNetto[rawMat] = (directMaterialNetto[rawMat] || 0) + rowNetto; }
-      
-      // Removed: redundant directTruckTypes calculation here, now handled in global loop (V11.5)
       
       if (!directDailyAgg[dateKey]) {
         directDailyAgg[dateKey] = { date: dateKey, netto: 0, trucks: 0 };
@@ -368,15 +407,14 @@ function getDowntimeQuery(ssId, e) {
     }
   }
   
-  // ======== INTAKE 71 REAL-TIME TIMELINE LOGIC (V12.4) ========
+  // ======== INTAKE 71 FAST NORMALIZATION LOGIC (V14.0) ========
   var now = new Date();
+  var daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
   var totalMonthMin;
-  
-  // Real-Time Calendar Minutes: If today is in the target month/year, only count up to 'now'
   if (now.getFullYear() === targetYear && (now.getMonth() + 1) === targetMonth) {
     totalMonthMin = ((now.getDate() - 1) * 1440) + (now.getHours() * 60) + now.getMinutes();
   } else {
-    totalMonthMin = (new Date(targetYear, targetMonth, 0).getDate()) * 1440;
+    totalMonthMin = daysInMonth * 1440;
   }
   
   var idleMin = 0;
@@ -385,79 +423,77 @@ function getDowntimeQuery(ssId, e) {
   if (intake71Trucks.length > 0) {
     intake71Trucks.sort(function(a, b) { return a.start - b.start; });
     
-    // Gap before first truck
-    offMin += intake71Trucks[0].start;
+    // 1. Initial Gap Analysis (Procedural & Fast)
+    offMin += intake71Trucks[0].start; // Before first truck
     
-    // Gaps between trucks
     for (var j = 0; j < intake71Trucks.length - 1; j++) {
       var curr = intake71Trucks[j];
       var next = intake71Trucks[j+1];
       var gap = next.start - curr.end;
-      
       if (gap > 0) {
-        if (curr.mat === next.mat && curr.code === next.code) {
-          idleMin += gap;
-        } else {
-          offMin += gap;
-        }
+        if (curr.mat === next.mat && curr.code === next.code) idleMin += gap;
+        else offMin += gap;
       }
     }
     
-    // Gap after last truck (up to totalMonthMin)
     var lastEnd = intake71Trucks[intake71Trucks.length - 1].end;
     if (totalMonthMin > lastEnd) offMin += (totalMonthMin - lastEnd);
   } else {
     offMin = totalMonthMin;
   }
-  
-  // SCALE & BALANCE TO CALENDAR MINUTES (V12.4 Integrity Fix)
-  // Active = total stay from Start to End. 
-  // Net = Active - Manuver - QC.
-  var leftover = Math.max(0, totalMonthMin - i71ActiveTotalGenerated);
-  var gapTotal = idleMin + offMin;
-  var finalIdle = gapTotal > 0 ? (idleMin / gapTotal) * leftover : 0;
-  var finalOff = leftover - finalIdle;
-  
-  // V14: Build daily detail with idle/off per day
-  var i71DailyArr = [];
-  var dayTrucks = {};
-  intake71Trucks.forEach(function(t) { 
-    if (!dayTrucks[t.day]) dayTrucks[t.day] = [];
-    dayTrucks[t.day].push(t);
+
+  // 2. CRITICAL FIX: Mathematical Normalization (V14.0)
+  // If (Active + Idle + Off) > total calendar time, scale the gaps down.
+  // This is the FAST way to lock duration to 24h without heavy loops.
+  var rawTotal = i71ActiveTotalGenerated + idleMin + offMin;
+  var finalActive = i71ActiveTotalGenerated;
+  var finalIdle = idleMin;
+  var finalOff = offMin;
+
+  if (rawTotal > totalMonthMin) {
+    var leftover = Math.max(0, totalMonthMin - finalActive);
+    var gapRatio = (idleMin + offMin) > 0 ? (idleMin / (idleMin + offMin)) : 0.5;
+    finalIdle = leftover * gapRatio;
+    finalOff = leftover - finalIdle;
+  }
+
+  // 3. Simple Shift Distribution (Capped at 480)
+  Object.values(dailyAgg).forEach(function(d) {
+    ["1", "2", "3"].forEach(function(s) {
+      var sd = d.shiftData[s];
+      sd.active = Math.min(480, sd.active);
+      var rem = 480 - sd.active;
+      // Proportional split for this shift
+      var sRatio = (finalIdle + finalOff) > 0 ? (finalIdle / (finalIdle + finalOff)) : 0.5;
+      sd.idle = Math.round(rem * sRatio);
+      sd.off = 480 - sd.active - sd.idle;
+    });
   });
+
+  // Build daily detail
+  var i71DailyArr = [];
   Object.keys(i71DailyDetail).forEach(function(dk) {
     var dd = i71DailyDetail[dk];
-    var dayNum = parseInt(dk.split("-")[2]);
-    var trucks = dayTrucks[dayNum] || [];
-    var dayIdle = 0, dayOff = 0;
-    if (trucks.length > 0) {
-      trucks.sort(function(a,b) { return a.start - b.start; });
-      for (var j = 0; j < trucks.length - 1; j++) {
-        var gp = trucks[j+1].start - trucks[j].end;
-        if (gp > 0) {
-          if (trucks[j].mat === trucks[j+1].mat && trucks[j].code === trucks[j+1].code) dayIdle += gp;
-          else dayOff += gp;
-        }
-      }
+    var dObj = dailyAgg[dk];
+    if (dObj) {
+      var sh = dObj.shiftData;
+      dd.activeMin = sh["1"].active + sh["2"].active + sh["3"].active;
+      dd.idleMin = sh["1"].idle + sh["2"].idle + sh["3"].idle;
+      dd.offMin = sh["1"].off + sh["2"].off + sh["3"].off;
+      dd.tonPerHour = dd.activeMin > 0 ? (dd.netto / 1000) / (dd.activeMin / 60) : 0;
     }
-    dd.idleMin = Math.round(dayIdle);
-    dd.offMin = Math.round(dayOff);
-    dd.activeMin = Math.round(dd.activeMin);
-    dd.tonPerHour = dd.activeMin > 0 ? Math.round(((dd.netto / 1000) / (dd.activeMin / 60)) * 10) / 10 : 0;
     i71DailyArr.push(dd);
   });
   i71DailyArr.sort(function(a,b) { return a.date.localeCompare(b.date); });
   
   var intake71 = {
-    activeTotal: Math.round(i71ActiveTotalGenerated),
-    netDischarge: Math.round(Math.max(0, i71ActiveTotalGenerated - i71TotalMan - i71TotalQC)),
+    activeTotal: Math.round(finalActive),
+    netDischarge: Math.round(Math.max(0, finalActive - i71TotalMan - i71TotalQC)),
     manuverTotal: Math.round(i71TotalMan),
     qcTotal: Math.round(i71TotalQC),
     idleLoss: Math.round(finalIdle),
     offSetup: Math.round(finalOff),
-    activePct: (i71ActiveTotalGenerated / totalMonthMin) * 100,
-    idlePct: (finalIdle / totalMonthMin) * 100,
-    offPct: (finalOff / totalMonthMin) * 100,
+    activePct: (finalActive / totalMonthMin) * 100,
     trucks: i71TruckCount,
     nettoKg: Math.round(i71TotalNetto),
     materials: i71MaterialNetto,
@@ -480,7 +516,8 @@ function getDowntimeQuery(ssId, e) {
       dist: { 
         intake: Math.round((s.intakeNetto / s.netto) * 100) || 0, 
         direct: Math.round((s.directNetto / s.netto) * 100) || 0 
-      }
+      },
+      shiftData: s.shiftData // V15: Detailed shift analysis
     };
   });
   

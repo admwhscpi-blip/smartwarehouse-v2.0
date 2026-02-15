@@ -20,6 +20,7 @@ const BKKDowntimeApp = {
         if (document.getElementById('loading')) {
             document.getElementById('loading').classList.add('hidden');
         }
+        this.startClock(); // V16.4: Start Premium Widget
         this.renderDashboard();
     },
 
@@ -53,7 +54,6 @@ const BKKDowntimeApp = {
                     this.availableMaterials = result.materials || [];
                     this.renderMaterialTable();
                     this.renderDashboard();
-                    document.getElementById('sync-label').innerText = `SYNCED: ${new Date().toLocaleTimeString()}`;
                 } else {
                     this.aggregatedData = [];
                     this.renderDashboard();
@@ -107,6 +107,44 @@ const BKKDowntimeApp = {
         }
     },
 
+    // V16.4: PREMIUM CLOCK ENGINE
+    startClock: function () {
+        const update = () => {
+            const now = new Date();
+            const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+            const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+
+            // Date Elements
+            const dayEl = document.getElementById('widget-day');
+            const dateEl = document.getElementById('widget-date');
+            if (dayEl) dayEl.innerText = days[now.getDay()];
+            if (dateEl) dateEl.innerText = `${months[now.getMonth()]} ${now.getDate()}`;
+
+            // Time Elements
+            let h = now.getHours();
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12; // 0 becomes 12
+            const hStr = String(h).padStart(2, '0');
+
+            const timeEl = document.getElementById('widget-time');
+            const ampmEl = document.getElementById('widget-ampm');
+            if (timeEl) timeEl.innerText = `${hStr}:${m}`;
+            if (ampmEl) ampmEl.innerText = ampm;
+
+            // Visual Progress (Seconds)
+            const sec = now.getSeconds();
+            const progressEl = document.getElementById('widget-sec-progress');
+            if (progressEl) {
+                const deg = (sec / 60) * 360;
+                progressEl.style.transform = `rotate(${deg - 45}deg)`;
+            }
+        };
+        update();
+        setInterval(update, 1000);
+    },
+
     renderDashboard: function () {
         this.renderIntake71Analysis();
         this.renderVolumeTrend(); // Top Full Width
@@ -117,6 +155,7 @@ const BKKDowntimeApp = {
         this.renderGrandTotal();
         this.renderProcessStats();
         this.renderEvalSection(); // V14: New consolidated evaluation
+        this.renderCalendar(); // V15: New daily volume calendar
     },
 
     calculateProductivity: function () {
@@ -785,6 +824,266 @@ const BKKDowntimeApp = {
         });
 
         container.innerHTML = html;
+    },
+
+    renderCalendar: function () {
+        const grid = document.getElementById('calendar-grid-v15');
+        const monthYearLabel = document.getElementById('cal-month-year');
+        if (!grid) return;
+
+        const month = parseInt(document.getElementById('select-month').value);
+        const year = parseInt(document.getElementById('select-year').value);
+
+        const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+        if (monthYearLabel) monthYearLabel.innerText = `${monthNames[month - 1]} ${year}`;
+
+        grid.innerHTML = '';
+
+        // Add Day Headers
+        ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].forEach(day => {
+            const div = document.createElement('div');
+            div.className = 'cal-day-header';
+            div.innerText = day;
+            grid.appendChild(div);
+        });
+
+        const firstDay = new Date(year, month - 1, 1).getDay();
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        // Empty cells before first day
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'cal-cell empty';
+            grid.appendChild(empty);
+        }
+
+        // Data map for easy lookup
+        const dataMap = {};
+        if (this.aggregatedData) {
+            this.aggregatedData.forEach(d => {
+                const day = parseInt(d.date.split("-")[2]);
+                dataMap[day] = d;
+            });
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-cell';
+            const dayData = dataMap[d];
+
+            if (dayData) {
+                cell.classList.add('has-data');
+                const ton = Math.round(dayData.netto / 1000);
+                cell.innerHTML = `
+                    <div class="cal-num">${d}</div>
+                    <div class="cal-vol">${ton}T</div>
+                `;
+                cell.onclick = () => {
+                    document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('active'));
+                    cell.classList.add('active');
+                    this.showDayDetail(dayData);
+                };
+            } else {
+                cell.innerHTML = `<div class="cal-num">${d}</div>`;
+            }
+            grid.appendChild(cell);
+        }
+
+        // V16.1: Reset gauges until a day is picked
+        ["1", "2", "3"].forEach(id => {
+            if (this.charts[`gaugeS${id}`]) {
+                this.charts[`gaugeS${id}`].destroy();
+                delete this.charts[`gaugeS${id}`];
+            }
+            const el = document.getElementById(`chart-gauge-s${id}`);
+            if (el) el.innerHTML = '<div style="font-size:0.6rem; color:#111; margin-top:10px;">-</div>';
+        });
+    },
+
+    showDayDetail: function (dayData) {
+        const content = document.getElementById('analysis-content-v15');
+        const label = document.getElementById('selected-date-label');
+        if (!content || !dayData) return;
+
+        label.innerText = new Date(dayData.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        const shifts = dayData.shiftData || {};
+        const s1 = shifts["1"] || { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 };
+        const s2 = shifts["2"] || { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 };
+        const s3 = shifts["3"] || { sbm_ins: 0, sbm_dg: 0, pkm_ins: 0, pkm_dg: 0, active: 0, qc: 0, man: 0, idle: 0, off: 0, workers: 0, trucks: 0 };
+
+        const fmt = (n) => (n / 1000).toFixed(1);
+        const fmtM = (n) => Math.round(n);
+
+        let html = `
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th style="text-align:left;">OPERATIONAL METRICS</th>
+                    <th>SHIFT 1</th>
+                    <th>SHIFT 2</th>
+                    <th>SHIFT 3</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="metric-name">SBM Via Intake 71</td>
+                    <td class="shift-val">${fmt(s1.sbm_ins)} T</td>
+                    <td class="shift-val">${fmt(s2.sbm_ins)} T</td>
+                    <td class="shift-val">${fmt(s3.sbm_ins)} T</td>
+                </tr>
+                <tr>
+                    <td class="metric-name">SBM Direct Gudang</td>
+                    <td class="shift-val">${fmt(s1.sbm_dg)} T</td>
+                    <td class="shift-val">${fmt(s2.sbm_dg)} T</td>
+                    <td class="shift-val">${fmt(s3.sbm_dg)} T</td>
+                </tr>
+                <tr>
+                    <td class="metric-name">PKM Via Intake 71</td>
+                    <td class="shift-val">${fmt(s1.pkm_ins)} T</td>
+                    <td class="shift-val">${fmt(s2.pkm_ins)} T</td>
+                    <td class="shift-val">${fmt(s3.pkm_ins)} T</td>
+                </tr>
+                <tr>
+                    <td class="metric-name">PKM Direct Gudang</td>
+                    <td class="shift-val">${fmt(s1.pkm_dg)} T</td>
+                    <td class="shift-val">${fmt(s2.pkm_dg)} T</td>
+                    <td class="shift-val">${fmt(s3.pkm_dg)} T</td>
+                </tr>
+                
+                <tr style="height:10px;"><td colspan="4"></td></tr>
+                
+                <tr>
+                    <td class="metric-name highlight">1. Active Discharge</td>
+                    <td class="shift-val highlight">${fmtM(s1.active)} M</td>
+                    <td class="shift-val highlight">${fmtM(s2.active)} M</td>
+                    <td class="shift-val highlight">${fmtM(s3.active)} M</td>
+                </tr>
+                <tr>
+                    <td class="metric-name sub-metric">- Net Bongkar</td>
+                    <td class="shift-val">${fmtM(s1.active - s1.qc - s1.man)} M</td>
+                    <td class="shift-val">${fmtM(s2.active - s2.qc - s2.man)} M</td>
+                    <td class="shift-val">${fmtM(s3.active - s3.qc - s3.man)} M</td>
+                </tr>
+                <tr>
+                    <td class="metric-name sub-metric">- DT - QC Checked</td>
+                    <td class="shift-val">${fmtM(s1.qc)} M</td>
+                    <td class="shift-val">${fmtM(s2.qc)} M</td>
+                    <td class="shift-val">${fmtM(s3.qc)} M</td>
+                </tr>
+                <tr>
+                    <td class="metric-name sub-metric">- DT - Manuver Unit</td>
+                    <td class="shift-val">${fmtM(s1.man)} M</td>
+                    <td class="shift-val">${fmtM(s2.man)} M</td>
+                    <td class="shift-val">${fmtM(s3.man)} M</td>
+                </tr>
+                <tr>
+                    <td class="metric-name highlight">2. Idle Loss</td>
+                    <td class="shift-val highlight">${fmtM(s1.idle)} M</td>
+                    <td class="shift-val highlight">${fmtM(s2.idle)} M</td>
+                    <td class="shift-val highlight">${fmtM(s3.idle)} M</td>
+                </tr>
+                <tr>
+                    <td class="metric-name highlight">3. OFF / Set-up</td>
+                    <td class="shift-val highlight">${fmtM(s1.off)} M</td>
+                    <td class="shift-val highlight">${fmtM(s2.off)} M</td>
+                    <td class="shift-val highlight">${fmtM(s3.off)} M</td>
+                </tr>
+                
+                <tr class="total-row">
+                    <td class="metric-name" style="color:var(--coin-accent);">TOTAL VOLUME</td>
+                    <td class="shift-val" style="color:var(--coin-accent);">${fmt(s1.sbm_ins + s1.sbm_dg + s1.pkm_ins + s1.pkm_dg)} T</td>
+                    <td class="shift-val" style="color:var(--coin-accent);">${fmt(s2.sbm_ins + s2.sbm_dg + s2.pkm_ins + s2.pkm_dg)} T</td>
+                    <td class="shift-val" style="color:var(--coin-accent);">${fmt(s3.sbm_ins + s3.sbm_dg + s3.pkm_ins + s3.pkm_dg)} T</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="metric-name">TRUCK COUNT</td>
+                    <td class="shift-val">${s1.trucks}</td>
+                    <td class="shift-val">${s2.trucks}</td>
+                    <td class="shift-val">${s3.trucks}</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="metric-name">WORKERS</td>
+                    <td class="shift-val">${s1.workers}</td>
+                    <td class="shift-val">${s2.workers}</td>
+                    <td class="shift-val">${s3.workers}</td>
+                </tr>
+            </tbody>
+        </table>`;
+
+        content.innerHTML = html;
+        content.scrollTop = 0;
+
+        // V16: Render Mini Speedometers
+        this.renderShiftGauges(shifts);
+    },
+
+    renderShiftGauges: function (shifts) {
+        const ids = ["1", "2", "3"];
+        ids.forEach(id => {
+            const chartId = `chart-gauge-s1`; // Placeholder for target ID
+            const targetElId = `chart-gauge-s${id}`;
+            const el = document.getElementById(targetElId);
+            if (!el) return;
+
+            const s = shifts[id] || { active: 0, idle: 0, off: 0 };
+
+            // Calculate percentages based on 480 min
+            const activePct = Math.min(100, (s.active / 480) * 100);
+            const idlePct = Math.min(100, (s.idle / 480) * 100);
+            const offPct = Math.min(100, (s.off / 480) * 100);
+
+            // V16.3: Clear dot artifacts if no data
+            if (activePct + idlePct + offPct === 0) {
+                if (this.charts[`gaugeS${id}`]) {
+                    this.charts[`gaugeS${id}`].destroy();
+                    delete this.charts[`gaugeS${id}`];
+                }
+                el.innerHTML = '<div style="font-size:0.5rem; color:#1a1a1a; margin-top:20px; font-family:\'Orbitron\'">OFFLINE</div>';
+                return;
+            }
+
+            const options = {
+                series: [activePct, idlePct, offPct],
+                chart: {
+                    type: 'radialBar',
+                    height: 160,
+                    offsetY: -20,
+                    sparkline: { enabled: true }
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -90,
+                        endAngle: 90,
+                        hollow: { size: '40%' },
+                        track: {
+                            background: "rgba(255,255,255,0.02)", // Much fainter
+                            margin: 2
+                        },
+                        dataLabels: {
+                            name: { show: false },
+                            value: {
+                                offsetY: -2,
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                color: '#fff',
+                                formatter: function (val, opt) {
+                                    return Math.round(s.active) + "m";
+                                }
+                            }
+                        }
+                    }
+                },
+                colors: ['#bc13fe', '#888888', '#ff003c'], // Active (Purple), Idle (Gray), Off (Red)
+                stroke: { lineCap: 'round' },
+                labels: ['Active', 'Idle', 'Off']
+            };
+
+            // Cleanup & Render
+            if (this.charts[`gaugeS${id}`]) this.charts[`gaugeS${id}`].destroy();
+            this.charts[`gaugeS${id}`] = new ApexCharts(el, options);
+            this.charts[`gaugeS${id}`].render();
+        });
     },
 
     closeModal: function () { document.getElementById('modal-drill').style.display = 'none'; }
