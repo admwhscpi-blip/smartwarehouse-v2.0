@@ -1374,48 +1374,52 @@
                 </div>
                 <div class="guide-grid-dense">
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[L]</span> <span class="item-label">KE AREA
-                                UNLOADING/INTAKE</span></div>
+                        <div class="item-main"><span class="item-code">[L]</span> <span class="item-label">START
+                                PANGGIL</span></div>
                         <div class="item-desc">JAM SAAT KRANI MEMANGGIL UNIT DARI PARKIRAN UNTUK MASUK KE AREA BONGKAR.
                         </div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[M]</span> <span class="item-label">START
+                        <div class="item-main"><span class="item-code">[M]</span> <span class="item-label">TRUCK
+                                READY</span></div>
+                        <div class="item-desc">JAM SAAT UNIT SUDAH TIBA DI AREA BONGKAR DAN SIAP UNTUK DIPROSES.</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[N]</span> <span class="item-label">START
                                 BONGKAR</span></div>
-                        <div class="item-desc">JAM UNIT MULAI MENUANG MUATAN (SETELAH UNIT SAMPAI, BUKA TERPAL, & QC
-                            SELESAI VERIFIKASI).</div>
+                        <div class="item-desc">JAM UNIT MULAI MENUANG MUATAN (SETELAH BUKA TERPAL & QC SELESAI
+                            VERIFIKASI).</div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[N]</span> <span class="item-label">HOLD
+                        <div class="item-main"><span class="item-code">[O]</span> <span class="item-label">HOLD
                                 QC</span></div>
-                        <div class="item-desc">JAM SAAT OPERASIONAL DIHENTIKAN SEMENTARA UNTUK PROSES SAMPLING ATAU
-                            PENGECEKAN MUTU.</div>
+                        <div class="item-desc">JAM SAAT OPERASIONAL DIHENTIKAN SEMENTARA UNTUK PROSES
+                            SAMPLING/PENGECEKAN MUTU.</div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[O]</span> <span class="item-label">RE-START
+                        <div class="item-main"><span class="item-code">[P]</span> <span class="item-label">RE-START
                                 QC</span></div>
                         <div class="item-desc">JAM OPERASIONAL DILANJUTKAN KEMBALI SETELAH MENDAPAT INSTRUKSI RILIS DARI
-                            LAB/QC.</div>
+                            LAB.</div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[P]</span> <span class="item-label">MANUVER
+                        <div class="item-main"><span class="item-code">[Q]</span> <span class="item-label">MANUVER
                                 AKHIR</span></div>
-                        <div class="item-desc">JAM UNIT SELESAI BONGKAR DAN MULAI MELAKUKAN PERAPIHAN BAK ATAU PERSIAPAN
-                            KELUAR AREA.</div>
+                        <div class="item-desc">JAM UNIT SELESAI BONGKAR DAN MULAI PERSIAPAN KELUAR AREA.</div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[Q]</span> <span class="item-label">FINISH</span>
+                        <div class="item-main"><span class="item-code">[R]</span> <span class="item-label">FINISH</span>
                         </div>
                         <div class="item-desc">JAM SAAT UNIT BENAR-BENAR KELUAR DARI SISTEM/AREA BONGKAR.</div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[R]</span> <span class="item-label">START TRUCK
+                        <div class="item-main"><span class="item-code">[S]</span> <span class="item-label">START TRUCK
                                 BERIKUTNYA</span></div>
-                        <div class="item-desc">JAM PANGGIL UNIT SELANJUTNYA - DIGUNAKAN UNTUK MENDETEKSI JEDA WAKTU
-                            (IDLE loss).</div>
+                        <div class="item-desc">JAM PANGGIL UNIT SELANJUTNYA - UNTUK MENDETEKSI JEDA WAKTU (IDLE loss).
+                        </div>
                     </div>
                     <div class="guide-item-expanded">
-                        <div class="item-main"><span class="item-code">[T]</span> <span class="item-label">OFF /
+                        <div class="item-main"><span class="item-code">[U]</span> <span class="item-label">OFF /
                                 SET-UP</span></div>
                         <div class="item-desc">JAM KHUSUS UNTUK MENCATAT DURASI PERSIAPAN ALAT, ISTIRAHAT, ATAU
                             PERGANTIAN SHIFT.</div>
@@ -1436,35 +1440,40 @@
                         </div>
                         <div class="logic-split">
                             <div class="logic-item-box">
-                                <span class="logic-step-num">STEP 01 <i class="fas fa-long-arrow-alt-right"></i></span>
-                                <span class="logic-name">WAIT PANGGIL</span>
+                                <span class="logic-step-num">STEP 01</span>
+                                <span class="logic-name">MANUVER AWAL</span>
                                 <span class="logic-formula">($M - L$)</span>
-                                <span class="logic-desc-small">DURASI PERJALANAN UNIT HINGGA MULAI BONGKAR.</span>
+                                <span class="logic-desc-small">DURASI UNIT MASUK HINGGA TRUCK READY.</span>
                             </div>
                             <div class="logic-item-box">
-                                <span class="logic-step-num">STEP 02 <i class="fas fa-long-arrow-alt-right"></i></span>
-                                <span class="logic-name">ACTIVE BONGKAR</span>
+                                <span class="logic-step-num">STEP 02</span>
+                                <span class="logic-name">TUNGGU QC TIBA</span>
                                 <span class="logic-formula">($N - M$)</span>
-                                <span class="logic-desc-small">DURASI MURNI PENUANGAN MUATAN (PRE-QC).</span>
+                                <span class="logic-desc-small">WAKTU TUNGGU QC SEBELUM BONGKAR.</span>
                             </div>
                             <div class="logic-item-box">
-                                <span class="logic-step-num">STEP 03 <i class="fas fa-long-arrow-alt-right"></i></span>
-                                <span class="logic-name">QC PROCESS</span>
+                                <span class="logic-step-num">STEP 03</span>
+                                <span class="logic-name">BONGKAR AWAL</span>
                                 <span class="logic-formula">($O - N$)</span>
-                                <span class="logic-desc-small">TOTAL WAKTU BERHENTI UNTUK KEPERLUAN CHECK QC.</span>
+                                <span class="logic-desc-small">PENUANGAN MUATAN TAHAP PERTAMA.</span>
                             </div>
                             <div class="logic-item-box">
-                                <span class="logic-step-num">STEP 04 <i class="fas fa-long-arrow-alt-right"></i></span>
-                                <span class="logic-name">MANUVER AKHIR</span>
+                                <span class="logic-step-num">STEP 04</span>
+                                <span class="logic-name">HOLD QC (SAMPLE)</span>
                                 <span class="logic-formula">($P - O$)</span>
-                                <span class="logic-desc-small">PENYELESAIAN SETELAH RILIS QC HINGGA SELESAI.</span>
+                                <span class="logic-desc-small">DURASI SAMPLING ATAU CEK MUTU.</span>
                             </div>
-                            <div style="grid-column: span 2;" class="logic-item-box">
-                                <span class="logic-step-num">STEP 05 <i class="fas fa-flag-checkered"></i></span>
-                                <span class="logic-name">FINISH DELAY</span>
+                            <div class="logic-item-box">
+                                <span class="logic-step-num">STEP 05</span>
+                                <span class="logic-name">BONGKAR LANJUT</span>
                                 <span class="logic-formula">($Q - P$)</span>
-                                <span class="logic-desc-small">WAKTU TUNGGU ADMINISTRASI ATAU PERGERAKAN UNIT
-                                    MENINGGALKAN AREA BONGKAR.</span>
+                                <span class="logic-desc-small">PENYELESAIAN PENUANGAN MUATAN.</span>
+                            </div>
+                            <div class="logic-item-box">
+                                <span class="logic-step-num">STEP 06</span>
+                                <span class="logic-name">MANUVER AKHIR</span>
+                                <span class="logic-formula">($R - Q$)</span>
+                                <span class="logic-desc-small">UNIT SELESAI HINGGA KELUAR AREA.</span>
                             </div>
                         </div>
                     </div>
@@ -1475,15 +1484,15 @@
                             DURASI NON-OPERASIONAL (EKSKLUSIF)</div>
                         <div class="logic-grid-dense" style="gap:10px;">
                             <div class="logic-item-box" style="border-left: 3px solid var(--neon-gold);">
-                                <span class="logic-name tag-yellow">IDLE LOSS: $R\text{ (UNIT BARU)} - Q\text{ (UNIT
+                                <span class="logic-name tag-yellow">IDLE LOSS: $S\text{ (UNIT BARU)} - R\text{ (UNIT
                                     SEBELUMNYA)}$</span>
-                                <span class="logic-desc-small">DIVALIDASI OLEH **KOLOM S (KETERANGAN IDLE LOSS)** UNTUK
-                                    MENGETAHUI KENDALA TEKNIS/NON-TEKNIS PENYEBAB MACETNYA ALIRAN TRUK.</span>
+                                <span class="logic-desc-small">DIVALIDASI OLEH **KOLOM T (KETERANGAN IDLE
+                                    LOSS)**.</span>
                             </div>
                             <div class="logic-item-box" style="border-left: 3px solid var(--neon-red);">
-                                <span class="logic-name tag-red">OFF / SET-UP: DIHITUNG DARI MARKER T</span>
-                                <span class="logic-desc-small">DIVALIDASI OLEH **KOLOM U (KETERANGAN OFF/SET-UP)** UNTUK
-                                    MENCATAT WAKTU YANG DIRENCANAKAN BERHENTI (CLEANING/BREAK).</span>
+                                <span class="logic-name tag-red">OFF / SET-UP: DIHITUNG DARI MARKER U</span>
+                                <span class="logic-desc-small">DIVALIDASI OLEH **KOLOM V (KETERANGAN
+                                    OFF/SET-UP)**.</span>
                             </div>
                         </div>
                     </div>

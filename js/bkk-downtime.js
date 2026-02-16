@@ -188,10 +188,10 @@ const BKKDowntimeApp = {
         // --- 1. PREPARE DATA ---
         const totalNetto = i71.nettoKg || 0;
         const totalTon = totalNetto / 1000;
-        const netMin = i71.netDischarge || 0;
-        const activeTotal = i71.activeTotal || 0;
-        const idleLoss = i71.idleLoss || 0;
-        const offSetup = i71.offSetup || 0;
+        let netMin = i71.netDischarge || 0;
+        let activeTotal = i71.activeTotal || 0;
+        let idleLoss = i71.idleLoss || 0;
+        let offSetup = i71.offSetup || 0;
         const totalTime = activeTotal + idleLoss + offSetup;
 
         // --- 2. CALCULATE SPEEDS (Min, Avg, Max) ---
@@ -233,9 +233,45 @@ const BKKDowntimeApp = {
         // --- 3. DURATION BREAKDOWN METRICS ---
         // V12.2: Perfect 100% Math
         den = i71.totalMonthMin || totalTime || 1;
-        const manTime = i71.manuverTotal || 0;
-        const qcTime = i71.qcTotal || 0;
-        const activeTotalWorking = i71.activeTotal || (netMin + manTime + qcTime);
+
+        let manTime, qcTime, waitQcTime, bongkarLanjut, manAkhir;
+        let activeTotalWorking;
+        let activeSeries, activeLabels, activeColors;
+
+        if (i71.isMarch26 && i71.i71_v2) {
+            const v2 = i71.i71_v2;
+            // netMin is already declared at line 191
+            netMin = v2.bongkar_awal;
+            manTime = v2.man_awal;
+            qcTime = v2.hold_qc;
+            waitQcTime = v2.wait_qc;
+            bongkarLanjut = v2.bongkar_lanjut;
+            manAkhir = v2.man_akhir;
+            activeTotalWorking = i71.activeTotal || (netMin + manTime + qcTime + waitQcTime + bongkarLanjut + manAkhir);
+
+            activeSeries = [manTime, waitQcTime, netMin, qcTime, bongkarLanjut, manAkhir];
+            activeLabels = ['Man. Awal', 'Wait QC', 'Bongkar 1', 'Hold QC', 'Bongkar 2', 'Man. Akhir'];
+            activeColors = ['#2979ff', '#ffcc00', '#00e5ff', '#651fff', '#00ff88', '#ff003c'];
+
+            // Update text labels specifically for 6-stage display if they exist
+            // For now, we'll keep the core 3 summary as they are, but update the chart.
+            setVal('micro-net', fmt(netMin + bongkarLanjut) + 'm');
+            setVal('micro-man', fmt(manTime + manAkhir) + 'm');
+            setVal('micro-qc', fmt(qcTime + waitQcTime) + 'm');
+        } else {
+            manTime = i71.manuverTotal || 0;
+            qcTime = i71.qcTotal || 0;
+            netMin = i71.netDischarge || 0;
+            activeTotalWorking = i71.activeTotal || (netMin + manTime + qcTime);
+
+            activeSeries = [netMin, manTime, qcTime];
+            activeLabels = ['Net Bongkar', 'Manuver', 'QC Check'];
+            activeColors = ['#00e5ff', '#2979ff', '#651fff'];
+
+            setVal('micro-net', fmt(netMin) + 'm');
+            setVal('micro-man', fmt(manTime) + 'm');
+            setVal('micro-qc', fmt(qcTime) + 'm');
+        }
 
         setVal('val-active-min', fmt(activeTotalWorking) + ' MIN');
         setVal('val-active-pct', ((activeTotalWorking / den) * 100).toFixed(0) + '%');
@@ -254,16 +290,7 @@ const BKKDowntimeApp = {
         const avgSetup = days > 0 ? (offSetup / (days * 2)) : 0; // Assume 2 setups/day avg
         setVal('val-avg-setup', avgSetup.toFixed(1));
 
-        // Micro Breakdown Text
-        setVal('micro-net', fmt(netMin) + 'm');
-        setVal('micro-man', fmt(manTime) + 'm');
-        setVal('micro-qc', fmt(qcTime) + 'm');
-
         // --- 4. CHARTS ---
-        const activeSeries = [netMin, manTime, qcTime];
-        const activeLabels = ['Net Bongkar', 'Manuver', 'QC Check'];
-        const activeColors = ['#00e5ff', '#2979ff', '#651fff'];
-
         const activeOpts = {
             series: activeSeries,
             labels: activeLabels,
@@ -272,7 +299,7 @@ const BKKDowntimeApp = {
             stroke: { show: false },
             dataLabels: { enabled: false },
             legend: { show: false },
-            plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { show: true, color: '#fff', fontSize: '13px' }, value: { show: true, color: '#fff', fontSize: '18px', formatter: v => v + 'm' } } } } },
+            plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { show: true, color: '#fff', fontSize: '10px' }, value: { show: true, color: '#fff', fontSize: '16px', formatter: v => Math.round(v) + 'm' } } } } },
             tooltip: { theme: 'dark' }
         };
 

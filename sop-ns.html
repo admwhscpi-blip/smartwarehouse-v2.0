@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP - KELUAR NS (NON-STANDARD)</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #ef4444;
+            /* Crimson Red */
+            --accent: #b91c1c;
+            --dark-bg: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(239, 68, 68, 0.2);
+            --neon-red: #ef4444;
+        }
+
+        /* BRANDING LOGO STYLES */
+        .logo-link {
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: cyber-glow 4s infinite alternate;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes blue-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.6), 0 0 25px rgba(59, 130, 246, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 25px rgba(0, 243, 255, 0.9), 0 0 45px rgba(59, 130, 246, 0.7);
+            }
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes cyber-glow {
+            0% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+
+            50% {
+                text-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+                filter: brightness(1.2);
+            }
+
+            100% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(239, 68, 68, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(239, 68, 68, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title-area h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #ccc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .back-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .sop-title-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .sop-title-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sop-title-section p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            color: #94a3b8;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+            font-weight: 700;
+        }
+
+        .content-card {
+            display: none;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .content-card.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .section-header i {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .section-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .sap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 3px solid var(--primary);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .alert-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .alert-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .email-preview {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .email-header {
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .email-body {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .step-list {
+            margin-top: 30px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .step-num {
+            background: var(--primary);
+            color: #fff;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            font-family: 'Orbitron';
+        }
+
+        .step-text {
+            font-size: 1rem;
+            color: #e2e8f0;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 30px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 25px;">
+            <a href="homepage-v1.html" class="logo-link">
+                <div class="logo-text">
+                    <span class="brand-smart">SMART WAREHOUSE</span>
+                    <span class="brand-v2">V2.0</span>
+                </div>
+            </a>
+            <div class="header-title-area" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 25px;">
+                <h1>PUSAT PENGETAHUAN / SOP</h1>
+            </div>
+        </div>
+        <a href="knowledge-center.html" class="back-btn"><i class="fas fa-arrow-left"></i> KEMBALI KE PUSAT</a>
+    </header>
+
+    <div class="container">
+        <div class="sop-title-section">
+            <div
+                style="font-family: 'Orbitron', sans-serif; color: var(--primary); font-size: 0.8rem; margin-bottom: 10px;">
+                SOP-WHS-PROC-NS400</div>
+            <h2>TATA CARA: KELUAR NS (NON-STANDARD)</h2>
+            <p>Prosedur penanganan material NS berdasarkan sumber asalnya (Bin BS atau Material Lain).</p>
+        </div>
+
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('bin-bs')">Skenario 1: Dari Bin BS</button>
+            <button class="tab-btn" onclick="switchTab('mat-lain')">Skenario 2: Dari Material Lain</button>
+        </div>
+
+        <!-- SKENARIO 1 -->
+        <div id="tab-bin-bs" class="content-card active">
+            <div class="section-header">
+                <i class="fas fa-box-open"></i>
+                <h3>PENGELUARAN MANDIRI (FROM BIN BS)</h3>
+            </div>
+
+            <p style="color: #94a3b8; margin-bottom: 30px; font-style: italic;">"Gunakan prosedur ini jika material NS
+                bersumber dari Bin BS yang bisa diproses secara mandiri."</p>
+
+            <div class="sap-grid">
+                <div class="info-box">
+                    <div class="info-label">T-Code</div>
+                    <div class="info-value">MB1C</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Mvt Type</div>
+                    <div class="info-value">919</div>
+                </div>
+                <div class="info-box" style="border-left-color: #fff;">
+                    <div class="info-label">Tindakan</div>
+                    <div class="info-value">Manual Receipt</div>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <i class="fas fa-barcode alert-icon"></i>
+                <div>
+                    <div style="color: var(--primary); font-weight: bold; font-family: 'Orbitron';">KODE MATERIAL BIN BS
+                    </div>
+                    <div style="font-size: 1.5rem; font-family: 'Orbitron'; margin-top: 5px;">940.08.0001</div>
+                </div>
+            </div>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Verifikasi jumlah fisik material yang akan dikategorikan sebagai NS.</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Input transaksi di SAP menggunakan material **940.08.0001** (BIN BS).</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Lakukan **Post** transaksi untuk memperbarui saldo stok di sistem.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKENARIO 2 -->
+        <div id="tab-mat-lain" class="content-card">
+            <div class="section-header">
+                <i class="fas fa-exchange-alt"></i>
+                <h3>MATERIAL TO MATERIAL (FROM OTHER MAT)</h3>
+            </div>
+
+            <p style="color: #94a3b8; margin-bottom: 30px; font-style: italic;">"Jika NS berasal dari bahan
+                baku/material lain yang memerlukan perubahan identitas kode."</p>
+
+            <h4 style="color: var(--primary); font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 15px;">LANGKAH 1:
+                IDENTIFIKASI</h4>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Siapkan Kode Material Awal dan pastikan fisik material sudah dipisahkan.
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="color: var(--primary); font-family: 'Orbitron'; font-size: 1rem; margin: 30px 0 15px;">LANGKAH 2:
+                KOORDINASI QC (EMAIL)</h4>
+            <div class="email-preview">
+                <div class="email-header">
+                    To: QC Department<br>
+                    Subject: Pengajuan Mat to Mat (Transfer Status ke NS)
+                </div>
+                <div class="email-body">
+                    Mohon bantuan untuk melakukan perubahan status/kode material pada SAP:<br><br>
+                    **DARI: [Input Kode Material Awal]**<br>
+                    **MENJADI: [Input Kode Material NS]**<br><br>
+                    Catatan: Pastikan kode tujuan NS menggunakan **akhiran kode 400**.
+                </div>
+            </div>
+
+            <div class="alert-box" style="background: rgba(255, 255, 255, 0.05); border-color: #fff;">
+                <i class="fas fa-exclamation-triangle alert-icon" style="color: #fff;"></i>
+                <div>
+                    <div style="color: #fff; font-weight: bold; font-family: 'Orbitron';">ATURAN KRUSIAL</div>
+                    <div style="font-size: 1.1rem; margin-top: 5px;">Kode tujuan NS wajib menggunakan **AKHIRAN KODE
+                        400**.</div>
+                </div>
+            </div>
+
+            <h4 style="color: var(--primary); font-family: 'Orbitron'; font-size: 1rem; margin: 30px 0 15px;">LANGKAH 3:
+                VERIFIKASI SELESAI</h4>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Setelah TP dilakukan QC, verifikasi saldo stok pada kode material baru
+                        (akhiran 400).</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        QUALITY CONTROL COMPLIANCE • SMART WAREHOUSE V2.0 SYSTEM
+    </footer>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.content-card').forEach(card => card.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+    </script>
+</body>
+
+</html>

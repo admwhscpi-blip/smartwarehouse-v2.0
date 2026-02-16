@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP - RESERVASI LIMBAH (DEPT LAIN)</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            /* Indigo */
+            --accent: #4f46e5;
+            --dark-bg: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(99, 102, 241, 0.2);
+            --neon-indigo: #818cf8;
+        }
+
+        /* BRANDING LOGO STYLES */
+        .logo-link {
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: cyber-glow 4s infinite alternate;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes blue-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.6), 0 0 25px rgba(59, 130, 246, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 25px rgba(0, 243, 255, 0.9), 0 0 45px rgba(59, 130, 246, 0.7);
+            }
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes cyber-glow {
+            0% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+
+            50% {
+                text-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+                filter: brightness(1.2);
+            }
+
+            100% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #ccc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .back-btn:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .sop-title-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .sop-title-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sop-title-section p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .content-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .section-header i {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .section-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .sap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 3px solid var(--primary);
+        }
+
+        .info-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .step-list {
+            margin-top: 20px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: flex-start;
+        }
+
+        .step-num {
+            background: var(--primary);
+            color: #fff;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            font-family: 'Orbitron';
+            margin-top: 2px;
+        }
+
+        .step-text {
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        .badge-dept {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 5px;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            margin-bottom: 15px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .highlight-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--glass-border);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .highlight-title {
+            font-family: 'Orbitron';
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 30px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 25px;">
+            <a href="homepage-v1.html" class="logo-link">
+                <div class="logo-text">
+                    <span class="brand-smart">SMART WAREHOUSE</span>
+                    <span class="brand-v2">V2.0</span>
+                </div>
+            </a>
+            <div class="header-left" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 25px;">
+                <h1>PUSAT PENGETAHUAN / SOP</h1>
+            </div>
+        </div>
+        <a href="knowledge-center.html" class="back-btn"><i class="fas fa-arrow-left"></i> KEMBALI KE PUSAT</a>
+    </header>
+
+    <div class="container">
+        <div class="sop-title-section">
+            <div
+                style="font-family: 'Orbitron', sans-serif; color: var(--primary); font-size: 0.8rem; margin-bottom: 10px;">
+                SOP-WHS-RSV-INTL</div>
+            <h2>TATA CARA: RESERVASI LIMBAH</h2>
+            <p>Prosedur penerimaan dan pemrosesan reservasi limbah dari departemen lain (Internal Pabrik).</p>
+        </div>
+
+        <!-- LANGKAH 1 -->
+        <div class="content-card">
+            <div class="badge-dept">Oleh: DEPARTEMEN PEMINTA</div>
+            <div class="section-header">
+                <i class="fas fa-file-signature"></i>
+                <h3>01. PEMBUATAN DOKUMEN RESERVASI</h3>
+            </div>
+
+            <p style="color: #94a3b8; margin-bottom: 25px; font-style: italic;">"Sebelum barang dikeluarkan, departemen
+                lain wajib membuat dokumen reservasi resmi di SAP."</p>
+
+            <div class="sap-grid">
+                <div class="info-box">
+                    <div class="info-label">Transaction Code</div>
+                    <div class="info-value">MB21</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Action</div>
+                    <div class="info-value">Create Reservation</div>
+                </div>
+            </div>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Departemen lain menginput material, jumlah, dan tujuan penggunaan di SAP.
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Dapatkan **Nomor Reservasi** (RSV Number) yang dihasilkan oleh sistem.</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Bawa **Form Reservasi Fisik** ke gudang untuk proses penyerahan barang.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LANGKAH 2 -->
+        <div class="content-card">
+            <div class="badge-dept">Oleh: STAFF GUDANG</div>
+            <div class="section-header">
+                <i class="fas fa-dolly-flatbed"></i>
+                <h3>02. EKSEKUSI POTONG STOK (ISSUANCE)</h3>
+            </div>
+
+            <p style="color: #94a3b8; margin-bottom: 25px; font-style: italic;">"Memotong stok secara resmi berdasarkan
+                dokumen reservasi yang sah."</p>
+
+            <div class="sap-grid">
+                <div class="info-box">
+                    <div class="info-label">Transaction Code</div>
+                    <div class="info-value">MB1A</div>
+                </div>
+                <div class="info-box" style="border-left-color: #fff;">
+                    <div class="info-label">Input Method</div>
+                    <div class="info-value">"To Reservation..."</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Storage Location</div>
+                    <div class="info-value">RM01</div>
+                </div>
+            </div>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">**Validasi Fisik**: Periksa Form Reservasi, pastikan nomor aktif dan material
+                        sesuai.</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">**Input SAP**: Di MB1A, pilih tombol **"To Reservation..."** dan masukkan
+                        nomor dokumen.</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">**SLoc Check**: Pastikan SLoc asal adalah **RM01** agar saldo fisik dan
+                        sistem sinkron.</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">4</div>
+                    <div class="step-text">**Finalisasi**: Klik **Post**. Saldo stok SAP akan otomatis terpotong sesuai
+                        jumlah reservasi.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <div class="highlight-title"><i class="fas fa-archive"></i> PENYIMPANAN ARSIP</div>
+                <div style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
+                    Berikan tanda tangan/stempel pada Form Reservasi fisik dan catat nomor **Material Document** sebagai
+                    bukti sah pengambilan barang.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        DEPARTMENT COORDINATION • SMART WAREHOUSE V2.0 SYSTEM
+    </footer>
+</body>
+
+</html>

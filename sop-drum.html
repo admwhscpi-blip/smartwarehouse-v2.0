@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP - POTONG STOK DRUM (INTERNAL)</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #94a3b8;
+            /* Steel/Silver */
+            --accent: #64748b;
+            --dark-bg: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.2);
+            --neon-silver: #e2e8f0;
+            --highlight: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* BACKGROUND */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(148, 163, 184, 0.3);
+        }
+
+        /* BRANDING LOGO STYLES */
+        .logo-link {
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: cyber-glow 4s infinite alternate;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 2s linear infinite, blue-glow 1.5s ease-in-out infinite alternate;
+            font-weight: 950;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+        }
+
+        .brand-v2 {
+            background: #ffffff;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes blue-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 15px rgba(0, 243, 255, 0.6), 0 0 25px rgba(59, 130, 246, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 25px rgba(0, 243, 255, 0.9), 0 0 45px rgba(59, 130, 246, 0.7);
+            }
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes cyber-glow {
+            0% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+
+            50% {
+                text-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+                filter: brightness(1.2);
+            }
+
+            100% {
+                text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+                filter: brightness(1);
+            }
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #ccc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .back-btn:hover {
+            background: rgba(148, 163, 184, 0.1);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .sop-title-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .sop-title-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sop-title-section p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        /* MAIN CARD */
+        .content-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .content-card::after {
+            content: "DRM";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10rem;
+            opacity: 0.02;
+            font-weight: 900;
+            pointer-events: none;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .section-header i {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .section-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        /* SAP DATA GRID */
+        .sap-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .info-box::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        /* ACCOUNTING PANEL */
+        .accounting-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .acc-item {
+            text-align: center;
+        }
+
+        .acc-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .acc-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #e2e8f0;
+            display: block;
+        }
+
+        /* INSTRUCTIONS */
+        .instruction-group {
+            margin-top: 40px;
+        }
+
+        .guide-step {
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            transition: 0.3s;
+        }
+
+        .guide-step:hover {
+            border-color: var(--primary);
+            background: rgba(148, 163, 184, 0.05);
+            transform: scale(1.01);
+        }
+
+        .step-icon {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-top: 5px;
+        }
+
+        .step-content {
+            flex-grow: 1;
+        }
+
+        .step-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .step-desc {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .step-desc strong {
+            color: #e2e8f0;
+        }
+
+        /* FOOTER */
+        footer {
+            margin-top: 50px;
+            padding: 30px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logbook-notice {
+            background: rgba(251, 191, 36, 0.05);
+            border-left: 4px solid #fbbf24;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 25px;">
+            <a href="homepage-v1.html" class="logo-link">
+                <div class="logo-text">
+                    <span class="brand-smart">SMART WAREHOUSE</span>
+                    <span class="brand-v2">V2.0</span>
+                </div>
+            </a>
+            <div class="header-left" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 25px;">
+                <h1>PUSAT PENGETAHUAN / SOP</h1>
+            </div>
+        </div>
+        <a href="knowledge-center.html" class="back-btn"><i class="fas fa-arrow-left"></i> KEMBALI KE PUSAT</a>
+    </header>
+
+    <div class="container">
+        <div class="sop-title-section">
+            <div style="font-family: 'Orbitron', sans-serif; color: #94a3b8; font-size: 0.8rem; margin-bottom: 10px;">
+                WI-WHS-PROC-003</div>
+            <h2>TATA CARA: POTONG STOK DRUM</h2>
+            <p>Prosedur pengeluaran material Drum untuk mendukung operasional internal (Maintenance/Boiler).</p>
+        </div>
+
+        <div class="content-card">
+            <div class="section-header">
+                <i class="fas fa-tools"></i>
+                <h3>PENGELUARAN BARANG (CONSUMPTION)</h3>
+            </div>
+
+            <p style="color: #94a3b8; margin-bottom: 30px; font-style: italic;">"Gunakan prosedur ini saat ada kebutuhan
+                penggunaan Drum untuk keperluan internal area produksi atau maintenance."</p>
+
+            <div class="sap-info-grid">
+                <div class="info-box">
+                    <div class="info-label">Transaction Code</div>
+                    <div class="info-value">MB1A</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Movement Type</div>
+                    <div class="info-value">201</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Storage Location</div>
+                    <div class="info-value">RM01</div>
+                </div>
+            </div>
+
+            <div class="accounting-panel">
+                <div class="acc-item">
+                    <span class="acc-label">GL ACCOUNT</span>
+                    <span class="acc-value">607100</span>
+                    <span style="font-size: 0.65rem; color: #475569;">Beban Material Operasional</span>
+                </div>
+                <div class="acc-item" style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+                <div class="acc-item">
+                    <span class="acc-label">COST CENTER</span>
+                    <span class="acc-value">189920</span>
+                    <span style="font-size: 0.65rem; color: #475569;">Dept Maintenance</span>
+                </div>
+            </div>
+
+            <div class="instruction-group">
+                <div class="guide-step">
+                    <i class="fas fa-dolly step-icon"></i>
+                    <div class="step-content">
+                        <div class="step-title">Pemeriksaan Fisik</div>
+                        <div class="step-desc">Pastikan jumlah Drum yang diambil sesuai dengan kebutuhan operasional di
+                            lapangan.</div>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <i class="fas fa-file-signature step-icon"></i>
+                    <div class="step-content">
+                        <div class="step-title">Verifikasi Dokumen</div>
+                        <div class="step-desc">Meskipun digunakan internal, tetap lampirkan **Form Reservasi** sebagai
+                            dasar pemotongan Stock di sistem.</div>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <i class="fas fa-keyboard step-icon"></i>
+                    <div class="step-content">
+                        <div class="step-title">Database Input (SAP)</div>
+                        <div class="step-desc">Gunakan Movement Type **201** karena Drum dianggap sebagai barang habis
+                            pakai (consumption) untuk operasional. Pastikan nomor Cost Center **189920** tidak salah
+                            ketik.</div>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <i class="fas fa-save step-icon"></i>
+                    <div class="step-content">
+                        <div class="step-title">Finalisasi & Pencatatan</div>
+                        <div class="step-desc">Klik **Post** untuk memotong saldo Stock. Catat nomor dokumen SAP yang
+                            terbentuk pada **Logbook** keluar-masuk barang non-bahan baku.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="logbook-notice">
+                <i class="fas fa-info-circle"></i> **CATATAN:** Penggunaan Drum harus tercatat secara disiplin untuk
+                menjaga akurasi inventory gudang pendukung.
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        STEEL ACCURACY • SMART WAREHOUSE V2.0 SYSTEM
+    </footer>
+</body>
+
+</html>

@@ -210,6 +210,14 @@ function getDowntimeQuery(ssId, e) {
   var totalIdleNew = 0;
   var totalOffNew = 0;
   var intake71Trucks = []; 
+  
+  // Accumulated durations for March 26+
+  var i71Total_dP = 0; // Manuver Awal
+  var i71Total_dTready = 0; // Tunggu QC
+  var i71Total_dB = 0; // Bongkar Awal
+  var i71Total_dQ = 0; // Hold QC
+  var i71Total_dM = 0; // Bongkar Lanjutan
+  var i71Total_dF = 0; // Manuver Akhir
 
   // ======== HELPERS ========
   var ssTZ = ss.getSpreadsheetTimeZone();
@@ -254,6 +262,9 @@ function getDowntimeQuery(ssId, e) {
     var rowDate, type, rowNetto, rawMat, truckType, actualShift, rowWorkers;
     var startTs, endTs, mStart, mEnd, qStart, qEnd;
 
+    var isNewFormat = (targetYear > 2026) || (targetYear === 2026 && targetMonth >= 2);
+    var isMarch26 = (targetYear > 2026) || (targetYear === 2026 && targetMonth >= 3);
+    
     if (isNewFormat) {
       rowDate = parseDate(rawData[i][0]);
       type = (rawData[i][1] || "").toString().toUpperCase();
@@ -262,12 +273,24 @@ function getDowntimeQuery(ssId, e) {
       rowNetto = parseNetto(rawData[i][8]);
       rawMat = (rawData[i][9] || "").toString().trim().toUpperCase();
       
-      startTs = rawData[i][11]; // L: START PANGGIL
-      mStart = rawData[i][12];  // M: START BONGKAR
-      qStart = rawData[i][13];  // N: HOLD QC
-      qEnd = rawData[i][14];    // O: RE-START QC
-      mEnd = rawData[i][15];    // P: MANUVER AKHIR
-      endTs = rawData[i][16];   // Q: FINISH
+      if (isMarch26) {
+        // MARCH 2026+ FORMAT: L(11), M(12), N(13), O(14), P(15), Q(16), R(17)
+        startTs = rawData[i][11]; // L: START PANGGIL
+        var tReady = rawData[i][12]; // M: TRUCK READY
+        mStart = rawData[i][13];  // N: START BONGKAR
+        qStart = rawData[i][14];  // O: HOLD QC
+        qEnd = rawData[i][15];    // P: RE-START QC
+        mEnd = rawData[i][16];    // Q: MANUVER AKHIR
+        endTs = rawData[i][17];   // R: FINISH
+      } else {
+        // FEB 2026 FORMAT: L(11), M(12), N(13), O(14), P(15), Q(16)
+        startTs = rawData[i][11]; // L: START PANGGIL
+        mStart = rawData[i][12];  // M: START BONGKAR
+        qStart = rawData[i][13];  // N: HOLD QC
+        qEnd = rawData[i][14];    // O: RE-START QC
+        mEnd = rawData[i][15];    // P: MANUVER AKHIR
+        endTs = rawData[i][16];   // Q: FINISH
+      }
       
       var kraniName = (rawData[i][2] || "").toString().trim(); // C
       var scadaName = (rawData[i][3] || "").toString().trim(); // D
@@ -415,16 +438,73 @@ function getDowntimeQuery(ssId, e) {
           if (scadaName && sd.scada.indexOf(scadaName) === -1) sd.scada.push(scadaName);
 
           // Sub-durations breakdown ratios (Using Epochs for Midnight Safety)
-          var eL = getEpochAtTime(startTs), eM = getEpochAtTime(mStart), eN = getEpochAtTime(qStart), eO = getEpochAtTime(qEnd), eP = getEpochAtTime(mEnd), eQ = getEpochAtTime(endTs);
+          var eL = getEpochAtTime(startTs);
+          var eM, eN, eO, eP, eQ, eR, eTready;
+
+          if (isMarch26) {
+            eTready = getEpochAtTime(rawData[i][12]); // M
+            eN = getEpochAtTime(rawData[i][13]);      // N
+            eO = getEpochAtTime(rawData[i][14]);      // O
+            eP = getEpochAtTime(rawData[i][15]);      // P
+            eQ = getEpochAtTime(rawData[i][16]);      // Q
+            eR = getEpochAtTime(rawData[i][17]);      // R
+          } else {
+            eM = getEpochAtTime(rawData[i][12]);      // M
+            eN = getEpochAtTime(rawData[i][13]);      // N
+            eO = getEpochAtTime(rawData[i][14]);      // O
+            eP = getEpochAtTime(rawData[i][15]);      // P
+            eQ = getEpochAtTime(rawData[i][16]);      // Q
+          }
+
           var fixS = function(p, c) { return (p !== null && c !== null && c < p) ? c + 24*3600000 : c; };
-          eM = fixS(eL, eM); eN = fixS(eM, eN); eO = fixS(eN, eO); eP = fixS(eO, eP); eQ = fixS(eP, eQ);
           
-          var dP = (eM && eL) ? (eM-eL) : 0, dB = (eN && eM) ? (eN-eM) : 0, dQ = (eO && eN) ? (eO-eN) : 0, dM = (eP && eO) ? (eP-eO) : 0, dF = (eQ && eP) ? (eQ-eP) : 0;
-          var totalBreakdown = Math.max(0.1, (dP + dB + dQ + dM + dF) / 60000);
+          var dP, dB, dQ, dM, dF, dTready, dQCWait;
+          
+          if (isMarch26) {
+             eTready = fixS(eL, eTready);
+             eN = fixS(eTready, eN);
+             eO = fixS(eN, eO);
+             eP = fixS(eO, eP);
+             eQ = fixS(eP, eQ);
+             eR = fixS(eQ, eR);
+             
+             dP = (eTready && eL) ? (eTready-eL) : 0; // 1v2: DOWNTIME MANUVER AWAL
+             dTready = (eN && eTready) ? (eN-eTready) : 0; // 2v3: DURASI TUNGGU QC
+             dB = (eO && eN) ? (eO-eN) : 0; // 3v4: DURASI BONGKAR AWAL
+             dQ = (eP && eO) ? (eP-eO) : 0; // 4v5: DURASI HOLD QC
+             dM = (eQ && eP) ? (eQ-eP) : 0; // 5v6: DURASI BONGKAR KEDUA
+             dF = (eR && eQ) ? (eR-eQ) : 0; // 6v7: DURASI MANUVER AKHIR
+             
+             i71Total_dP += dP / 60000;
+             i71Total_dTready += dTready / 60000;
+             i71Total_dB += dB / 60000;
+             i71Total_dQ += dQ / 60000;
+             i71Total_dM += dM / 60000;
+             i71Total_dF += dF / 60000;
+          } else {
+             eN = fixS(eM, eN); eO = fixS(eN, eO); eP = fixS(eO, eP); eQ = fixS(eP, eQ);
+             dP = (eM && eL) ? (eM-eL) : 0;
+             dB = (eN && eM) ? (eN-eM) : 0;
+             dQ = (eO && eN) ? (eO-eN) : 0;
+             dM = (eP && eO) ? (eP-eO) : 0;
+             dF = (eQ && eP) ? (eQ-eP) : 0;
+             dTready = 0;
+          }
+
+          var totalBreakdown = Math.max(0.1, (dP + dB + dQ + dM + dF + dTready) / 60000);
           var rWt = (dP/60000)/totalBreakdown, rBk = (dB/60000)/totalBreakdown, rQc = (dQ/60000)/totalBreakdown, rMnv = (dM/60000)/totalBreakdown, rFn = (dF/60000)/totalBreakdown;
+          var rTready = (dTready/60000)/totalBreakdown;
 
           ["1","2","3"].forEach(function(sid) {
             var a = activePerShift[sid];
+            if (isMarch26) {
+              // We'll reuse the same buckets in the frontend but we need to pass the extra val
+              // Or better, we add a specific field for March to the result.
+              // For simplicity, let's keep the core 5 and maybe merge or add.
+              // Actually, the user wants 6 durations displayed. 
+              // Let's add 't_ready' to shiftData.
+              d.shiftData[sid].t_ready = (d.shiftData[sid].t_ready || 0) + (a * rTready);
+            }
             d.shiftData[sid].wt += a * rWt; d.shiftData[sid].bk += a * rBk; d.shiftData[sid].qct += a * rQc; d.shiftData[sid].mnv += a * rMnv; d.shiftData[sid].fn += a * rFn;
           });
         } else {
@@ -582,7 +662,17 @@ function getDowntimeQuery(ssId, e) {
       totalMonthMin: totalMonthMin,
       intakeSubTypes: intakeSubTypes,
       dailyDetail: i71DailyArr,
-      workerStats: workerStats
+      workerStats: workerStats,
+      // NEW: For March 2026+ 6-stage display
+      isMarch26: isMarch26,
+      i71_v2: isMarch26 ? {
+        man_awal: Math.round(i71Total_dP),
+        wait_qc: Math.round(i71Total_dTready),
+        bongkar_awal: Math.round(i71Total_dB),
+        hold_qc: Math.round(i71Total_dQ),
+        bongkar_lanjut: Math.round(i71Total_dM),
+        man_akhir: Math.round(i71Total_dF)
+      } : null
     },
     directGudang: {
       totalNetto: Math.round(directTotalNetto), totalTrucks: directTotalTrucks,

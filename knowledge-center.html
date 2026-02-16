@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART WAREHOUSE V2.0 - KNOWLEDGE CENTER</title>
+
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #06b6d4;
+            --accent: #8b5cf6;
+            --dark-bg: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.4);
+            --glass-border: rgba(6, 182, 212, 0.2);
+            --card-glow: rgba(6, 182, 212, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* PREMIUM BACKGROUND ELEMENTS */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .vignette-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 20%, rgba(2, 6, 23, 0.8) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 2px, 3px 100%;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* HEADER */
+        .knowledge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* BRANDING LOGO */
+        .logo-link {
+            text-decoration: none;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05) rotate(-1deg);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-smart {
+            background: linear-gradient(90deg, #00f3ff, #3b82f6, #00f3ff, #8b5cf6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fire-move 3s linear infinite;
+            font-weight: 950;
+            filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.4));
+        }
+
+        .brand-v2 {
+            background: #fff;
+            color: #000;
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes fire-move {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: 0.4s;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .back-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .back-btn:hover::before {
+            left: 100%;
+        }
+
+        .back-btn:hover {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* DAFTAR ISI - CYBER INDEX */
+        .toc-container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 50px;
+            text-align: left;
+            backdrop-filter: blur(15px);
+            animation: fadeInBlur 0.8s ease-out backwards;
+        }
+
+        .toc-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+        }
+
+        .toc-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 12px;
+        }
+
+        .toc-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 10px 15px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.4s;
+        }
+
+        .toc-link:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: var(--primary);
+            color: #fff;
+            transform: translateX(8px);
+            box-shadow: -5px 0 15px rgba(6, 182, 212, 0.2);
+        }
+
+        .toc-link span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            margin-left: auto;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* MAIN HERO */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+        }
+
+        .hero-section {
+            max-width: 900px;
+            margin-bottom: 60px;
+            animation: slideUpFade 1s ease-out;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.8rem;
+            margin-bottom: 25px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 30%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .hero-desc {
+            font-size: 1.3rem;
+            color: #94a3b8;
+            line-height: 1.7;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* FEATURE GRID & CARDS */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 35px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .card-wrapper {
+            perspective: 1000px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 40px 30px;
+            border-radius: 25px;
+            transition: transform 0.1s ease-out, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: 0.6s;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--card-glow);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 25px;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateZ(30px);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: translateZ(50px) scale(1.1) rotate(10deg);
+        }
+
+        .feature-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #fff;
+            font-weight: 700;
+            transform: translateZ(20px);
+        }
+
+        .feature-desc {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            transform: translateZ(10px);
+        }
+
+        .card-meta {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInBlur {
+            from {
+                opacity: 0;
+                filter: blur(20px);
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                filter: blur(0);
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* STAGGERED ENTRANCE */
+        .stagger-item {
+            animation: fadeInBlur 0.8s ease-out backwards;
+        }
+
+        .stagger-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-item:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .stagger-item:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .stagger-item:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+        .stagger-item:nth-child(7) {
+            animation-delay: 0.7s;
+        }
+
+        footer {
+            padding: 40px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="grid-bg"></div>
+    <div class="vignette-overlay"></div>
+    <div class="scanlines"></div>
+
+    <header class="knowledge-header">
+        <div style="display: flex; align-items: center; gap: 40px;">
+            <a href="homepage-v1.html" class="logo-link">
+                <div class="logo-text">
+                    <span class="brand-smart">SMART WAREHOUSE</span>
+                    <span class="brand-v2">V2.0</span>
+                </div>
+            </a>
+            <div class="header-info" style="border-left: 2px solid rgba(255,255,255,0.1); padding-left: 30px;">
+                <h1 style="font-family: 'Orbitron'; font-size: 1.2rem; color: var(--primary); letter-spacing: 3px;">
+                    PUSAT PENGETAHUAN</h1>
+                <div
+                    style="font-size: 0.75rem; color: #64748b; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
+                    Central Intelligence Node</div>
+            </div>
+        </div>
+        <a href="homepage-v1.html" class="back-btn"><i class="fas fa-home"></i> BERANDA</a>
+    </header>
+
+    <main class="main-container">
+        <div class="hero-section">
+            <h2 class="hero-title">INTELLIGENCE CENTER</h2>
+            <p class="hero-desc">Standarisasi operasional dan dokumentasi terpadu untuk efisiensi warehouse tingkat
+                tinggi.</p>
+        </div>
+
+        <!-- DAFTAR ISI -->
+        <div class="toc-container stagger-item">
+            <div class="toc-header">
+                <i class="fas fa-microchip"></i>
+                <h3>Indeks Prosedur Operasional (7 Active Nodes)</h3>
+            </div>
+            <div class="toc-grid">
+                <a href="sop-luprosil.html" class="toc-link">
+                    <i class="fas fa-vial" style="color: #fbbf24;"></i> LUPROSIL <span>MB1B/MB1A</span>
+                </a>
+                <a href="sop-salt.html" class="toc-link">
+                    <i class="fas fa-snowflake" style="color: #06b6d4;"></i> SALT (GARAM) <span>MB1A</span>
+                </a>
+                <a href="sop-drum.html" class="toc-link">
+                    <i class="fas fa-drum-steelpan" style="color: #94a3b8;"></i> DRUM <span>MB1A</span>
+                </a>
+                <a href="sop-karung.html" class="toc-link">
+                    <i class="fas fa-recycle" style="color: #84cc16;"></i> KARUNG <span>MB1C</span>
+                </a>
+                <a href="sop-limbah-drum.html" class="toc-link">
+                    <i class="fas fa-truck-moving" style="color: #f59e0b;"></i> LIMBAH DRUM <span>MB1B(311)</span>
+                </a>
+                <a href="sop-ns.html" class="toc-link">
+                    <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i> KELUAR NS <span>SCENARIO</span>
+                </a>
+                <a href="sop-reservasi.html" class="toc-link">
+                    <i class="fas fa-clipboard-check" style="color: #6366f1;"></i> RESERVASI <span>MB21/MB1A</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="card-wrapper stagger-item">
+                <a href="sop-luprosil.html" class="feature-card" style="--card-glow: rgba(251, 191, 36, 0.2);">
+                    <i class="fas fa-vial feature-icon" style="color: #fbbf24;"></i>
+                    <div class="feature-name">LUPROSIL PROCEDURES</div>
+                    <div class="feature-desc">Tata cara digital untuk pemotongan stok Luprosil secara akurat.</div>
+                    <div class="card-meta"
+                        style="color: #fbbf24; font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-code"></i> T-CODE: MB1B / MB1A
+                    </div>
+                </a>
+            </div>
+
+            <div class="card-wrapper stagger-item">
+                <a href="sop-salt.html" class="feature-card" style="--card-glow: rgba(6, 182, 212, 0.2);">
+                    <i class="fas fa-snowflake feature-icon" style="color: var(--primary);"></i>
+                    <div class="feature-name">SALT (GARAM) PROCEDURES</div>
+                    <div class="feature-desc">Tata cara pemotongan stok Garam untuk kebutuhan Boiler Maintenance.</div>
+                    <div class="card-meta"
+                        style="color: var(--primary); font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-code"></i> T-CODE: MB1A
+                    </div>
+                </a>
+            </div>
+
+            <div class="card-wrapper stagger-item">
+                <a href="sop-drum.html" class="feature-card" style="--card-glow: rgba(148, 163, 184, 0.2);">
+                    <i class="fas fa-drum-steelpan feature-icon" style="color: #94a3b8;"></i>
+                    <div class="feature-name">DRUM PROCEDURES</div>
+                    <div class="feature-desc">Tata cara pengeluaran Drum untuk operasional internal & Maintenance.</div>
+                    <div class="card-meta"
+                        style="color: #94a3b8; font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-code"></i> T-CODE: MB1A
+                    </div>
+                </a>
+            </div>
+
+            <div class="card-wrapper stagger-item">
+                <a href="sop-karung.html" class="feature-card" style="--card-glow: rgba(132, 204, 22, 0.2);">
+                    <i class="fas fa-recycle feature-icon" style="color: #84cc16;"></i>
+                    <div class="feature-name">KARUNG PROCEDURES</div>
+                    <div class="feature-desc">SOP pengeluaran limbah karung campuran & proses Mat to Mat.</div>
+                    <div class="card-meta"
+                        style="color: #84cc16; font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-retweet"></i> T-CODE: MB1C / TP
+                    </div>
+                </a>
+            </div>
+
+            <div class="card-wrapper stagger-item">
+                <a href="sop-limbah-drum.html" class="feature-card" style="--card-glow: rgba(245, 158, 11, 0.2);">
+                    <i class="fas fa-truck-moving feature-icon" style="color: #f59e0b;"></i>
+                    <div class="feature-name">LIMBAH DRUM PROCEDURES</div>
+                    <div class="feature-desc">Tata cara pemindahan limbah drum kotak antar lokasi transfer posting.
+                    </div>
+                    <div class="card-meta"
+                        style="color: #f59e0b; font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-exchange-alt"></i> T-CODE: MB1B
+                    </div>
+                </a>
+            </div>
+
+            <div class="card-wrapper stagger-item">
+                <a href="sop-ns.html" class="feature-card" style="--card-glow: rgba(239, 68, 68, 0.2);">
+                    <i class="fas fa-exclamation-circle feature-icon" style="color: #ef4444;"></i>
+                    <div class="feature-name">KELUAR NS PROCEDURES</div>
+                    <div class="feature-desc">Panduan penanganan material Non-Standard (BS & Material Lain).</div>
+                    <div class="card-meta"
+                        style="color: #ef4444; font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-shield-alt"></i> SCENARIO: BIN BS / 400
+                    </div>
+                </a>
+            </div>
+
+            <div class="card-wrapper stagger-item">
+                <a href="sop-reservasi.html" class="feature-card" style="--card-glow: rgba(99, 102, 241, 0.2);">
+                    <i class="fas fa-clipboard-check feature-icon" style="color: #6366f1;"></i>
+                    <div class="feature-name">RESERVASI PROCEDURES</div>
+                    <div class="feature-desc">Mekanisme pengambilan limbah oleh Dept lain via Reservasi SAP.</div>
+                    <div class="card-meta"
+                        style="color: #6366f1; font-size: 0.75rem; font-weight: 700; font-family: 'Orbitron';">
+                        <i class="fas fa-link"></i> MB21 / MB1A
+                    </div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        SECURE ACCESS: WH 1891 / WAREHOUSE 1891 • SMART WAREHOUSE V2.0 SYSTEM • POWERED BY HYPER-OPERATIONS
+    </footer>
+
+    <script>
+        // --- PARTICLE SYSTEM ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.alpha = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(6, 182, 212, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 80; i++) particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        initParticles();
+        animate();
+
+        // --- 3D TILT EFFECT ---
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+            });
+        });
+    </script>
+</body>
+
+</html>
