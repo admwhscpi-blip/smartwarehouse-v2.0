@@ -167,6 +167,14 @@
             background: rgba(0, 243, 255, 0.1);
         }
 
+        /* FIX VISIBILITY FOR DROPDOWN OPTIONS ON DARK THEMES */
+        .modern-select option {
+            background-color: #0c121d;
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            padding: 10px;
+        }
+
         .btn-run-v10 {
             background: var(--neon-blue);
             border: none;
@@ -976,6 +984,284 @@
             height: 30px;
             background: rgba(0, 243, 255, 0.1);
         }
+
+        /* V17: ULTRA-MODERN EXPANDED DATA GUIDE */
+        .guide-container {
+            background: rgba(5, 10, 20, 0.95);
+            border: 2px solid rgba(0, 243, 255, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 25px;
+            font-family: 'Orbitron', sans-serif;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 243, 255, 0.1);
+        }
+
+        .guide-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-gold), transparent);
+            animation: guide-scan 6s linear infinite;
+            z-index: 10;
+        }
+
+        @keyframes guide-scan {
+            0% {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(300px);
+                opacity: 0;
+            }
+        }
+
+        .guide-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .guide-title {
+            font-size: 0.85rem;
+            color: var(--neon-gold);
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 900;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+        }
+
+        .guide-grid-dense {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .guide-item-expanded {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .guide-item-expanded:hover {
+            border-left-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .item-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-code {
+            color: var(--neon-blue);
+            font-weight: 950;
+            font-size: 0.75rem;
+            /* SHRUNK */
+            min-width: 30px;
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.4);
+        }
+
+        .item-label {
+            color: #fff;
+            font-size: 0.65rem;
+            /* SHRUNK */
+            font-weight: 800;
+        }
+
+        .item-desc {
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            /* SHRUNK */
+            line-height: 1.2;
+            font-family: 'Rajdhani';
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .logic-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            /* REDUCED */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .logic-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .logic-header {
+            font-size: 0.65rem;
+            /* SHRUNK */
+            font-weight: 900;
+            color: var(--neon-green);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logic-split {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .logic-item-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            padding: 6px 10px;
+            /* REDUCED */
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .logic-item-box:hover {
+            background: rgba(0, 243, 255, 0.05);
+            border-color: rgba(0, 243, 255, 0.15);
+        }
+
+        .logic-step-num {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 0.5rem;
+            color: var(--neon-blue);
+            font-weight: 900;
+            opacity: 0.6;
+        }
+
+        .logic-name {
+            color: #fff;
+            font-size: 0.6rem;
+            /* SHRUNK */
+            font-weight: 800;
+        }
+
+        .logic-formula {
+            color: var(--neon-gold);
+            font-size: 0.65rem;
+            /* SHRUNK */
+            font-weight: 900;
+        }
+
+        .logic-desc-small {
+            color: #777;
+            font-size: 0.5rem;
+            /* SHRUNK */
+            font-family: 'Rajdhani';
+            font-weight: 600;
+        }
+
+        .flow-arrow {
+            color: var(--neon-blue);
+            margin: 0 5px;
+            font-size: 0.8rem;
+            animation: arrow-blink 1.5s infinite;
+        }
+
+        @keyframes arrow-blink {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translateX(0);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(3px);
+            }
+        }
+
+        .system-notes-box {
+            margin-top: 15px;
+            padding: 12px 15px;
+            background: rgba(0, 243, 255, 0.03);
+            border: 1px dashed rgba(0, 243, 255, 0.2);
+            border-radius: 6px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .notes-header {
+            font-family: 'Orbitron';
+            font-size: 0.6rem;
+            color: var(--neon-blue);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 950;
+        }
+
+        .notes-content {
+            font-size: 0.6rem;
+            color: #666;
+            line-height: 1.4;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-red {
+            color: var(--neon-red);
+        }
+
+        .tag-yellow {
+            color: var(--neon-gold);
+        }
+
+        .tag-cyan {
+            color: var(--neon-blue);
+        }
+
+        .visual-decoration {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 2.5rem;
+            color: rgba(0, 243, 255, 0.03);
+            pointer-events: none;
+            font-style: italic;
+            font-weight: 900;
+        }
     </style>
 </head>
 
@@ -1076,6 +1362,149 @@
                         <div class="clock-time" id="widget-time">00:00</div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- V17: ULTRA-MODERN DETAIL GUIDE (FULL CAPSLOCK & ANTI-OVERLAP) -->
+        <div class="guide-container scanline-card">
+
+            <!-- SECTION 1: RINCIAN KOLOM DATA (DATA LAPANGAN) -->
+            <div class="guide-section">
+                <div class="guide-title"><i class="fas fa-satellite-dish"></i> 1. RINCIAN KOLOM DATA (DATA LAPANGAN)
+                </div>
+                <div class="guide-grid-dense">
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[L]</span> <span class="item-label">KE AREA
+                                UNLOADING/INTAKE</span></div>
+                        <div class="item-desc">JAM SAAT KRANI MEMANGGIL UNIT DARI PARKIRAN UNTUK MASUK KE AREA BONGKAR.
+                        </div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[M]</span> <span class="item-label">START
+                                BONGKAR</span></div>
+                        <div class="item-desc">JAM UNIT MULAI MENUANG MUATAN (SETELAH UNIT SAMPAI, BUKA TERPAL, & QC
+                            SELESAI VERIFIKASI).</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[N]</span> <span class="item-label">HOLD
+                                QC</span></div>
+                        <div class="item-desc">JAM SAAT OPERASIONAL DIHENTIKAN SEMENTARA UNTUK PROSES SAMPLING ATAU
+                            PENGECEKAN MUTU.</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[O]</span> <span class="item-label">RE-START
+                                QC</span></div>
+                        <div class="item-desc">JAM OPERASIONAL DILANJUTKAN KEMBALI SETELAH MENDAPAT INSTRUKSI RILIS DARI
+                            LAB/QC.</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[P]</span> <span class="item-label">MANUVER
+                                AKHIR</span></div>
+                        <div class="item-desc">JAM UNIT SELESAI BONGKAR DAN MULAI MELAKUKAN PERAPIHAN BAK ATAU PERSIAPAN
+                            KELUAR AREA.</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[Q]</span> <span class="item-label">FINISH</span>
+                        </div>
+                        <div class="item-desc">JAM SAAT UNIT BENAR-BENAR KELUAR DARI SISTEM/AREA BONGKAR.</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[R]</span> <span class="item-label">START TRUCK
+                                BERIKUTNYA</span></div>
+                        <div class="item-desc">JAM PANGGIL UNIT SELANJUTNYA - DIGUNAKAN UNTUK MENDETEKSI JEDA WAKTU
+                            (IDLE loss).</div>
+                    </div>
+                    <div class="guide-item-expanded">
+                        <div class="item-main"><span class="item-code">[T]</span> <span class="item-label">OFF /
+                                SET-UP</span></div>
+                        <div class="item-desc">JAM KHUSUS UNTUK MENCATAT DURASI PERSIAPAN ALAT, ISTIRAHAT, ATAU
+                            PERGANTIAN SHIFT.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: LOGIKA PERHITUNGAN DURASI -->
+            <div class="guide-section">
+                <div class="guide-title" style="color:var(--neon-green); border-color:rgba(0,255,136,0.3);">
+                    <i class="fas fa-brain"></i> 2. LOGIKA PERHITUNGAN DURASI (INTERPRETASI HASIL)
+                </div>
+
+                <div class="logic-card">
+                    <!-- A. ACTIVE DISCHARGE -->
+                    <div class="logic-group">
+                        <div class="logic-header"><i class="fas fa-bolt"></i> A. ACTIVE DISCHARGE (URUTAN OPERASIONAL)
+                        </div>
+                        <div class="logic-split">
+                            <div class="logic-item-box">
+                                <span class="logic-step-num">STEP 01 <i class="fas fa-long-arrow-alt-right"></i></span>
+                                <span class="logic-name">WAIT PANGGIL</span>
+                                <span class="logic-formula">($M - L$)</span>
+                                <span class="logic-desc-small">DURASI PERJALANAN UNIT HINGGA MULAI BONGKAR.</span>
+                            </div>
+                            <div class="logic-item-box">
+                                <span class="logic-step-num">STEP 02 <i class="fas fa-long-arrow-alt-right"></i></span>
+                                <span class="logic-name">ACTIVE BONGKAR</span>
+                                <span class="logic-formula">($N - M$)</span>
+                                <span class="logic-desc-small">DURASI MURNI PENUANGAN MUATAN (PRE-QC).</span>
+                            </div>
+                            <div class="logic-item-box">
+                                <span class="logic-step-num">STEP 03 <i class="fas fa-long-arrow-alt-right"></i></span>
+                                <span class="logic-name">QC PROCESS</span>
+                                <span class="logic-formula">($O - N$)</span>
+                                <span class="logic-desc-small">TOTAL WAKTU BERHENTI UNTUK KEPERLUAN CHECK QC.</span>
+                            </div>
+                            <div class="logic-item-box">
+                                <span class="logic-step-num">STEP 04 <i class="fas fa-long-arrow-alt-right"></i></span>
+                                <span class="logic-name">MANUVER AKHIR</span>
+                                <span class="logic-formula">($P - O$)</span>
+                                <span class="logic-desc-small">PENYELESAIAN SETELAH RILIS QC HINGGA SELESAI.</span>
+                            </div>
+                            <div style="grid-column: span 2;" class="logic-item-box">
+                                <span class="logic-step-num">STEP 05 <i class="fas fa-flag-checkered"></i></span>
+                                <span class="logic-name">FINISH DELAY</span>
+                                <span class="logic-formula">($Q - P$)</span>
+                                <span class="logic-desc-small">WAKTU TUNGGU ADMINISTRASI ATAU PERGERAKAN UNIT
+                                    MENINGGALKAN AREA BONGKAR.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B. DURASI NON-OPERASIONAL -->
+                    <div class="logic-group" style="padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+                        <div class="logic-header" style="color:var(--neon-red);"><i class="fas fa-stop-circle"></i> B.
+                            DURASI NON-OPERASIONAL (EKSKLUSIF)</div>
+                        <div class="logic-grid-dense" style="gap:10px;">
+                            <div class="logic-item-box" style="border-left: 3px solid var(--neon-gold);">
+                                <span class="logic-name tag-yellow">IDLE LOSS: $R\text{ (UNIT BARU)} - Q\text{ (UNIT
+                                    SEBELUMNYA)}$</span>
+                                <span class="logic-desc-small">DIVALIDASI OLEH **KOLOM S (KETERANGAN IDLE LOSS)** UNTUK
+                                    MENGETAHUI KENDALA TEKNIS/NON-TEKNIS PENYEBAB MACETNYA ALIRAN TRUK.</span>
+                            </div>
+                            <div class="logic-item-box" style="border-left: 3px solid var(--neon-red);">
+                                <span class="logic-name tag-red">OFF / SET-UP: DIHITUNG DARI MARKER T</span>
+                                <span class="logic-desc-small">DIVALIDASI OLEH **KOLOM U (KETERANGAN OFF/SET-UP)** UNTUK
+                                    MENCATAT WAKTU YANG DIRENCANAKAN BERHENTI (CLEANING/BREAK).</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CATATAN TAMBAHAN (SYSTEM NOTES) -->
+                    <div class="system-notes-box">
+                        <div class="notes-header"><i class="fas fa-terminal blink"></i> CATATAN LOGIKA SISTEM BKK
+                            DASHBOARD</div>
+                        <div class="notes-content">
+                            • SELURUH PERHITUNGAN DURASI BERJALAN SECARA REAL-TIME DALAM SIKLUS 24 JAM PENUH BERDASARKAN
+                            INPUTAN KRANI DI LAPANGAN. <br>
+                            • SISTEM SECARA OTOMATIS MENGKALIBRASI JEDA WAKTU ANTAR SHIFT DAN GANTI MATERIAL UNTUK
+                            MENJAMIN AKURASI DATA 100%. <br>
+                            • ANALISA KECEPATAN (TON/JAM) MENGGUNAKAN BASIS WAKTU "ACTIVE BONGKAR" UNTUK HASIL YANGLEBIH
+                            REPRESENTATIF TERHADAP KINERJA ALAT.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DECORATION -->
+                <div class="visual-decoration">BKK_SYSTEM_V.10</div>
             </div>
         </div>
     </div>

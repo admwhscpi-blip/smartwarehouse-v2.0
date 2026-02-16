@@ -952,7 +952,6 @@
                         <a href="rm-staffel-analys.html">ANALYS</a>
                     </div>
 
-                    <a href="rm-downtime.html">RM-DOWNTIME</a>
 
                     <button class="submenu-btn" onclick="toggleMenu('rm-langsir-menu')">
                         <span>RM-LANGSIR</span>
@@ -995,7 +994,6 @@
                 <div class="submenu" id="cpo-menu">
                     <a href="cpo-dashboard.html">CPO-STOCK</a>
                     <a href="cpo-simulation.html">CPO-SIMULASI</a>
-                    <a href="cpo-downtime.html">CPO-DOWNTIME</a>
                 </div>
             </div>
 
@@ -1008,7 +1006,6 @@
                 <div class="submenu" id="bkk-menu">
                     <a href="bkk-dashboard.html">BKK-STOCK</a>
                     <a href="bkk-simulasi.html">BKK-SIMULASI</a>
-                    <a href="bkk-downtime.html">BKK-DOWNTIME</a>
                 </div>
             </div>
 
@@ -1060,7 +1057,20 @@
                 </div>
             </div>
 
-            <!-- 7. OUTSTANDING -->
+            <!-- 7. UNLOADING ANALYTICS -->
+            <div class="nav-item">
+                <button class="nav-btn" onclick="toggleMenu('unloading-menu')">
+                    <span><i class="fas fa-chart-bar icon"></i> UNLOADING ANALYTICS</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7em;"></i>
+                </button>
+                <div class="submenu" id="unloading-menu">
+                    <a href="bkk-downtime.html">BKK-DOWNTIME</a>
+                    <a href="rm-downtime.html">RM-DOWNTIME</a>
+                    <a href="cpo-downtime.html">CPO-DOWNTIME</a>
+                </div>
+            </div>
+
+            <!-- 8. OUTSTANDING -->
             <div class="nav-item">
                 <button class="nav-btn" onclick="toggleMenu('outstanding-menu')">
                     <span><i class="fas fa-stream icon"></i> OUTSTANDING</span>
