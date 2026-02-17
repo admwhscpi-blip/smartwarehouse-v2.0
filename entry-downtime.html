@@ -580,6 +580,24 @@
 
 
             <div style="text-align:center; margin-top:30px;">
+                <!-- v18.32: Dashboard Button -->
+                <a href="homepage-v1.html" style="text-decoration:none;">
+                    <button style="
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid var(--border);
+                        color: var(--muted);
+                        padding: 12px 25px;
+                        border-radius: 50px;
+                        font-family: 'Orbitron';
+                        font-size: 0.7rem;
+                        cursor: pointer;
+                        display: inline-block;
+                        margin-bottom: 15px;
+                    ">
+                        ← KEMBALI KE DASHBOARD
+                    </button>
+                </a>
+                <br>
                 <button id="btn-install-app" onclick="installApp()" style="
                     background: linear-gradient(90deg, #00f3ff, #0066ff);
                     color: #000;
@@ -629,12 +647,7 @@
                         </select></div>
                     <div class="field-group"><label>Gudang Pekerjaan</label>
                         <input type="text" id="setup_gudang" list="gudang_list" placeholder="Pilih / Ketik...">
-                        <datalist id="gudang_list">
-                            <option value="SLOC"></option>
-                            <option value="RW01"></option>
-                            <option value="RM01"></option>
-                            <option value="RW03"></option>
-                        </datalist>
+                        <datalist id="gudang_list"></datalist>
                     </div>
                     <div class="field-group"><label>Nama Krani Petugas</label><input type="text" id="setup_krani"
                             placeholder="Nama Krani (Abi Fajar dll)"></div>
@@ -989,6 +1002,22 @@
                     const res = await rDowntime.json();
                     const stockRes = await rStock.json();
 
+                    // v18.32: JS-First Datalist Population (Robust)
+                    const defaultWarehouses = ["SLOC", "RW01", "RM01", "RW03"];
+                    let finalWarehouses = [...defaultWarehouses];
+
+                    if (stockRes && stockRes.success && stockRes.warehouses) {
+                        stockRes.warehouses.forEach(w => {
+                            if (!finalWarehouses.includes(w)) finalWarehouses.push(w);
+                        });
+                    }
+
+                    const dl = document.getElementById('gudang_list');
+                    if (dl) {
+                        dl.innerHTML = ''; // Clear first
+                        dl.innerHTML = finalWarehouses.map(w => `<option value="${w}">${w}</option>`).join('');
+                    }
+
                     if (res.success) {
                         activeSessions = res.activeSessions || [];
                         document.getElementById('data-status-label').innerText = 'STORED (v17.3)';
@@ -1002,20 +1031,20 @@
                         window.pendingCoords = res.pendingCoords || [];
                     }
 
-                    if (stockRes && stockRes.success) {
-                        materialData = stockRes.materials;
-                        if (stockRes.warehouses) {
-                            const dl = document.getElementById('gudang_list');
-                            if (dl) {
-                                // Append API warehouses to existing hints (Deduplicate)
-                                const currentOptions = Array.from(dl.options).map(o => o.value);
-                                const newOptions = stockRes.warehouses
-                                    .filter(w => !currentOptions.includes(w))
-                                    .map(w => `<option value="${w}"></option>`)
-                                    .join('');
-                                dl.insertAdjacentHTML('beforeend', newOptions);
-                            }
-                        }
+                    // v18.32: JS-First Datalist Population (Robust)
+                    const defaultWarehouses = ["SLOC", "RW01", "RM01", "RW03"];
+                    let finalWarehouses = [...defaultWarehouses];
+
+                    if (stockRes && stockRes.success && stockRes.warehouses) {
+                        stockRes.warehouses.forEach(w => {
+                            if (!finalWarehouses.includes(w)) finalWarehouses.push(w);
+                        });
+                    }
+
+                    const dl = document.getElementById('gudang_list');
+                    if (dl) {
+                        dl.innerHTML = ''; // Clear first
+                        dl.innerHTML = finalWarehouses.map(w => `<option value="${w}">${w}</option>`).join('');
                     }
 
                     renderSessionPicker();
@@ -1545,7 +1574,7 @@
             });
         </script>
         <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.6rem; font-family:'Orbitron';">
-            WHSMART SYSTEM v18.30 (DATA REVISION)<br>
+            WHSMART SYSTEM v18.32 (FINAL FIX)<br>
             <span style="color:var(--accent)">GGMU!</span>
         </div>
 </body>
