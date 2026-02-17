@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PUSAT - LIVE CHAT | SMART WAREHOUSE</title>
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/app-config.js"></script>
+    <script src="js/app-data.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --neon-blue: #0ea5e9;
+            --neon-cyan: #06b6d4;
+            --neon-purple: #8b5cf6;
+            --neon-red: #ef4444;
+            --glass-bg: rgba(15, 17, 42, 0.75);
+            --glass-border: rgba(14, 165, 233, 0.25);
+            --user-msg-bg: rgba(14, 165, 233, 0.1);
+            --ai-msg-bg: rgba(2, 6, 23, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.05), transparent 70%),
+                linear-gradient(rgba(14, 165, 233, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === HEADER === */
+        header {
+            padding: 15px 30px;
+            background: rgba(2, 6, 23, 0.95);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(15px);
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand i {
+            font-size: 1.8rem;
+            color: var(--neon-cyan);
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
+        }
+
+        .brand h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #fff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-icon:hover {
+            color: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            background: rgba(14, 165, 233, 0.1);
+        }
+
+        /* === CHAT AREA === */
+        main {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* LUXURY COMMAND CENTER UI */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: rgba(10, 10, 15, 0.4);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+            margin: 10px;
+        }
+
+        .chat-window {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-purple) transparent;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            margin-bottom: 25px;
+            padding: 18px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            position: relative;
+            line-height: 1.6;
+            animation: bubbleLux 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+        }
+
+        @keyframes bubbleLux {
+            0% {
+                transform: translateY(20px) scale(0.95);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .ai-bubble {
+            align-self: flex-start;
+            background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(40, 40, 60, 0.6));
+            border-left: 5px solid var(--neon-purple);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(176, 38, 255, 0.2);
+            color: #fff;
+        }
+
+        .user-bubble {
+            align-self: flex-end;
+            background: linear-gradient(135deg, rgba(176, 38, 255, 0.15), rgba(0, 243, 255, 0.1));
+            border-right: 5px solid var(--neon-blue);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 243, 255, 0.1);
+            color: #fff;
+            text-align: right;
+        }
+
+        .ai-bubble pre,
+        .user-bubble pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        .ai-bubble table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .ai-bubble th,
+        .ai-bubble td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px;
+            text-align: left;
+        }
+
+        .ai-bubble th {
+            background: rgba(176, 38, 255, 0.2);
+        }
+
+        .label-msg {
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .ai-label {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        .user-label {
+            color: var(--neon-purple);
+            text-align: right;
+            text-shadow: 0 0 10px rgba(176, 38, 255, 0.5);
+        }
+
+        /* === SECURITY & ANALYTICS === */
+        .info-panel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            color: var(--neon-red);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-point {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+
+        .data-label {
+            color: #94a3b8;
+        }
+
+        .data-value {
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        /* === INPUT AREA === */
+        .input-area {
+            padding: 20px 40px;
+            background: rgba(2, 6, 23, 0.98);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 15px;
+            backdrop-filter: blur(15px);
+        }
+
+        .input-group {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 16px 25px;
+            border-radius: 35px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .send-btn {
+            width: 55px;
+            height: 55px;
+            background: var(--neon-cyan);
+            border: none;
+            border-radius: 50%;
+            color: #000;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05) rotate(-5deg);
+            filter: brightness(1.1);
+        }
+
+        .send-btn:disabled {
+            background: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* === LOADING ANIMATION === */
+        .typing {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+                opacity: 0.3;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* === MODAL CONFIG === */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg-dark);
+            border: 1px solid var(--neon-cyan);
+            padding: 30px;
+            border-radius: 12px;
+            width: 400px;
+            box-shadow: 0 0 30px var(--neon-cyan);
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron';
+            margin-bottom: 20px;
+            color: var(--neon-cyan);
+        }
+
+        .modal input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .modal-btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+        }
+
+        .btn-primary {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 1px solid #475569;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Rajdhani', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <i class="fas fa-robot"></i>
+            <div>
+                <h1>ADMIN PUSAT</h1>
+                <div style="font-size: 0.55rem; color: var(--neon-cyan); letter-spacing: 2px;">SMART RESEARCH ENGINE
+                    V3.0</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" title="Settings" onclick="openConfig()">
+                <i class="fas fa-cog"></i>
+            </button>
+            <button class="btn-icon" title="Clear Chat" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <div
+                style="display: flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(34, 197, 94, 0.3); font-size: 0.7rem; font-weight: 700; color: #22c55e;">
+                <div class="dot" style="width: 6px; height: 6px; background: #22c55e; animation: none;"></div>
+                SYSTEM ACTIVE
+            </div>
+        </div>
+    </header>
+
+    <main id="chatWindow">
+        <div class="chat-bubble ai-bubble">
+            <span class="label-msg ai-label">ADMIN PUSAT</span>
+            Selamat datang, <strong>Pak Bos</strong>! Saya <strong>ADMIN PUSAT</strong>, otak di balik struktur
+            <strong>SMART-WAREHOUSE V2.0</strong>.
+            <br><br>
+            Saya telah memetakan seluruh koordinat sistem: dari Jurnal SAP (MB1A/B/C), Alur 6-Tahap Intake 71, hingga
+            detail Teknis Luprosil.
+            Apapun data yang Pak Bos butuhkan, saya siap menyajikannya dengan presisi mutlak. <strong>GGMU!</strong> 🔥
+        </div>
+    </main>
+
+    <div class="info-panel">
+        <div class="glass-panel">
+            <div class="panel-title">
+                <i class="fas fa-microchip"></i>
+                BRAIN STATUS
+            </div>
+            <div class="data-point">
+                <span class="data-value" id="currentModelDisplay">LOCAL CORE</span>
+            </div>
+            <div class="data-point">
+                <span class="data-label">Engine Status:</span>
+                <span class="data-value" id="apiKeyStatus" style="color: #22c55e;">Autonomous</span>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="panel-title">
+                <i class="fas fa-database"></i>
+                KNOWLEDGE CONTEXT
+            </div>
+            <div class="data-point">
+                <span class="data-label">Stock Data:</span>
+                <span class="data-value">SECURED</span>
+            </div>
+            <div class="data-point">
+                <span class="data-label">Downtime:</span>
+                <span class="data-value">SYNCED</span>
+            </div>
+            <div class="data-point">
+                <span class="data-label">Last Sync:</span>
+                <span class="data-value" id="lastSync">...</span>
+            </div>
+            <button onclick="syncKnowledge()"
+                style="width:100%; margin-top:10px; padding:5px; border-radius:4px; border:1px solid var(--neon-cyan); background:rgba(6, 182, 212, 0.1); color:var(--neon-cyan); font-family:'Orbitron'; font-size:0.6rem; cursor:pointer;">RE-SYNC
+                DATA</button>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-group">
+            <input type="text" id="userInput" class="chat-input" placeholder="Tanya apa saja tentang database gudang..."
+                onkeypress="handleKey(event)">
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <!-- API CONFIG MODAL -->
+    <div id="modalConfig" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <h2>AI ENGINE SETTINGS</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">Configure your Gemini Brain connection.
+            </p>
+
+            <label style="font-size: 0.75rem; color: var(--neon-cyan); display: block; margin-bottom: 5px;">Gemini API
+                Key:</label>
+            <input type="password" id="apiKeyInput" placeholder="Enter API Key...">
+
+            <label style="font-size: 0.75rem; color: var(--neon-cyan); display: block; margin-bottom: 5px;">Select
+                Model:</label>
+            <select id="modelSelect"
+                style="width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: #fff; padding: 10px; margin-bottom: 20px; border-radius: 4px; font-family: 'Orbitron'; cursor: pointer;">
+                <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Fast & Free)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
+                <option value="gemini-pro">Gemini Pro (Legacy)</option>
+            </select>
+
+            <div class="modal-btns" style="flex-direction: column; gap: 10px; align-items: stretch;">
+                <button class="btn btn-secondary" onclick="listAvailableModels()" id="btnListModels"
+                    style="background: rgba(14, 165, 233, 0.1); border-color: var(--neon-cyan); color: var(--neon-cyan);">
+                    <i class="fas fa-list"></i> CHECK AVAILABLE MODELS
+                </button>
+                <div id="modelListHint"
+                    style="font-size: 0.65rem; color: #64748b; display: none; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-secondary" onclick="closeConfig()">CANCEL</button>
+                    <button class="btn btn-primary" onclick="saveConfig()">UPDATE SETTINGS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chatWindow');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const apiKeyStatus = document.getElementById('apiKeyStatus');
+
+        let warehouseContext = "";
+        let API_KEY = localStorage.getItem('GEMINI_API_KEY') || "AIzaSyAkw9vO1cvc4CpJ09BMCGy3PC5pYrFLYoc";
+        let SELECTED_MODEL = localStorage.getItem('GEMINI_MODEL') || 'gemini-1.5-flash';
+        let isLoggedIn = false;
+        let overtimeData = null;
+        async function listAvailableModels() {
+            if (!API_KEY) return alert("Pliis Pak Bos, API Key diisi dulu!");
+
+            const btn = document.getElementById('btnListModels');
+            const hint = document.getElementById('modelListHint');
+            btn.innerText = "CHECKING...";
+            btn.disabled = true;
+
+            try {
+                // Try v1beta first
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`);
+                if (!response.ok) throw new Error("Gagal ambil daftar model.");
+
+                const data = await response.json();
+                const models = data.models.filter(m => m.supportedGenerationMethods.includes("generateContent"));
+
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = '';
+
+                models.forEach(m => {
+                    const modelName = m.name.replace('models/', '');
+                    const option = document.createElement('option');
+                    option.value = modelName;
+                    option.innerText = modelName.toUpperCase() + (m.displayName ? ` (${m.displayName})` : '');
+                    if (modelName === SELECTED_MODEL) option.selected = true;
+                    select.appendChild(option);
+                });
+
+                hint.style.display = 'block';
+                hint.innerHTML = `<i class="fas fa-check-circle" style="color:#22c55e"></i> Berhasil mendeteksi ${models.length} model! Silahkan pilih model di atas.`;
+                btn.innerText = "CHECK AVAILABLE MODELS";
+            } catch (error) {
+                alert("Waduh, gagal deteksi model. Pastikan API KEY benar. Error: " + error.message);
+                btn.innerText = "CHECK AVAILABLE MODELS";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // PAGING DATA COLLECTION
+        async function syncKnowledge() {
+            try {
+                console.log("ADMIN PUSAT: Aggregating warehouse knowledge...");
+                const syncBtn = document.querySelector('button[onclick="syncKnowledge()"]');
+                if (syncBtn) syncBtn.innerText = "SYNCING...";
+
+                // 1. Fetch Live Dashboard Data
+                const data = await DataService.fetchData();
+                if (!data) throw new Error("Gagal ambil data dashboard.");
+
+                // 2. Fetch Record Moisture & Inflow (ka_final_check.json)
+                let moistureData = "Tidak ada data moisture rill.";
+                try {
+                    const mRaw = await fetch('ka_final_check.json');
+                    if (mRaw.ok) {
+                        const mJson = await mRaw.json();
+                        // Ambil 15 record penerimaan terbaru
+                        const latestP = (mJson.penerimaan || []).slice(-15).reverse();
+                        moistureData = latestP.map(p => `- [${p.date}] ${p.material}: ${p.moisture}% (${p.lokasi}) | Vessel: ${p.kapal}`).join('\n');
+                    }
+                } catch (e) { console.warn("Moisture scan failed:", e); }
+
+                const stats = DataService.processGlobalStats(data);
+                document.getElementById('lastSync').innerText = new Date().toLocaleTimeString();
+
+                // Build Overtime Context if Logged In
+                let sensitiveContext = "\nACCESS STATUS: RESTRICTED (Login required for Overtime/HR data)";
+                if (isLoggedIn) {
+                    sensitiveContext = "\nACCESS STATUS: GRANTED (Admin Level)\n\nSENSITIVE DATA: OVERTIME (LEMBURAN)\n";
+                    try {
+                        const otRaw = await fetch(CONFIG.OVERTIME_API_URL + "?action=getData");
+                        const otJson = await otRaw.json();
+                        if (otJson.status === 'success') {
+                            const emps = otJson.data.employees || [];
+
+                            // AGGREGATE HOURS
+                            let otSummary = emps.map(e => {
+                                let total = 0;
+                                for (let d in e.attendance) {
+                                    total += parseFloat(e.attendance[d]) || 0;
+                                }
+                                return { name: e.name, total: total };
+                            });
+
+                            // Sort and take top 15
+                            otSummary.sort((a, b) => b.total - a.total);
+
+                            sensitiveContext += `Total Personnel: ${emps.length}\n`;
+                            sensitiveContext += `TOP PERSONNEL BY TOTAL OVERTIME HOURS:\n`;
+                            otSummary.slice(0, 15).forEach((e, idx) => {
+                                sensitiveContext += `${idx + 1}. ${e.name}: ${e.total.toFixed(1)} Hours\n`;
+                            });
+
+                            overtimeData = otJson.data;
+                        }
+                    } catch (otErr) {
+                        sensitiveContext += "Error fetching live overtime data.";
+                    }
+                }
+
+                // Add Historical Data (3-Day Trend for ALL materials)
+                let historyContext = "\nRECENT HISTORY (3-DAY TREND):\n";
+                try {
+                    const storedHistory = localStorage.getItem('rm_stock_history');
+                    if (storedHistory) {
+                        const historyPoints = JSON.parse(storedHistory);
+                        const last3 = historyPoints.slice(-3).reverse();
+
+                        // Create a map for AI to quickly look up
+                        let historyMap = {};
+                        last3.forEach(h => {
+                            h.materials.forEach(m => {
+                                if (!historyMap[m.name]) historyMap[m.name] = [];
+                                historyMap[m.name].push({ date: h.date, stock: DataService.convertKgToTon(m.totalVal) });
+                            });
+                        });
+
+                        // OPTIMIZATION: Only include history for materials with current stock
+                        const currentActiveMats = data.materials.filter(m => m.stocks.reduce((a, b) => a + b, 0) > 0).map(m => m.name);
+
+                        historyContext += "Material History (3D Trend):\n";
+                        for (let matName in historyMap) {
+                            if (currentActiveMats.includes(matName)) {
+                                historyContext += `- ${matName}: ${historyMap[matName].map(p => `${p.date.slice(-5)}:${p.stock}`).join(' | ')}\n`;
+                            }
+                        }
+                    }
+                } catch (hErr) {
+                    console.warn("History sync failed:", hErr);
+                }
+
+                // Build context
+                let context = `
+LOKASI GUDANG & KAPASITAS:
+${data.warehouses.map((wh, i) => `- ${wh}: Cap ${DataService.convertKgToTon(data.capacities[i])} TON`).join('\n')}
+
+DATA DASHBOARD LIVE (STOK):
+- GUDANG TERISI: ${stats.percentage.toFixed(1)}% (${DataService.convertKgToTon(stats.totalFilled)} TON)
+${data.materials.map(m => `- ${m.name}: ${DataService.convertKgToTon(m.stocks.reduce((a, b) => a + b, 0))} TON`).join('\n')}
+
+STATUS INTAKE & SILO:
+${data.intake.map(i => `- ${i.name}: ${i.status} (${i.material})`).join('\n')}
+${data.silos.map(s => `- Silo ${s.id}: ${s.material} | Stok: ${s.stock} Unit | Status: ${s.status || 'Standby'}`).join('\n')}
+
+LIST TRUCK AKTIF (BONGKARAN):
+${data.trucks.map(t => `- [${t.aging}] ${t.nopol}: ${t.material} (${t.netto} Kg) | Status: ${t.type}`).join('\n')}
+
+RECORD MOISTURE & INFLOW (Record Terbaru):
+${moistureData}
+
+MAPPING MATERIAL:
+${JSON.stringify(CONFIG.MATERIAL_CODES)}
+
+${historyContext}
+${sensitiveContext}
+`;
+                warehouseContext = context;
+                if (syncBtn) syncBtn.innerText = "RE-SYNC DATA";
+                console.log("Context updated with live data.");
+            } catch (err) {
+                console.error("Sync error:", err);
+                warehouseContext = "Error syncing data. Using basic knowledge.";
+            }
+        }
+
+        // INITIAL CHECK
+        function updateStatus() {
+            if (API_KEY) {
+                apiKeyStatus.innerText = "Connected";
+                apiKeyStatus.style.color = "#22c55e";
+            } else {
+                apiKeyStatus.innerText = "Disconnected";
+                apiKeyStatus.style.color = "var(--neon-red)";
+            }
+            document.getElementById('modelSelect').value = SELECTED_MODEL;
+            document.getElementById('currentModelDisplay').innerText = SELECTED_MODEL.toUpperCase().replace(/-/g, ' ');
+        }
+
+        function openConfig() {
+            document.getElementById('modalConfig').style.display = 'flex';
+            document.getElementById('apiKeyInput').value = API_KEY;
+            document.getElementById('modelSelect').value = SELECTED_MODEL;
+        }
+        function closeConfig() { document.getElementById('modalConfig').style.display = 'none'; }
+        function saveConfig() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const model = document.getElementById('modelSelect').value;
+
+            if (key) {
+                localStorage.setItem('GEMINI_API_KEY', key);
+                API_KEY = key;
+            }
+            localStorage.setItem('GEMINI_MODEL', model);
+            SELECTED_MODEL = model;
+
+            updateStatus();
+            closeConfig();
+            alert("Settings Updated! ADMIN A1 siap bekerja dengan model " + SELECTED_MODEL);
+        }
+
+        function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+
+        function addBubble(text, type, isLabel = true) {
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${type}-bubble`;
+            const labelText = type === 'ai' ? 'ADMIN A1' : 'PAK BOS';
+            const labelClass = type === 'ai' ? 'ai-label' : 'user-label';
+
+            // Masking Logic for User Credentials
+            let displayRef = text;
+            if (type === 'user') {
+                displayRef = text.split('\n').map(line => {
+                    const low = line.toUpperCase();
+                    if (low.includes('USERNAME:') || low.includes('PASWORD:')) {
+                        const parts = line.split(':');
+                        if (parts.length > 1) {
+                            return parts[0] + ': ' + '*'.repeat(parts[1].trim().length || 8);
+                        }
+                    }
+                    return line;
+                }).join('\n');
+            }
+
+            div.innerHTML = `
+                ${isLabel ? `<span class="label-msg ${labelClass}">${labelText}</span>` : ''}
+                <pre>${displayRef}</pre>
+                `;
+            chatWindow.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+
+        function scrollToBottom() { chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' }); }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text || sendBtn.disabled) return;
+
+            if (!API_KEY) {
+                alert("Waduh Pak Bos, API Key belum diisi! Klik ikon gear di kanan atas.");
+                openConfig();
+                return;
+            }
+
+            // Auth Trap
+            const upText = text.toUpperCase();
+            if (upText.includes("USERNAME:") && upText.includes("PASWORD:")) {
+                const lines = upText.split('\n');
+                let userMatch = false;
+                let passMatch = false;
+                lines.forEach(l => {
+                    if (l.includes("USERNAME:") && l.includes("WAREHOUSE")) userMatch = true;
+                    if (l.includes("PASWORD:") && l.includes("1891")) passMatch = true;
+                });
+
+                if (userMatch && passMatch) {
+                    isLoggedIn = true;
+                    await syncKnowledge(); // Refetch with sensitive data
+                }
+            }
+
+            addBubble(text, 'user');
+            userInput.value = '';
+
+            // AI Thinking State
+            sendBtn.disabled = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing';
+            typingDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+            chatWindow.appendChild(typingDiv);
+            scrollToBottom();
+
+            try {
+                const response = await callGemini(text);
+                chatWindow.removeChild(typingDiv);
+                addBubble(response, 'ai');
+            } catch (error) {
+                if (typingDiv.parentNode) chatWindow.removeChild(typingDiv);
+                addBubble("Waduh, koneksi ke server pusat gangguan Pak Bos! " + error.message + "\n\nTips: Coba ganti model ke 'Gemini Pro' atau 'Gemini 1.5 Pro' di pengaturan (Ikon Gear).", 'ai');
+                console.error(error);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        // === SEMANTIC LIBRARIAN V7.0 (INTENT MAPPING & DATE RESOLVER) ===
+        const SemanticLibrarian = {
+            keywords: {
+                SBM: ["SBM", "SOYA", "SB M", "LUPO", "LUPROSIL"],
+                RICE_BRAN: ["RICE BRAN", "401200", "RB", "BEKATUL", "RICEBRAN"],
+                PKM: ["PKM", "PALM", "INTI SAWIT"],
+                STOCK: ["STOK", "STOCK", "ADA BERAPA", "SISA"],
+                UNLOADING: ["BONGKAR", "MASUK", "DATANG", "VESSEL", "KAPAL", "TRUCK"],
+                DOWNTIME: ["MATI", "RUSAK", "DOWNTIME", "KENDALA", "TROUBLE"],
+                SAFETY: ["SAFETY", "APD", "KECELAKAAN", "AMAN"]
+            },
+
+            mapIntent: function (query) {
+                const up = query.toUpperCase();
+                let intents = [];
+                for (let topic in this.keywords) {
+                    if (this.keywords[topic].some(k => up.includes(k))) intents.push(topic);
+                }
+                return intents.length > 0 ? intents.join(", ") : "GENERAL QUERY";
+            },
+
+            resolveDate: function (query) {
+                const now = new Date();
+                const up = query.toUpperCase();
+
+                if (up.includes("KEMARIN") || up.includes("KMRN")) {
+                    const d = new Date(now); d.setDate(d.getDate() - 1);
+                    return `TARGET DATE: ${d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+                }
+                if (up.includes("3 HARI")) {
+                    return `RANGE: 3 Hari Terakhir (Sejak 14 Feb 2026)`;
+                }
+                if (up.includes("TADI") || up.includes("HARI INI")) {
+                    return `TARGET DATE: Today (${now.toLocaleDateString('id-ID')})`;
+                }
+                return "TIMEFRAME: Latest Data Available";
+            }
+        };
+
+        // === LOCAL ADMIN PUSAT ENGINE (REPLACING CLOUD AI) ===
+        const LocalAdminPusat = {
+            processQuery: function (query) {
+                const intent = SemanticLibrarian.mapIntent(query);
+                const time = SemanticLibrarian.resolveDate(query);
+                const upQuery = query.toUpperCase();
+                let results = [`**DIAGNOSA MANUAL:** Topic: ${intent} | ${time}`];
+
+                // 1. SAP TRANSACTIONS
+                if (upQuery.includes("MB1B") || upQuery.includes("TRANSFER")) {
+                    results.push("**INFORMASI SAP MB1B (MOVEMENT 311):**\nDigunakan untuk **Transfer Stok Internal** (SLoc to SLoc). Contoh: Pemindahan Luprosil dari `RM01` ke `TANK` penampungan. Wajib cek saldo asal sebelum posting! GGMU!");
+                }
+                if (upQuery.includes("MB1A") || upQuery.includes("ISSUE") || upQuery.includes("KELUAR")) {
+                    results.push("**INFORMASI SAP MB1A (MOVEMENT 201):**\nDigunakan untuk **Goods Issue** ke Departemen lain (Maintenance/Produksi). Membutuhkan Cost Center. \n- GL: `607230`\n- Sample CC: `189909` (Maintenance).");
+                }
+                if (upQuery.includes("MB1C") || upQuery.includes("RECEIPT") || upQuery.includes("MASUK")) {
+                    results.push("**INFORMASI SAP MB1C (MOVEMENT 919):**\nDigunakan untuk **Manual Receipt**. Sering digunakan untuk input hasil *Bin Sweeping* dengan kode material NS berakhiran **400** (Contoh: `940.08.0001`).");
+                }
+
+                // 2. OPERATIONAL FLOWS
+                if (upQuery.includes("INTAKE") || upQuery.includes("71")) {
+                    results.push("**ALUR 6-TAHAP INTAKE 71:**\n1. **Manuver Awal**\n2. **Wait QC** (Sampling)\n3. **Bongkar 1**\n4. **Hold QC** (Re-check)\n5. **Bongkar 2**\n6. **Manuver Akhir**\nData rill diproses secara otomatis di dashboard Command Center.");
+                }
+                if (upQuery.includes("SWEEPING") || upQuery.includes("BIN")) {
+                    results.push("**BIN SWEEPING LOGIC:**\n- Mengutamakan prinsip FIFO untuk hasil ayak.\n- Material NS wajib menggunakan kode akhiran **400**.\n- Lokasi utama: Bin BS.");
+                }
+
+                // 3. UI OBSERVABILITY (TYPO)
+                if (upQuery.includes("TYPO") || upQuery.includes("MAMPU") || upQuery.includes("CEK UI")) {
+                    results.push("**LAPORAN OBSERVASI UI:**\nAdmin Pusat mendeteksi typo pada sub-menu: **'ANALYSTIC'** (Harusnya *Analytic* atau *Analytics*) di menu RM Kadar Air dan Bin Sweeping. Mohon koreksi pada iterasi berikutnya, Pak Bos!");
+                }
+
+                // 4. STOCK DATA EXTRACTION (REAL DATA)
+                if (intent.includes("STOCK") || intent.includes("UNLOADING") || upQuery.includes("BERAPA")) {
+                    const matches = this.findAllMaterialsInContext(upQuery);
+
+                    if (matches.length === 1) {
+                        results.push(this.formatStockResponse(matches[0]));
+                    } else if (matches.length > 1) {
+                        let suggestionMsg = "### BEBERAPA KANDIDAT MATERIAL DITEMUKAN:\n";
+                        suggestionMsg += "Mungkin maksud Pak Bos salah satu dari ini?:\n";
+                        matches.forEach((m, i) => {
+                            suggestionMsg += `${i + 1}. **${m.name}** (${m.code})\n`;
+                        });
+                        suggestionMsg += "\nSilakan ketik nama lengkap atau kodenya untuk data presisi.";
+                        results.push(suggestionMsg);
+                    } else {
+                        // SUGGEST BASED ON PARTIAL MATCH IF NO EXACT INTENT MATCH
+                        const partials = this.findPartialMatches(upQuery);
+                        if (partials.length > 0) {
+                            let partialMsg = "### SARAN ADMIN PUSAT:\n";
+                            partialMsg += "Saya tidak menemukan data rill untuk kata kunci tersebut, tapi mungkin maksud Pak Bos:\n";
+                            partials.forEach((p, i) => {
+                                partialMsg += `${i + 1}. **${p.name}** (${p.code})\n`;
+                            });
+                            results.push(partialMsg);
+                        } else {
+                            results.push("Izin Pak Bos, sebutkan nama materialnya secara spesifik (misal: SBM, Rice Bran, PKM). Saya akan tarik data rill dari database pusat.");
+                        }
+                    }
+                }
+
+                // Default if no patterns matched
+                if (results.length === 0) {
+                    return "Maaf Pak Bos, query tersebut belum masuk dalam database fundamental Admin Pusat. \n\nSaya merekomendasikan cek menu **SOP/WI CENTER** atau tanya spesifik tentang **SAP (MB1A/B/C)**, **Stok Material**, atau **Alur Intake**. GGMU!";
+                }
+
+                return results.join("\n\n---\n\n");
+            },
+
+            findAllMaterialsInContext: function (query) {
+                let found = [];
+                const up = query.toUpperCase();
+
+                // DATA RILL DARI API (Dynamic)
+                if (window.App && App.data && App.data.materials) {
+                    App.data.materials.forEach(mat => {
+                        const name = mat.name.toUpperCase();
+                        // Matching Eksak atau Nama mengandung Kata Kunci
+                        if (up.includes(name) || (mat.code && up.includes(mat.code))) {
+                            found.push({ name: mat.name, code: mat.code || 'N/A' });
+                        }
+                    });
+                }
+
+                // FALLBACK KE CONFIG (Static)
+                for (let code in CONFIG.MATERIAL_CODES) {
+                    const name = CONFIG.MATERIAL_CODES[code].toUpperCase();
+                    if (up.includes(name) || up.includes(code)) {
+                        // Avoid duplicates if already found in App.data
+                        if (!found.some(f => f.name.toUpperCase() === name)) {
+                            found.push({ name: name, code: code });
+                        }
+                    }
+                }
+                return found;
+            },
+
+            findPartialMatches: function (query) {
+                let suggestions = [];
+                const up = query.toUpperCase();
+                const words = up.split(' ').filter(w => w.length > 2);
+
+                if (words.length === 0) return [];
+
+                // 1. Search in live Data
+                if (window.App && App.data && App.data.materials) {
+                    App.data.materials.forEach(mat => {
+                        const name = mat.name.toUpperCase();
+                        if (words.some(w => name.includes(w))) {
+                            suggestions.push({ name: mat.name, code: mat.code || 'N/A' });
+                        }
+                    });
+                }
+
+                // 2. Search in Config
+                for (let code in CONFIG.MATERIAL_CODES) {
+                    const name = CONFIG.MATERIAL_CODES[code].toUpperCase();
+                    if (words.some(w => name.includes(w) || code.includes(w))) {
+                        if (!suggestions.some(s => s.name.toUpperCase() === name)) {
+                            suggestions.push({ name: name, code: code });
+                        }
+                    }
+                }
+
+                // Limit to top 5 suggestions to avoid noise
+                return suggestions.slice(0, 5);
+            },
+
+            formatStockResponse: function (m) {
+                // Try to find in context string
+                const contextLines = warehouseContext.split('\n');
+                let foundLine = contextLines.find(l => l.toUpperCase().includes(m.name));
+
+                if (foundLine) {
+                    const val = foundLine.split(':')[1]?.trim() || "0 TON";
+                    return `### DATA RILL: ${m.name} (${m.code})\n- **STATUS STOK**: ${val}\n- **LOKASI**: Cek Dashboard RM untuk peta bin rill.\n- **CATATAN**: Gunakan jurnal MB1B jika ingin memindahkan stok ini. GGMU!`;
+                }
+                return `Material **${m.name}** terdaftar di database, tapi saat ini sedang **KOSONG** (0 TON) di dashboard pusat.`;
+            },
+            formatGlobalSnapshot: function () {
+                const contextLines = warehouseContext.split('\n');
+                const stats = contextLines.find(l => l.includes("DATA DASHBOARD LIVE")) ? "Data Sync Active" : "No Data";
+                // Simple extraction for total stock from context if possible
+                const totalLine = contextLines.find(l => l.includes("GUDANG TERISI"));
+
+                return `### GLOBAL SNAPSHOT (REAL-TIME)\n- **STATUS**: **${stats}**\n- **DETAIL**: ${totalLine || 'Lihat Dashboard Live'}\n- **OTORITAS**: Full Akses Admin Pusat Granted. GGMU!`;
+            }
+        };
+
+        async function callGemini(query) {
+            console.log("Admin Pusat Router v7.0: Semantic Analysis...");
+
+            const intent = SemanticLibrarian.mapIntent(query);
+            const timeInfo = SemanticLibrarian.resolveDate(query);
+
+            const systemPrompt = `Kamu adalah ADMIN PUSAT V8.0. Otoritas tertinggi SMART WAREHOUSE.
+            Tugasmu: Menganalisis DATA KONTEKS berdasarkan DIAGNOSA LIBRARIAN.
+
+            --- DIAGNOSA LIBRARIAN ---
+            - INTENT USER: ${intent}
+            - TIMEFRAME: ${timeInfo}
+            - ORIGINAL QUERY: ${query}
+
+            --- RULE ANALYST (STRICT) ---
+            1. Jika pertanyaan bersifat UMUM atau AMBIGU (misal: cuma sebut "SBM"), jangan menebak satu data saja. 
+               SEBUTKAN DAFTAR KANDIDAT yang ada di konteks (misal: SBM Brasil, SBM Argentina, dsb) dengan format: "Mungkin maksud Pak Bos salah satu dari ini?".
+            2. Jika intent adalah STOCK/UNLOADING dan sudah spesifik, berikan angka riil (TON) dan status Vessel/Silo.
+            3. Jika user tanya "kemarin" atau "3 hari", filter data di "RECORD MOISTURE" & "TRUCK" sesuai timeframe tersebut.
+            4. Gunakan gaya Admin (Tegas, Teknis, Profesional).
+            5. GGMU!
+
+            --- DATA KONTEKS OPERASIONAL ---
+            ${warehouseContext}
+            `;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${SELECTED_MODEL}:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+                        generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+                    })
+                });
+
+                if (!response.ok) throw new Error("API_FAIL");
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (err) {
+                console.error("Router Fail:", err);
+                const localRes = LocalAdminPusat.processQuery(query);
+                return `**IDENTIFIKASI SEMANTIK ADMIN PUSAT:**\n\nIzin Pak Bos, Brain Pusat sedang sinkronisasi. Hasil scan manual:\n\n${localRes}\n\nGGMU!`;
+            }
+        }
+
+        // INIT
+        window.onload = () => {
+            syncKnowledge();
+            updateStatus();
+            console.log("ADMIN PUSAT: Local Core Engine v2.0 READY.");
+        };
+    </script>
+</body>
+
+</html>

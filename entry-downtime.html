@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- PWA / MOBILE APP MODE -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#03040b">
+    <meta name="application-name" content="WHSMART">
+    <meta name="apple-mobile-web-app-title" content="WHSMART">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2942/2942544.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2942/2942544.png">
+
+    <title>WHSMART v18.18 - MOBILE APP MODE</title>
+
+    <!-- UI LIBS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <link rel="manifest"
+        href="data:application/manifest+json;base64,eyJuYW1lIjoiV0hTTUFSVCIsInNob3J0X25hbWUiOiJXSFNNQVJUIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwMzA0MGIiLCJ0aGVtZV9jb2xvciI6IiMwMzA0MGIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnXMcG5nLmZsYXRpY29uLmNvbS81MTIvMjk0Mi8yOTQyNTQ0LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmcifV19">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #03040b;
+            --card: rgba(15, 20, 35, 0.7);
+            --accent: #00f3ff;
+            --accent-glow: rgba(0, 243, 255, 0.4);
+            --text: #ffffff;
+            --muted: #a0a0c0;
+            --success: #00ff88;
+            --border: rgba(0, 243, 255, 0.2);
+            --danger: #ff4d4d;
+            --warning: #ffaa00;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 243, 255, 0.05) 0%, transparent 40%);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .app-bar {
+            background: rgba(5, 7, 15, 0.95);
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 2px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0, 243, 255, 0.2);
+        }
+
+        .brand-logo {
+            font-family: 'Orbitron';
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            cursor: pointer;
+            transition: 0.4s;
+            display: inline-block;
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .brand-logo span {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .app-sub {
+            font-family: 'Orbitron';
+            font-size: 0.5rem;
+            color: var(--muted);
+            letter-spacing: 1px;
+            margin-top: 4px;
+            pointer-events: none;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .section-header {
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            color: var(--accent);
+            margin: 20px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 0 5px var(--accent-glow);
+            text-transform: uppercase;
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+
+        .field-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.55rem;
+            color: var(--muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: rgba(20, 25, 45, 0.8);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-family: 'Inter';
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Role Selection */
+        .selection-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .selection-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selection-card:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
+        }
+
+        .selection-icon {
+            font-size: 2.2rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .selection-title {
+            font-family: 'Orbitron';
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .selection-desc {
+            font-size: 0.55rem;
+            color: var(--muted);
+        }
+
+        /* Task Center List */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .task-card {
+            background: rgba(30, 40, 60, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 4px solid var(--warning);
+        }
+
+        .task-card:hover {
+            transform: scale(1.01);
+            border-color: var(--accent);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        .task-card.coord {
+            border-left-color: var(--accent);
+        }
+
+        .task-card .nopol {
+            font-family: 'Orbitron';
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .task-card .mat {
+            font-size: 0.65rem;
+            color: var(--text);
+            margin-top: 4px;
+        }
+
+        .task-card .status {
+            display: inline-block;
+            font-size: 0.45rem;
+            background: var(--warning);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--accent), #00aaff);
+            color: #000;
+            border: none;
+            border-radius: 15px;
+            font-family: 'Orbitron';
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 20px rgba(0, 243, 255, 0.3);
+            cursor: pointer;
+        }
+
+        .btn-submit:disabled {
+            background: #334155 !important;
+            color: #64748b !important;
+            cursor: not-allowed;
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        /* LOADING SPINNER */
+        .loading-spinner-inline {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* TOM SELECT TWEAKS */
+        .ts-dropdown .option {
+            color: #000 !important;
+            font-weight: 600;
+            background: #fff !important;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ts-dropdown .active {
+            background: var(--accent) !important;
+            color: #000 !important;
+        }
+
+        .ts-control input {
+            color: white !important;
+        }
+
+        .btn-back {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-family: 'Orbitron';
+            font-size: 0.6rem;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .btn-new {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            margin-top: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #data-status-box {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.5rem;
+            font-family: 'Orbitron';
+            color: var(--muted);
+            border: 1px solid var(--border);
+            z-index: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="data-status-box">CLOUD DATA: <span id="data-status-label" style="color:var(--danger)">OFFLINE</span></div>
+
+    <div class="success-overlay" id="success-overlay">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🛡️</div>
+        <h2 style="font-family: 'Orbitron'; color: var(--success);">SYNC SUCCESS</h2>
+        <p id="success-msg" style="color: var(--muted);">v18.3 Ultimate Synchronization Success.</p>
+        <button class="btn-submit" style="width: auto; padding: 15px 40px;" onclick="location.reload()">SIAAP
+            GGMU!</button>
+    </div>
+
+    <!-- EDIT OVERLAY (Unified for Krani/Coord) -->
+    <div class="overlay" id="edit-screen">
+        <div class="container">
+            <button class="btn-back" onclick="closeEdit()">← BATAL / BALIK</button>
+            <div class="form-card">
+                <div class="section-header" id="edit-header">LENGKAPI DATA</div>
+                <div id="edit-summary"
+                    style="margin-bottom: 20px; padding: 15px; background: rgba(0,243,255,0.05); border-radius: 12px; border: 1px solid var(--border);">
+                    <div id="edit-nopol" style="font-family:'Orbitron'; color:var(--accent); font-size:1.1rem;">-</div>
+                    <div id="edit-mat" style="font-size: 0.7rem; color:white; margin-top:5px;">-</div>
+                    <div id="edit-gudang" style="font-size: 0.6rem; color:var(--muted); margin-top:3px;">-</div>
+                </div>
+
+                <div id="krani-edit-fields" style="display:none;">
+                    <div class="field-group">
+                        <label>Input Netto Baru (Kg)</label>
+                        <input type="number" id="edit_netto" placeholder="Kg">
+                    </div>
+                </div>
+
+                <div id="coord-edit-fields" style="display:none;">
+                    <div class="field-group"><label>1. Arrival Date</label><input type="text" id="coord_arrival_date"
+                            class="date-picker"></div>
+                    <div class="field-group"><label>2. Arrival Time</label><input type="text" id="coord_arrival_time"
+                            class="time-picker"></div>
+                    <div class="field-group"><label>3. QC Sampling 1 Time</label><input type="text" id="coord_qc_time"
+                            class="time-picker"></div>
+                    <div class="field-group"><label>4. Time Timbang Masuk</label><input type="text"
+                            id="coord_timbang_time" class="time-picker"></div>
+                </div>
+
+                <input type="hidden" id="edit-row-id">
+                <button class="btn-submit" id="btn-update-task" onclick="submitTaskUpdate()">SINKRONISASI DATA PETUGAS
+                    🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP BAR (v18.22 PWA SERVICE WORKER) -->
+    <div class="app-bar">
+        <div class="brand-logo" onclick="handleLogoClick()">SMART <span>WAREHOUSE</span></div>
+        <div class="app-sub">v18.22 PWA SERVICE WORKER - SAT SET GGMU!</div>
+    </div>
+
+    <div class="container">
+
+        <!-- SCREEN 0: ROLE SELECTION -->
+        <div id="screen-role" class="screen active">
+            <h3
+                style="font-family: 'Orbitron'; font-size: 0.65rem; color: var(--accent); text-align: center; margin-top: 30px; letter-spacing: 3px;">
+                PILIH ROLE / AKTIVITAS</h3>
+            <div class="selection-grid">
+                <div class="selection-card" onclick="switchScreen('setup')">
+                    <div class="selection-icon">⚙️</div>
+                    <div class="selection-content">
+                        <div class="selection-title">SETUP AWAL SHIFT</div>
+                        <div class="selection-desc">Config Nama Krani & Koordinator.</div>
+                    </div>
+                </div>
+                <div class="selection-card" onclick="openSessionPicker('input')">
+                    <div class="selection-icon">🚚</div>
+                    <div class="selection-content">
+                        <div class="selection-title">KRANI BONGKARAN</div>
+                        <div class="selection-desc">Mulai pencatatan truck baru.</div>
+                    </div>
+                </div>
+                <div class="selection-card" onclick="switchTaskChoice()">
+                    <div class="selection-icon">🔍</div>
+                    <div class="selection-content">
+                        <div class="selection-title">LENGKAPI DATA (RESUME)</div>
+                        <div class="selection-desc">Lanjutkan sesi yang tertunda.</div>
+                        <div class="selection-desc" style="color:var(--accent); font-size:0.55rem; margin-top:5px;">
+                            *Termasuk KOORDINATOR</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div style="text-align:center; margin-top:30px;">
+                <button id="btn-install-app" onclick="installApp()" style="
+                    background: linear-gradient(90deg, #00f3ff, #0066ff);
+                    color: #000;
+                    border: none;
+                    padding: 12px 25px;
+                    border-radius: 50px;
+                    font-family: 'Orbitron';
+                    font-weight: bold;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+                    display: inline-block; /* v18.21: Force Visible */
+                    animation: pulse 2s infinite;
+                ">
+                    📲 INSTALL APLIKASI
+                </button>
+                <p id="install-instruction"
+                    style="color:var(--muted); font-size:0.7rem; margin-top:10px; opacity:0.6; display:none;">
+                    *Jika tombol tidak muncul, gunakan menu Browser (⋮) -> Tambahkan ke Layar Utama
+                </p>
+            </div>
+        </div>
+
+        <!-- SCREEN: SESSION PICKER (v16.5) -->
+        <div id="screen-session-picker" class="screen">
+            <button class="btn-back" onclick="switchScreen('role')">← GANTI ROLE</button>
+            <div class="section-header">LANJUTKAN SESI?</div>
+            <div id="session-list" style="margin-bottom:20px;">
+                <div style="text-align:center; padding:20px; color:var(--muted);">MENCARI SESI AKTIF...</div>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn-add-unit" onclick="switchScreen('setup')"
+                    style="background:var(--accent); color:white; border:none; width:100%;">+ BUAT SETUP BARU</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 1: SETUP IDENTITY -->
+        <div id="screen-setup" class="screen">
+            <button class="btn-back" onclick="switchScreen('role')">← BALIK KE HOME</button>
+            <div class="form-card">
+                <div class="section-header">IDENTITY SETUP (v16.5)</div>
+                <div class="input-grid">
+                    <div class="field-group"><label>Shift</label><select id="setup_shift">
+                            <option value="1">SHIFT 1</option>
+                            <option value="2">SHIFT 2</option>
+                            <option value="3">SHIFT 3</option>
+                        </select></div>
+                    <div class="field-group"><label>Gudang Pekerjaan</label><select id="setup_gudang"></select></div>
+                </div>
+                <div class="field-group"><label>Nama Krani Petugas</label><input type="text" id="setup_krani"
+                        placeholder="Nama Krani (Abi Fajar dll)"></div>
+                <div class="field-group"><label>Nama Koordinator (PILIH)</label>
+                    <select id="setup_coordinator"></select>
+                </div>
+                <div class="input-grid">
+                    <div class="field-group"><label>Tim Kerja BORONG</label>
+                        <select id="setup_tim_borong">
+                            <option value="BADRUN">BADRUN</option>
+                            <option value="KARTONO">KARTONO</option>
+                        </select>
+                    </div>
+                    <div class="field-group"><label>Tim Kerja HARIAN</label>
+                        <select id="setup_tim_harian">
+                            <option value="WAWAN">WAWAN</option>
+                            <option value="SURYANA">SURYANA</option>
+                            <option value="SAHLAN">SAHLAN</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-group"><label>Sampling Man</label><input type="text" id="setup_sampling"></div>
+                <button class="btn-submit" onclick="saveSession()">SIMPAN SETUP 🛡️</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: TASK CHOICE (Rule 6) -->
+        <div id="screen-task-choice" class="screen">
+            <button class="btn-back" onclick="switchScreen('role')">← BALIK KE HOME</button>
+            <h3
+                style="font-family:'Orbitron'; font-size:0.7rem; color:var(--accent); text-align:center; margin-bottom:20px;">
+                LENGKAPI DATA SEBAGAI</h3>
+            <div class="selection-grid">
+                <div class="selection-card" onclick="openSessionPicker('task-krani')">
+                    <div class="selection-icon">🚚</div>
+                    <div class="selection-content">
+                        <div class="selection-title">REDAKSI KRANI</div>
+                        <div class="selection-desc">Lengkapi Tonase Netto.</div>
+                    </div>
+                </div>
+                <div class="selection-card" onclick="openSessionPicker('task-coord')">
+                    <div class="selection-icon">📊</div>
+                    <div class="selection-content">
+                        <div class="selection-title">KORDINATOR</div>
+                        <div class="selection-desc">Lengkapi Arrival & QC.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: ACTIVITY CHOICE (v13.2) -->
+        <div id="screen-choice" class="screen">
+            <button class="btn-back" onclick="switchScreen('role')">← GANTI ROLE</button>
+            <h3 id="choice-greeting"
+                style="font-family: 'Orbitron'; font-size: 0.65rem; color: var(--accent); text-align: center; margin-top: 10px; letter-spacing: 2px;">
+                HALO, PETUGAS</h3>
+            <p style="text-align: center; font-size: 0.55rem; color: var(--muted); margin-bottom: 25px;">APA YANG INGIN
+                ANDA LAKUKAN SEKARANG?</p>
+
+            <div class="selection-grid">
+                <div class="selection-card" id="choice-input-card" onclick="handleChoice('input')">
+                    <div class="selection-icon">📝</div>
+                    <div class="selection-content">
+                        <div class="selection-title">INPUT DATA BARU</div>
+                        <div class="selection-desc">Mulai pencatatan truck baru.</div>
+                    </div>
+                </div>
+                <div class="selection-card" onclick="handleChoice('tasks')">
+                    <div class="selection-icon">📑</div>
+                    <div class="selection-content">
+                        <div class="selection-title" id="task-choice-title">LENGKAPI DATA SAYA</div>
+                        <div class="selection-desc" id="task-choice-desc">Cek data yang masih kosong.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: TASK CENTER (Personal Queue) -->
+        <div id="screen-tasks" class="screen">
+            <button class="btn-back" onclick="switchScreen('role')">← BALIK KE HOME</button>
+            <div class="section-header" id="task-title">TUGAS PENDING SAYA</div>
+            <div id="task-list-container" class="task-list">
+                <div style="text-align:center; padding: 40px; color:var(--muted);">MENCARI TUGAS...</div>
+            </div>
+
+            <div id="krani-actions" style="display:none;">
+                <div class="section-header">DATA BARU?</div>
+                <button class="btn-new" onclick="switchScreen('mode')">MULAI INPUT TRUCK BARU 🚚</button>
+            </div>
+
+            <button class="btn-back" onclick="loadTaskQueue()"
+                style="width:100%; border-color:var(--accent); color:var(--accent); margin-top:20px;">REFRESH TUGAS SAYA
+                🔄</button>
+        </div>
+
+        <!-- SCREEN 3: MODE (Krani only) -->
+        <div id="screen-mode" class="screen">
+            <button class="btn-back" onclick="switchScreen('tasks')">← BALIK KE TUGAS SAYA</button>
+            <h3
+                style="font-family: 'Orbitron'; font-size: 0.75rem; color: var(--accent); text-align: center; margin-bottom: 20px;">
+                PILIH MODE INPUT</h3>
+            <div class="mode-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div class="mode-card" onclick="selectInputMode('single')"
+                    style="background:var(--card); padding:25px; border:1px solid var(--border); border-radius:15px; text-align:center;">
+                    🚚<div class="mode-title"
+                        style="font-family:'Orbitron'; font-size:0.6rem; color:var(--accent); margin-top:10px;">SENDIRI
+                    </div>
+                </div>
+                <div class="mode-card" onclick="selectInputMode('batch')"
+                    style="background:var(--card); padding:25px; border:1px solid var(--border); border-radius:15px; text-align:center;">
+                    🚛🚛<div class="mode-title"
+                        style="font-family:'Orbitron'; font-size:0.6rem; color:var(--accent); margin-top:10px;">BARENG
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: KRANI FORM -->
+        <div id="screen-form" class="screen">
+            <button class="btn-back" onclick="switchScreen('mode')">← GANTI MODE</button>
+            <div class="form-card" id="common-info">
+                <div class="section-header">7-STEP TIMELINE TRACKER</div>
+                <div class="field-group"><label>Tanggal & Shift</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <input type="date" id="common_tanggal">
+                        <input type="text" id="display_shift" disabled
+                            style="background:rgba(0,0,0,0.2); border:none; text-align:center;">
+                    </div>
+                </div>
+                <div class="field-group"><label>Gudang / Intake (LOCKED FOR THIS BATCH)</label>
+                    <select id="common_gudang" disabled
+                        style="background:var(--accent); color:white; font-weight:bold;"></select>
+                </div>
+
+                <div class="field-group"><label>Koordinator Monitoring (Rule 5)</label>
+                    <input type="text" id="display_coordinator" disabled
+                        style="background:rgba(0,0,0,0.2); border:none; color:var(--accent); font-weight:bold;">
+                </div>
+
+                <div class="field-group"><label>Sampling Man (v18.2)</label>
+                    <input type="text" id="display_sampling" disabled
+                        style="background:rgba(0,0,0,0.2); border:none; color:var(--accent); font-weight:bold;">
+                </div>
+
+                <!-- 7 STEP SAKLEK (v18.6 AUTO-FLOW) -->
+                <div class="input-grid">
+                    <div class="field-group"><label>1. START PANGGIL</label><input type="text" id="common_start"
+                            class="time-picker"></div>
+                    <div class="field-group"><label>2. TRUCK READY</label><input type="text" id="common_ready"
+                            class="time-picker"></div>
+                </div>
+                <div class="input-grid">
+                    <div class="field-group"><label>3. START BONGKAR</label><input type="text" id="common_start_bongkar"
+                            class="time-picker"></div>
+                    <div class="field-group"><label>4. HOLD QC</label><input type="text" id="common_hold"
+                            class="time-picker"></div>
+                </div>
+                <div class="input-grid">
+                    <div class="field-group"><label>5. RE-START QC</label><input type="text" id="common_restart"
+                            class="time-picker"></div>
+                    <div class="field-group"><label>6. MANUVER AKHIR</label><input type="text" id="common_manuver"
+                            class="time-picker">
+                    </div>
+                </div>
+                <div class="field-group"><label>7. FINISH / SELESAI</label><input type="text" id="common_finish"
+                        class="time-picker"></div>
+            </div>
+            <div id="units-container"></div>
+            <button class="btn-add-unit" id="btn-add-unit" onclick="addUnitRow()">[+] TAMBAH TRUCK LAIN</button>
+            <button class="btn-submit" onclick="submitPrecisionData(this)">SINKRON HASIL KERJA 🚀</button>
+        </div>
+
+
+    </div>
+
+    <script>
+        // v18.20 AUTO INSTALL LOGIC
+        let deferredPrompt;
+        const installBtn = document.getElementById('btn-install-app');
+        const installInstr = document.getElementById('install-instruction');
+
+        // v18.22 SERVICE WORKER REGISTRATION
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered!', reg))
+                    .catch(err => console.log('SW Failed', err));
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log("Auto-Install Ready (SW Active)");
+        });
+
+        // Fallback for when prompt is not supported (e.g. iOS or already installed)
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+            deferredPrompt = null;
+            Swal.fire('Success', 'Aplikasi Terinstall! GGMU!', 'success');
+        });
+
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredPrompt = null;
+                }
+            } else {
+                // v18.22 Protocol Check
+                if (window.location.protocol === 'file:') {
+                    Swal.fire({
+                        title: 'OFFLINE FILE DETECTED',
+                        text: 'Fitur Auto-Install TIDAK BERFUNGSI jika membuka file HTML langsung (file://). Mohon gunakan Web Server (Live Server) atau Upload ke Hosting agar fitur PWA aktif.',
+                        icon: 'warning'
+                    });
+                    return;
+                }
+
+                // v18.21 Manual Fallback
+                Swal.fire({
+                    title: 'INSTALL MANUAL',
+                    html: `
+                        <div style="text-align:left; font-size:0.9rem;">
+                            <p>Browser ini tidak mendukung Auto-Install.</p>
+                            <hr style="border:1px solid #444;">
+                            <p><b>CARA INSTALL (ANDROID):</b></p>
+                            <ol style="padding-left:20px;">
+                                <li>Klik Ikon <b>Titik Tiga (⋮)</b> di pojok kanan atas browser.</li>
+                                <li>Pilih menu <b>"Tambahkan ke Layar Utama"</b> (Add to Home Screen).</li>
+                                <li>Klik <b>Add</b> / Tambahkan.</li>
+                            </ol>
+                            <p><b>CARA INSTALL (iOS/IPHONE):</b></p>
+                            <ol style="padding-left:20px;">
+                                <li>Klik Ikon <b>Share (Kotak Panah)</b>.</li>
+                                <li>Pilih <b>"Add to Home Screen"</b>.</li>
+                            </ol>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'SIAP LAKSANAKAN!'
+                });
+            }
+        }
+
+        const CONFIG = {
+            API_URL: "https://script.google.com/macros/s/AKfycbwDP77QNY4780H_xF1x2Vr9QrG1lVyJ80mqdx5vOXYME8mKaYTwl2bsOMXOJk3hTM0p/exec",
+            SOURCE_DATA_URL: "https://script.google.com/macros/s/AKfycbwDP77QNY4780H_xF1x2Vr9QrG1lVyJ80mqdx5vOXYME8mKaYTwl2bsOMXOJk3hTM0p/exec",
+            GLOBAL_STOCK_URL: "https://script.google.com/macros/s/AKfycbwnStVw3UhKxgQDuTfufSlNMaTrf4ZpXC0FPAp6AK96t-YIJQNcJ1h0rtkbM2XlxPCr/exec"
+        };
+
+        let materialData = [], activeSessions = [], currentRole = '', currentInputMode = 'batch';
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+            if (screenId === 'tasks') loadTaskQueue();
+            if (screenId === 'form') {
+                const s = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
+                document.getElementById('display_shift').value = "SHIFT " + (s.shift || "?");
+            }
+            window.scrollTo(0, 0);
+        }
+
+        // v18.17 Fix: Missing Function for Resume Button
+        function switchTaskChoice() {
+            switchScreen('task-choice');
+        }
+
+        function handleLogoClick() {
+            switchScreen('role');
+        }
+
+        function selectAction(role) {
+            currentRole = role;
+            if (role === 'krani') {
+                openSessionPicker('input'); // Fixed: Explicit mode
+            } else if (role === 'coordinator') {
+                // For direct coordinator access, maybe just show setup or master data?
+                // But Bos said "Koordinator Master Data & Monitoring"
+                switchScreen('setup');
+            } else {
+                switchScreen('setup');
+            }
+        }
+
+        function updateChoiceUI() {
+            const inputCard = document.getElementById('choice-input-card');
+            const taskTitle = document.getElementById('task-choice-title');
+            const taskDesc = document.getElementById('task-choice-desc');
+
+            // Force hide/show with !important logic
+            if (currentRole === 'coordinator') {
+                inputCard.setAttribute('style', 'display: none !important');
+                taskTitle.innerText = "LENGKAPI CONTAINER SAYA"; // v15.0 Personal Label
+                taskDesc.innerText = "Isi Arrival & Monitoring data.";
+            } else {
+                inputCard.setAttribute('style', 'display: flex !important');
+                taskTitle.innerText = "LENGKAPI DATA SAYA";
+                taskDesc.innerText = "Isi Tonase Netto yang kosong.";
+            }
+        }
+
+        async function handleChoice(choice) {
+            if (choice === 'input') {
+                switchScreen('mode');
+            } else if (choice === 'tasks') {
+                switchScreen('tasks');
+            }
+        }
+
+        let currentPickerMode = 'input';
+        async function openSessionPicker(mode = 'input') {
+            currentPickerMode = mode;
+            // v17.8: Switch screen instantly
+            switchScreen('session-picker');
+            document.getElementById('session-list').innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);"><span class="loading-spinner-inline"></span> MENCARI SESI AKTIF...</div>';
+
+            await loadMasterData();
+            renderSessionPicker();
+        }
+
+        async function loadMasterData() {
+            const gSel = document.getElementById('common_gudang');
+            const cSel = document.getElementById('setup_coordinator');
+
+            // v16.2 Backups
+            const gBackups = ["RM", "INTAKE 71", "BKK", "CPO"];
+            const cBackups = ["ADE YANTO", "SAFII", "HADI"];
+
+            if (gSel && !gSel.options.length) gSel.innerHTML = gBackups.map(g => `<option value="${g}">${g}</option>`).join('');
+            if (!cSel.options.length) cSel.innerHTML = cBackups.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            try {
+                // v17.3 Dual API Fetch
+                const [rDowntime, rStock] = await Promise.all([
+                    fetch(CONFIG.SOURCE_DATA_URL + "?action=getData"),
+                    fetch(CONFIG.GLOBAL_STOCK_URL + "?action=getData")
+                ]);
+
+                const res = await rDowntime.json();
+                const stockRes = await rStock.json();
+
+                if (res.success) {
+                    activeSessions = res.activeSessions || [];
+                    document.getElementById('data-status-label').innerText = 'STORED (v17.3)';
+                    document.getElementById('data-status-label').style.color = 'var(--success)';
+
+                    if (res.coordinators && res.coordinators.length > 0) {
+                        cSel.innerHTML = res.coordinators.map(n => `<option value="${n}">${n}</option>`).join('');
+                    }
+                    // v18.12 Store mined data globally
+                    window.pendingKranis = res.pendingKranis || [];
+                    window.pendingCoords = res.pendingCoords || [];
+                }
+
+                if (stockRes && stockRes.success) {
+                    materialData = stockRes.materials;
+                    if (stockRes.warehouses) {
+                        const wOptions = stockRes.warehouses.map(w => `<option value="${w}">${w}</option>`).join('');
+                        if (gSel) gSel.innerHTML = wOptions;
+                        const setupGSel = document.getElementById('setup_gudang');
+                        if (setupGSel) setupGSel.innerHTML = wOptions;
+                    }
+                }
+
+                renderSessionPicker();
+            } catch (e) {
+                console.warn("Cloud slow, using local backups.", e);
+            }
+            loadSession();
+        }
+
+        function renderSessionPicker() {
+            const container = document.getElementById('session-list');
+            const isResume = (currentPickerMode === 'task-krani' || currentPickerMode === 'task-coord');
+            const mainHeader = document.querySelector('#screen-session-picker .section-header');
+            const title = document.querySelector('#screen-session-picker h3') || { innerText: '' };
+
+            if (mainHeader) {
+                mainHeader.innerText = isResume ? "REMINDER PENTING!" : "LANJUTKAN SESI?";
+                mainHeader.style.color = isResume ? "var(--warning)" : "white";
+            }
+
+            if (currentPickerMode === 'input') title.innerText = "SIAPA NAMA ANDA?";
+            else if (currentPickerMode === 'task-krani') title.innerText = "KLIK NAMAMU (LENGKAPI NETTO)";
+            else title.innerText = "MODUL KORDINATOR (RESUME)";
+
+            // v18.12 Data Mining Source
+            let listData = [];
+            if (currentPickerMode === 'task-krani') {
+                listData = window.pendingKranis || [];
+            } else if (currentPickerMode === 'task-coord') {
+                listData = window.pendingCoords || [];
+            } else {
+                listData = activeSessions; // Mode input normal
+            }
+
+            if (!listData || listData.length === 0) {
+                const emptyMsg = isResume ? "🎉 TIDAK ADA DATA PENDING. LANJUTKAN KERJA BAGUS!" : 'Belum ada sesi aktif hari ini.<br><span style="font-size:0.6rem;">Klik "SETUP AWAL SHIFT" dulu!</span>';
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted);">${emptyMsg}</div>`;
+                return;
+            }
+
+            // v18.0 Strict Filtering (Only for regular sessions, mining is already filtered)
+            // if (currentPickerMode === 'task-krani') filtered = activeSessions.filter(s => s.hasPendingKrani);
+
+            container.innerHTML = listData.map(item => {
+                let displayName = '';
+                let displayId = '';
+                let subText = '';
+
+                // Handle Mixed Data Types (String name vs Session Object)
+                if (typeof item === 'string') {
+                    displayName = item;
+                    displayId = item;
+                    subText = "KLIK UNTUK LIHAT SEMUA TUGAS PENDING";
+                } else {
+                    displayName = (currentPickerMode === 'task-coord') ? item.coordinator : item.krani;
+                    displayId = displayName;
+                    let tag = (currentPickerMode === 'input' && item.hasPendingKrani) ? '<span style="color:var(--warning); margin-left:10px;">[PENDING]</span>' : '<span style="color:var(--success); margin-left:10px;">[READY]</span>';
+                    subText = `Gudang: ${item.gudang} | Shift: ${item.shift} ${tag}`;
+                }
+
+                // v18.11 Human-Centered UI (Clean Name Only for Resume)
+                if (isResume) {
+                    return `
+                    <div style="display:flex; align-items:center; background:rgba(255,255,255,0.1); padding:15px; border-radius:12px; margin-bottom:10px; border:1px solid var(--accent);">
+                        <div style="flex:1; cursor:pointer; text-align:center;" onclick="continueAs('${String(displayId || '').replace(/'/g, "\\'")}')">
+                            <div style="font-size:1.2rem; color:white; font-family:'Orbitron'; letter-spacing:2px; font-weight:bold;">${String(displayName || '').toUpperCase()}</div>
+                            <div style="font-size:0.55rem; color:var(--warning); margin-top:5px;">${subText}</div>
+                        </div>
+                    </div>
+                `;
+                } else {
+                    return `
+                    <div style="display:flex; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid var(--border);">
+                        <div style="flex:1; cursor:pointer;" onclick="continueAs('${String(displayId || '').replace(/'/g, "\\'")}')">
+                            <div style="font-size:0.7rem; color:var(--accent); font-family:'Orbitron';">${String(displayName || '').toUpperCase()}</div>
+                            <div style="font-size:0.5rem; color:var(--muted);">${subText}</div>
+                        </div>
+                        <button onclick="forgetSession('${String(item.krani || '').replace(/'/g, "\\'")}')" style="background:rgba(255,0,0,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; font-size:0.6rem;">X</button>
+                    </div>
+                `;
+                }
+            }).join('');
+        }
+
+        function continueAs(name) {
+            const searchName = String(name || '').trim();
+            // Try to find existing session first
+            let session = activeSessions.find(s =>
+                String(s.krani || '').trim() === searchName ||
+                String(s.coordinator || '').trim() === searchName
+            );
+
+            // v18.12: If mining data, create ad-hoc session object
+            if (!session) {
+                // If this is a mined name, we allow it.
+                // We default to '?' for shift/gudang because we just want to load tasks.
+                session = {
+                    krani: (currentPickerMode === 'task-krani' || currentPickerMode === 'input') ? searchName : '',
+                    coordinator: (currentPickerMode === 'task-coord') ? searchName : '',
+                    shift: '?',
+                    gudang: '?',
+                    tim_borong: '?',
+                    tim_harian: '?'
+                };
+            }
+
+            if (session) {
+                localStorage.setItem('WHSMART_SESSION', JSON.stringify(session));
+                currentRole = (currentPickerMode === 'task-coord') ? 'coordinator' : 'krani';
+
+                // If it's ad-hoc, skip loadSession full fill, just partial
+                if (session.shift !== '?') loadSession();
+
+                if (currentPickerMode === 'input') {
+                    document.getElementById('choice-greeting').innerText = `HALO, ${String(session.krani || 'KRANI').toUpperCase()}`;
+                    updateChoiceUI();
+                    switchScreen('choice');
+                } else {
+                    switchScreen('tasks');
+                }
+            } else {
+                console.warn("Session error for:", name);
+            }
+        }
+
+        async function openUpdateForm(t) {
+            // v18.14 Coordinator Container Flow
+            if (currentRole === 'coordinator') {
+                if (t.jenis_truck && t.jenis_truck.toUpperCase().includes('CONTAINER')) {
+                    const { value: formValues } = await Swal.fire({
+                        title: 'DATA CONTAINER PENDING',
+                        html: `
+                            <div style="text-align:left; font-size:0.9rem;">
+                                <label>ARRIVAL DATE</label>
+                                <input id="swal-arr-date" class="swal2-input" placeholder="Pilih Tanggal" value="${t.arrival_date || ''}">
+                                <label>ARRIVAL TIME</label>
+                                <input id="swal-arr-time" class="swal2-input" placeholder="Jam Arrival" value="${t.arrival_time || ''}">
+                                <label>SCALING 1 TIME</label>
+                                <input id="swal-qc-time" class="swal2-input" placeholder="Jam Scaling 1" value="${t.qc_time || ''}">
+                                <label>SCALING TIMBANG MASUK</label>
+                                <input id="swal-timbang-time" class="swal2-input" placeholder="Jam Timbang Masuk" value="${t.timbang_time || ''}">
+                            </div>
+                        `,
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'SIMPAN DATA',
+                        didOpen: () => {
+                            flatpickr("#swal-arr-date", { dateFormat: "Y-m-d" });
+                            flatpickr("#swal-arr-time", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+                            flatpickr("#swal-qc-time", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+                            flatpickr("#swal-timbang-time", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+                        },
+                        preConfirm: () => {
+                            return {
+                                arrival_date: document.getElementById('swal-arr-date').value,
+                                arrival_time: document.getElementById('swal-arr-time').value,
+                                qc_time: document.getElementById('swal-qc-time').value,
+                                timbang_time: document.getElementById('swal-timbang-time').value
+                            }
+                        }
+                    });
+
+                    if (formValues) {
+                        // Validate emptiness
+                        if (!formValues.arrival_date || !formValues.arrival_time || !formValues.qc_time || !formValues.timbang_time) {
+                            Swal.fire('Error', 'Semua 4 data wajib diisi!', 'warning');
+                            return;
+                        }
+
+                        // Submit
+                        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        try {
+                            const payload = {
+                                action: 'updateCoordinator',
+                                row_id: t.row_id,
+                                ...formValues
+                            };
+                            await fetch(CONFIG.API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                            Swal.fire('Success', 'Data Container Tersimpan!', 'success').then(() => loadTaskQueue());
+                        } catch (e) {
+                            Swal.fire('Error', 'Gagal update database.', 'error');
+                        }
+                    }
+                } else {
+                    Swal.fire('Info', 'Fitur update untuk Non-Container belum tersedia.', 'info');
+                }
+                return;
+            }
+
+            // Normal Krani Logic
+            const { value: netto } = await Swal.fire({
+                title: 'INPUT NETTO (KG)',
+                input: 'number',
+                inputValue: t.netto || '',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value) return 'Netto harus diisi!'
+                }
+            });
+
+            if (netto) {
+                submitTaskUpdate(t.row_id, netto);
+            }
+        }
+
+        async function submitTaskUpdate(rowId, netto) {
+            Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                await fetch(CONFIG.API_URL, {
+                    method: 'POST', mode: 'no-cors',
+                    body: JSON.stringify({ action: 'updateNetto', row_id: rowId, netto: netto })
+                });
+                Swal.fire('Success', 'Netto updated!', 'success').then(() => loadTaskQueue());
+            } catch (e) {
+                Swal.fire('Error', 'Gagal update.', 'error');
+            }
+        }
+
+        async function forgetSession(name) {
+            if (confirm(`Hapus sesi setup ${name}? (Jika sudah selesai shift)`)) {
+                try {
+                    await fetch(CONFIG.API_URL, {
+                        method: 'POST', mode: 'no-cors',
+                        body: JSON.stringify({ action: 'terminateSession', krani: name })
+                    });
+                    activeSessions = activeSessions.filter(s => s.krani !== name);
+                    renderSessionPicker();
+                    const current = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
+                    if (current.krani === name) localStorage.removeItem('WHSMART_SESSION');
+                } catch (e) { Swal.fire('Error', 'Gagal hapus dari Cloud.', 'error'); }
+            }
+        }
+
+        function loadSession() {
+            const s = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
+            if (s.krani) {
+                document.getElementById('setup_krani').value = s.krani;
+                document.getElementById('setup_coordinator').value = s.coordinator || '';
+                document.getElementById('setup_sampling').value = s.sampling || '';
+                document.getElementById('setup_shift').value = s.shift || '1';
+
+                // v18.2 Auto-Fill visibility
+                if (document.getElementById('common_gudang') && s.gudang) document.getElementById('common_gudang').value = s.gudang;
+                if (document.getElementById('display_coordinator') && s.coordinator) document.getElementById('display_coordinator').value = s.coordinator.toUpperCase();
+                if (document.getElementById('display_sampling') && s.sampling) document.getElementById('display_sampling').value = s.sampling.toUpperCase();
+
+                // Update dynamic team labels in any existing unit rows
+                updateTeamLabels();
+            }
+        }
+
+        function updateTeamLabels() {
+            const s = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
+            const borongLabel = `BORONG (${s.tim_borong || '?'})`;
+            const harianLabel = `HARIAN (${s.tim_harian || '?'})`;
+
+            document.querySelectorAll('.u-labor-type').forEach(sel => {
+                sel.options[0].text = borongLabel;
+                sel.options[1].text = harianLabel;
+            });
+        }
+
+        async function saveSession() {
+            const s = {
+                shift: document.getElementById('setup_shift').value,
+                gudang: document.getElementById('setup_gudang').value,
+                krani: document.getElementById('setup_krani').value,
+                coordinator: document.getElementById('setup_coordinator').value,
+                sampling: document.getElementById('setup_sampling').value,
+                tim_borong: document.getElementById('setup_tim_borong').value,
+                tim_harian: document.getElementById('setup_tim_harian').value
+            };
+
+            if (!s.gudang || (!s.krani && !s.coordinator)) {
+                Swal.fire('Inkomplet', 'Gudang dan setidaknya satu Nama (Krani/Koordinator) wajib.', 'warning');
+                return;
+            }
+
+            const btn = document.querySelector('#screen-setup .btn-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner-inline"></span> SAVING IDENTITY...';
+            btn.style.opacity = '0.7';
+
+            localStorage.setItem('WHSMART_SESSION', JSON.stringify(s));
+
+            try {
+                await fetch(CONFIG.API_URL, {
+                    method: 'POST', mode: 'no-cors',
+                    body: JSON.stringify({ action: 'saveSession', ...s })
+                });
+
+                // v17.9: Optimistically update activeSessions locally for instant feedback
+                const idx = activeSessions.findIndex(as => as.krani === s.krani);
+                const sessionData = { ...s, hasPending: false };
+                if (idx !== -1) activeSessions[idx] = sessionData;
+                else activeSessions.push(sessionData);
+
+                Swal.fire('Identity Locked', 'Setup berhasil disimpan. GGMU!', 'success').then(() => switchScreen('role'));
+            } catch (e) {
+                Swal.fire('Identity Locked', 'Setup tersimpan lokal (Cloud slow).', 'success').then(() => switchScreen('role'));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'SIMPAN SETUP 🛡️';
+                btn.style.opacity = '1';
+            }
+        }
+
+        // ================= v13.0 TASK QUEUE LOGIC =================
+
+        async function loadTaskQueue() {
+            const container = document.getElementById('task-list-container');
+            const session = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
+            const name = (currentRole === 'krani') ? session.krani : session.coordinator;
+
+            // v18.0: Header UI & Rule Awareness
+            const actionTitle = (currentRole === 'krani') ? "REDAKSI: " : "ANTRIAN MONITORING: ";
+            document.getElementById('task-title').innerText = actionTitle + (name || "?").toUpperCase();
+            document.getElementById('krani-actions').style.display = (currentRole === 'krani') ? 'block' : 'none';
+            container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted);">MENCARI TUGAS...</div>';
+
+            try {
+                // v18.11: Remove gudang & shift filter to show ALL pending tasks for this user
+                const url = `${CONFIG.API_URL}?action=getTaskQueue&role=${currentRole}&name=${encodeURIComponent(name)}`;
+                const r = await fetch(url);
+                const data = await r.json();
+
+                // Rule 7 & 8 Strict Logic
+                const pending = data.filter(t => {
+                    if (currentRole === 'krani') {
+                        // Rule 7: Only show if Netto is missing
+                        return !t.netto || t.netto === '-' || t.netto === '0';
+                    } else {
+                        // Rule 8: Coordinator - miss Arrival or QC or Timbang
+                        // Backend helps, but secondary check here
+                        return true;
+                    }
+                });
+
+                if (pending.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; padding:30px; font-size:0.75rem; color:var(--success); font-weight:bold;">🎉 SEMUA DATA LENGKAP (GGMU!)</div>`;
+                } else {
+                    container.innerHTML = pending.map(t => {
+                        const tglLabel = t.tanggal ? new Date(t.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : '-';
+                        const truckLabel = (t.jenis_truck || 'TRUCK').toUpperCase();
+
+                        return `
+                        <div class="task-card ${currentRole === 'coordinator' ? 'coord' : ''}" onclick="openUpdateForm(${JSON.stringify(t).replace(/"/g, '&quot;')})">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div class="nopol">${t.nopol || 'NO NOPOL'}</div>
+                                <div style="font-size:0.5rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; color:var(--accent);">${truckLabel}</div>
+                            </div>
+                            <div class="mat">${t.material || 'NO MATERIAL'}</div>
+                            <div class="status" style="color:var(--warning); font-size:0.55rem; margin-top:5px;">⚠️ ${t.status}</div>
+                            <div style="font-size:0.45rem; color:var(--muted); margin-top:8px; border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;">
+                                GUDANG: ${t.gudang} | ${tglLabel}
+                            </div>
+                        </div>
+                    `}).join('');
+                }
+            } catch (e) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--danger);">GAGAL KONEK KE CLOUD</div>';
+            }
+        }
+
+        function openUpdateForm(t) {
+            document.getElementById('edit-row-id').value = t.row_id;
+            document.getElementById('edit-nopol').innerText = t.nopol;
+            document.getElementById('edit-mat').innerText = t.material;
+            document.getElementById('edit-gudang').innerText = "UNIT GUDANG: " + t.gudang;
+
+            // v14.3: Strict Field Enforcement
+            const isCoord = (currentRole === 'coordinator');
+            document.getElementById('krani-edit-fields').style.display = isCoord ? 'none' : 'block';
+            document.getElementById('coord-edit-fields').style.display = isCoord ? 'block' : 'none';
+
+            document.getElementById('edit-header').innerText = isCoord ? 'LENGKAPI ARRIVAL & QC' : 'LENGKAPI TONASE NETTO';
+
+            document.getElementById('edit-screen').style.display = 'flex';
+        }
+
+        function closeEdit() { document.getElementById('edit-screen').style.display = 'none'; }
+
+        async function submitTaskUpdate() {
+            const btn = document.getElementById('btn-update-task');
+            let payload = { action: (currentRole === 'krani') ? 'updateNetto' : 'updateCoordinator', row_id: document.getElementById('edit-row-id').value };
+
+            if (currentRole === 'krani') {
+                payload.netto = document.getElementById('edit_netto').value;
+                if (!payload.netto) { Swal.fire('Error', 'Netto harus diisi.', 'warning'); return; }
+            } else {
+                payload.arrival_date = document.getElementById('coord_arrival_date').value;
+                payload.arrival_time = document.getElementById('coord_arrival_time').value;
+                payload.qc_time = document.getElementById('coord_qc_time').value;
+                payload.timbang_time = document.getElementById('coord_timbang_time').value;
+                if (!payload.arrival_date || !payload.arrival_time) { Swal.fire('Inkomplet', 'Arrival wajib.', 'warning'); return; }
+            }
+
+            btn.disabled = true; btn.innerText = "SINKRONISASI CLOUD...";
+            try {
+                await fetch(CONFIG.API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                document.getElementById('success-overlay').style.display = 'flex';
+            } catch (e) {
+                btn.disabled = false; btn.innerText = "COBA LAGI";
+                Swal.fire('Error', 'Gagal update.', 'error');
+            }
+        }
+
+        // ================= KRANI INPUT FLOW =================
+
+        function selectInputMode(mode) {
+            currentInputMode = mode;
+            document.getElementById('btn-add-unit').style.display = (mode === 'batch') ? 'block' : 'none';
+            document.getElementById('units-container').innerHTML = ''; addUnitRow();
+            switchScreen('form');
+        }
+
+        function addUnitRow() {
+            const id = 'unit-' + Date.now();
+            const html = `
+                <div class="unit-card" id="${id}" style="background:rgba(40,50,80,0.2); padding:15px; border-radius:15px; margin-bottom:10px; border:1px dashed var(--border);">
+                    <div class="field-group"><label>Jenis Truck</label><select class="u-jenis"><option value="Container 20ft">CONTAINER 20FT</option><option value="Container 40ft">CONTAINER 40FT</option><option value="Fuso">FUSO</option><option value="Tronton">TRONTON</option></select></div>
+                    <div class="field-group"><label>Material RM</label><select class="u-mat" id="m-${id}"></select></div>
+                    <div class="input-grid">
+                        <div class="field-group"><label>Nopol Truck</label><input type="text" class="u-nopol"></div>
+                        <div class="field-group"><label>Netto (Kg) - OPSIONAL</label><input type="number" class="u-netto" placeholder="Isi jika ada"></div>
+                    </div>
+                    <div class="field-group"><label>Lokasi Simpan</label><input type="text" class="u-lokasi-simpan" placeholder="Blok / Cell"></div>
+                    <div class="field-group"><label>Kuli Penggarap (v18.2)</label>
+                        <select class="u-labor-type">
+                            <option value="BORONG">BORONG (${(JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}').tim_borong || '?')})</option>
+                            <option value="HARIAN">HARIAN (${(JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}').tim_harian || '?')})</option>
+                        </select>
+                    </div>
+                    <input type="hidden" class="u-sloc" value="RM01"><input type="hidden" class="u-tenaga" value="1">
+                </div>
+            `;
+            document.getElementById('units-container').insertAdjacentHTML('beforeend', html);
+            const mSel = document.getElementById(`m-${id}`);
+            materialData.forEach(m => mSel.appendChild(new Option(m.name, m.name)));
+            new TomSelect(`#m-${id}`, { create: false });
+        }
+
+        async function submitPrecisionData(btn) {
+            const session = JSON.parse(localStorage.getItem('WHSMART_SESSION'));
+            if (!session) { Swal.fire('Error', 'Sesi tidak ditemukan. Harap Setup ulang.', 'error'); return; }
+
+            const units = [];
+            document.querySelectorAll('.unit-card').forEach(row => {
+                const laborType = row.querySelector('.u-labor-type').value;
+                const team = (laborType === 'BORONG') ? session.tim_borong : session.tim_harian;
+
+                units.push({
+                    material: row.querySelector('.u-mat').value, nopol: row.querySelector('.u-nopol').value,
+                    jenis_truck: row.querySelector('.u-jenis').value, netto: row.querySelector('.u-netto').value || '-',
+                    tim_kerja: team || '-', sloc: 'RM01', tenaga_bongkar: 1,
+                    jenis_kuli: 'KULI ' + laborType, lokasi_simpan: row.querySelector('.u-lokasi-simpan').value || '-'
+                });
+            });
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading-spinner-inline"></span> SINKRONISASI CLOUD...';
+                btn.style.opacity = '0.7';
+            }
+
+            const payload = {
+                common: {
+                    tanggal: document.getElementById('common_tanggal').value || '-',
+                    shift: session.shift,
+                    gudang: session.gudang || '-', // v18.0 Auto
+                    krani: session.krani,
+                    coordinator: session.coordinator || '-', // v18.0 Auto (Rule 5)
+                    sampling_man: session.sampling || '-',
+                    start_panggil: document.getElementById('common_start').value || '-',
+                    truck_ready: document.getElementById('common_ready').value || '-',
+                    start_bongkar: document.getElementById('common_start_bongkar').value || '-',
+                    hold_qc: document.getElementById('common_hold').value || '-',
+                    restart_qc: document.getElementById('common_restart').value || '-',
+                    manuver_akhir: document.getElementById('common_manuver').value || '-',
+                    finish: document.getElementById('common_finish').value || '-'
+                },
+                units: units
+            };
+
+            try { await fetch(CONFIG.API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); document.getElementById('success-overlay').style.display = 'flex'; } catch (e) { Swal.fire('Error', e.message, 'error'); }
+        }
+
+        function handleLogoClick() { switchScreen('role'); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            flatpickr("#common_tanggal", { dateFormat: "d-M-Y", defaultDate: "today" });
+            flatpickr(".date-picker", { dateFormat: "d-M-Y", defaultDate: "today" });
+
+            // v18.6 AUTO-FLOW TURBO Logic
+            const steps = ["common_start", "common_ready", "common_start_bongkar", "common_hold", "common_restart", "common_manuver", "common_finish"];
+            steps.forEach((id, idx) => {
+                flatpickr("#" + id, {
+                    enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true,
+                    onClose: function (selectedDates, dateStr, instance) {
+                        if (dateStr && idx < steps.length - 1) {
+                            setTimeout(() => {
+                                const nextId = steps[idx + 1];
+                                const nextInput = document.getElementById(nextId);
+                                if (nextInput && nextInput._flatpickr) {
+                                    nextInput._flatpickr.open();
+                                }
+                            }, 150);
+                        }
+                    }
+                });
+            });
+
+            // Generic time picker for others
+            flatpickr(".time-picker:not([id^='common_'])", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+
+            loadMasterData();
+        });
+    </script>
+</body>
+
+</html>

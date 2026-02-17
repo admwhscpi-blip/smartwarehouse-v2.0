@@ -19,19 +19,8 @@ const CONFIG = {
     },
 
     // Material Code Mapping (Kode -> Nama Material)
-    // Tambahkan kode material disini, system akan otomatis mengenali
     MATERIAL_CODES: {
-        "81004": "COPPER",
-        "81005": "ALUMINIUM",
-        "81006": "IRON ORE",
-        "81007": "ZINC",
-        "81008": "NICKEL",
-        "81009": "TIN",
-        "81010": "LEAD",
-        "81011": "MANGANESE",
-        "81012": "CHROMIUM",
-        "81013": "TITANIUM",
-        // Tambahkan kode lainnya sesuai kebutuhan
-        // Format: "KODE": "NAMA_MATERIAL"
+        "401200": "RICE BRAN",
+        "81014": "LIMESTONE"
     }
 };

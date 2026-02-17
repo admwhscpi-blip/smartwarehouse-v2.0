@@ -4,6 +4,8 @@ const CONFIG = {
     DOWNTIME_API_URL: "https://script.google.com/macros/s/AKfycbxDerZpvftORq993r2EfGnG7gpALFWsXxA21mWe-xMzHCE-5wmJpDJXKNl29hgW-GQz/exec",
     BKK_API_URL: "https://script.google.com/macros/s/AKfycbw-YyDZiZFi7wrs9X6a1Bnp05E_cWHY15Cw-cKRfbO2lWoXkJMPysEe2uh1AJBsvXkN/exec?action=getData",
     BKK_DOWNTIME_API_URL: "https://script.google.com/macros/s/AKfycby-tuUqN0Nmb1F52RfNXZVV90-2QoEd0sz3QtYOAYpOYRmOydAjF1hp3Z4GG8DAEWw/exec?action=getDowntimeQuery",
+    OVERTIME_API_URL: "https://script.google.com/macros/s/AKfycbwjxJVAhHSpYY9taTQ5SR7A00M3pQfHdm9lXO33Zr88EDS1awbrFj2xkpeN0rOGomaI/exec",
+
 
     // Konfigurasi konversi satuan
     UNIT_DIVIDER: 1000,
@@ -22,15 +24,8 @@ const CONFIG = {
 
     // Material Code Mapping
     MATERIAL_CODES: {
-        "81004": "COPPER",
-        "81005": "ALUMINIUM",
-        "81006": "IRON ORE",
-        "81007": "ZINC",
-        "81008": "NICKEL",
-        "81009": "TIN",
-        "81010": "LEAD",
-        "81011": "MANGANESE",
-        "81012": "CHROMIUM",
-        "81013": "TITANIUM"
+        "81014": "LIMESTONE",
+        "401200": "RICE BRAN"
+        // Kode lainnya akan ditarik dinamis dari database oleh Admin Pusat v9.0
     }
 };
