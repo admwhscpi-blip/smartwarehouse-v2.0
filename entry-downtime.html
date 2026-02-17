@@ -647,7 +647,12 @@
                         </select></div>
                     <div class="field-group"><label>Gudang Pekerjaan</label>
                         <input type="text" id="setup_gudang" list="gudang_list" placeholder="Pilih / Ketik...">
-                        <datalist id="gudang_list"></datalist>
+                        <datalist id="gudang_list">
+                            <option value="SLOC"></option>
+                            <option value="RW01"></option>
+                            <option value="RM01"></option>
+                            <option value="RW03"></option>
+                        </datalist>
                     </div>
                     <div class="field-group"><label>Nama Krani Petugas</label><input type="text" id="setup_krani"
                             placeholder="Nama Krani (Abi Fajar dll)"></div>
@@ -992,12 +997,8 @@
                 if (gSel && !gSel.options.length) gSel.innerHTML = gBackups.map(g => `<option value="${g}">${g}</option>`).join('');
                 if (!cSel.options.length) cSel.innerHTML = cBackups.map(c => `<option value="${c}">${c}</option>`).join('');
 
-                // v18.34: INSTANT SLOC POPULATION (Safety Fallback)
-                const dl = document.getElementById('gudang_list');
-                const defaultWarehouses = ["SLOC", "RW01", "RM01", "RW03"];
-                if (dl) {
-                    dl.innerHTML = defaultWarehouses.map(w => `<option value="${w}">${w}</option>`).join('');
-                }
+                // v18.35: STATIC HTML FALLBACK (JS does nothing to defaults)
+                // We barely trust JS now for the defaults.
 
                 try {
                     // v17.3 Dual API Fetch
@@ -1009,16 +1010,16 @@
                     const res = await rDowntime.json();
                     const stockRes = await rStock.json();
 
-                    // v18.32: JS-First Datalist Population (Robust Merge)
-                    let finalWarehouses = [...defaultWarehouses];
-
+                    // v18.35: Append API Data only
                     if (stockRes && stockRes.success && stockRes.warehouses) {
-                        stockRes.warehouses.forEach(w => {
-                            if (!finalWarehouses.includes(w)) finalWarehouses.push(w);
-                        });
-                        // Re-render only if we have new data
+                        const dl = document.getElementById('gudang_list');
                         if (dl) {
-                            dl.innerHTML = finalWarehouses.map(w => `<option value="${w}">${w}</option>`).join('');
+                            const currentOptions = ["SLOC", "RW01", "RM01", "RW03"]; // Static ones
+                            const newOptions = stockRes.warehouses
+                                .filter(w => !currentOptions.includes(w))
+                                .map(w => `<option value="${w}">${w}</option>`)
+                                .join('');
+                            dl.insertAdjacentHTML('beforeend', newOptions);
                         }
                     }
 
@@ -1562,7 +1563,7 @@
             });
         </script>
         <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.6rem; font-family:'Orbitron';">
-            WHSMART SYSTEM v18.34 (INSTANT SLOC)<br>
+            WHSMART SYSTEM v18.35 (STATIC HTML)<br>
             <span style="color:var(--accent)">GGMU!</span>
         </div>
 </body>

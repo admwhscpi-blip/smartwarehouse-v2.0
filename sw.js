@@ -1,4 +1,4 @@
-const CACHE_NAME = 'whsmart-cache-v18.34';
+const CACHE_NAME = 'whsmart-cache-v18.35';
 const urlsToCache = [
     './entry-downtime.html',
     'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
