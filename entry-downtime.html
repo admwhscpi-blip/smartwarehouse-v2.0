@@ -627,7 +627,14 @@
                             <option value="2">SHIFT 2</option>
                             <option value="3">SHIFT 3</option>
                         </select></div>
-                    <div class="field-group"><label>Gudang Pekerjaan</label><select id="setup_gudang"></select></div>
+                    <div class="field-group"><label>Gudang Pekerjaan</label>
+                        <input type="text" id="setup_gudang" list="gudang_list" placeholder="Pilih / Ketik...">
+                        <datalist id="gudang_list">
+                            <option value="SLOC">
+                            <option value="RW01">
+                            <option value="RW03.RM01">
+                        </datalist>
+                    </div>
                 </div>
                 <div class="field-group"><label>Nama Krani Petugas</label><input type="text" id="setup_krani"
                         placeholder="Nama Krani (Abi Fajar dll)"></div>
@@ -757,9 +764,9 @@
                             style="background:rgba(0,0,0,0.2); border:none; text-align:center;">
                     </div>
                 </div>
-                <div class="field-group"><label>Gudang / Intake (LOCKED FOR THIS BATCH)</label>
-                    <select id="common_gudang" disabled
-                        style="background:var(--accent); color:white; font-weight:bold;"></select>
+                <div class="field-group"><label>Gudang / Intake (LOCKED)</label>
+                    <input type="text" id="common_gudang" disabled
+                        style="background:var(--accent); color:white; font-weight:bold; border:none; text-align:center; width:100%;">
                 </div>
 
                 <div class="field-group"><label>Koordinator Monitoring (Rule 5)</label>
@@ -989,10 +996,12 @@
                 if (stockRes && stockRes.success) {
                     materialData = stockRes.materials;
                     if (stockRes.warehouses) {
-                        const wOptions = stockRes.warehouses.map(w => `<option value="${w}">${w}</option>`).join('');
-                        if (gSel) gSel.innerHTML = wOptions;
-                        const setupGSel = document.getElementById('setup_gudang');
-                        if (setupGSel) setupGSel.innerHTML = wOptions;
+                        const dl = document.getElementById('gudang_list');
+                        if (dl) {
+                            // Append API warehouses to existing hints
+                            const apiOptions = stockRes.warehouses.map(w => `<option value="${w}">`).join('');
+                            dl.insertAdjacentHTML('beforeend', apiOptions);
+                        }
                     }
                 }
 
@@ -1414,7 +1423,17 @@
             const id = 'unit-' + Date.now();
             const html = `
                 <div class="unit-card" id="${id}" style="background:rgba(40,50,80,0.2); padding:15px; border-radius:15px; margin-bottom:10px; border:1px dashed var(--border);">
-                    <div class="field-group"><label>Jenis Truck</label><select class="u-jenis"><option value="Container 20ft">CONTAINER 20FT</option><option value="Container 40ft">CONTAINER 40FT</option><option value="Fuso">FUSO</option><option value="Tronton">TRONTON</option></select></div>
+                    <div class="field-group"><label>Jenis Truck</label>
+                        <select class="u-jenis">
+                            <option value="Container 20ft">CONTAINER 20FT</option>
+                            <option value="Container 40ft">CONTAINER 40FT</option>
+                            <option value="Fuso">FUSO</option>
+                            <option value="Tronton">TRONTON</option>
+                            <option value="Colt Diesel">COLT DIESEL</option>
+                            <option value="Gandengan">GANDENGAN</option>
+                            <option value="Wing Box">WING BOX</option>
+                        </select>
+                    </div>
                     <div class="field-group"><label>Material RM</label><select class="u-mat" id="m-${id}"></select></div>
                     <div class="input-grid">
                         <div class="field-group"><label>Nopol Truck</label><input type="text" class="u-nopol"></div>
@@ -1513,7 +1532,7 @@
         });
     </script>
     <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.6rem; font-family:'Orbitron';">
-        WHSMART SYSTEM v18.28 (REAL MOBILE FIX)<br>
+        WHSMART SYSTEM v18.29 (OPTIONS UPDATE)<br>
         <span style="color:var(--accent)">GGMU!</span>
     </div>
 </body>
