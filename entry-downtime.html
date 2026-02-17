@@ -55,6 +55,8 @@
             min-height: 100vh;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            /* v18.28: Prevent Scroll Zoom */
         }
 
         .container {
@@ -427,8 +429,8 @@
             z-index: 500;
         }
 
-        /* v18.25: MOBILE RESPONSIVE TWEAKS */
-        @media (max-width: 480px) {
+        /* v18.28: CRITICAL BREAKPOINT FIX */
+        @media (max-width: 768px) {
 
             .input-grid,
             .selection-grid,
@@ -1510,6 +1512,10 @@
             loadMasterData();
         });
     </script>
+    <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.6rem; font-family:'Orbitron';">
+        WHSMART SYSTEM v18.28 (REAL MOBILE FIX)<br>
+        <span style="color:var(--accent)">GGMU!</span>
+    </div>
 </body>
 
 </html>
