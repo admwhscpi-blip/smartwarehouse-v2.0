@@ -62,6 +62,7 @@
             max-width: 600px;
             margin: 0 auto;
             width: 100%;
+            /* v18.25: Full Width Mobile */
             box-sizing: border-box;
         }
 
@@ -162,9 +163,10 @@
 
         label {
             display: block;
-            font-size: 0.55rem;
+            font-size: 0.8rem;
+            /* v18.25: Bigger Label */
             color: var(--muted);
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             text-transform: uppercase;
             font-weight: 700;
             letter-spacing: 1px;
@@ -176,11 +178,15 @@
             background: rgba(20, 25, 45, 0.8);
             border: 1px solid var(--border);
             color: white;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 0.85rem;
+            padding: 14px;
+            /* v18.25: Larger Touch Area */
+            border-radius: 12px;
+            font-size: 1rem;
+            /* v18.25: No Auto-Zoom iOS */
             font-family: 'Inter';
             box-sizing: border-box;
+            -webkit-appearance: none;
+            /* Mobile reset */
         }
 
         input:focus,
@@ -414,11 +420,70 @@
             background: rgba(0, 0, 0, 0.8);
             padding: 5px 10px;
             border-radius: 5px;
-            font-size: 0.5rem;
+            font-size: 0.7rem;
             font-family: 'Orbitron';
             color: var(--muted);
             border: 1px solid var(--border);
             z-index: 500;
+        }
+
+        /* v18.25: MOBILE RESPONSIVE TWEAKS */
+        @media (max-width: 480px) {
+
+            .input-grid,
+            .selection-grid,
+            .mode-grid {
+                grid-template-columns: 1fr !important;
+                /* Stack vertically */
+                gap: 15px;
+            }
+
+            .container {
+                padding: 10px;
+                width: 100%;
+            }
+
+            .app-bar {
+                padding: 15px 0;
+            }
+
+            .brand-logo {
+                font-size: 1.2rem;
+            }
+
+            .app-sub {
+                font-size: 0.65rem;
+            }
+
+            .btn-submit,
+            .btn-new {
+                padding: 20px;
+                font-size: 1rem;
+            }
+
+            .selection-icon {
+                font-size: 2.5rem;
+            }
+
+            .selection-title {
+                font-size: 1rem;
+            }
+
+            .selection-desc {
+                font-size: 0.8rem;
+            }
+
+            .task-card .nopol {
+                font-size: 1.1rem;
+            }
+
+            .task-card .mat {
+                font-size: 0.85rem;
+            }
+
+            .section-header {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -472,10 +537,10 @@
         </div>
     </div>
 
-    <!-- APP BAR (v18.23 MANIFEST FIX) -->
+    <!-- APP BAR (v18.25 MOBILE OPTIMIZED) -->
     <div class="app-bar">
         <div class="brand-logo" onclick="handleLogoClick()">SMART <span>WAREHOUSE</span></div>
-        <div class="app-sub">v18.23 MANIFEST FIX - SAT SET GGMU!</div>
+        <div class="app-sub">v18.25 MOBILE OPTIMIZED - SAT SET GGMU!</div>
     </div>
 
     <div class="container">
