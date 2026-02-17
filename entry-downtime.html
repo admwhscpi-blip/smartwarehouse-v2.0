@@ -1031,22 +1031,6 @@
                         window.pendingCoords = res.pendingCoords || [];
                     }
 
-                    // v18.32: JS-First Datalist Population (Robust)
-                    const defaultWarehouses = ["SLOC", "RW01", "RM01", "RW03"];
-                    let finalWarehouses = [...defaultWarehouses];
-
-                    if (stockRes && stockRes.success && stockRes.warehouses) {
-                        stockRes.warehouses.forEach(w => {
-                            if (!finalWarehouses.includes(w)) finalWarehouses.push(w);
-                        });
-                    }
-
-                    const dl = document.getElementById('gudang_list');
-                    if (dl) {
-                        dl.innerHTML = ''; // Clear first
-                        dl.innerHTML = finalWarehouses.map(w => `<option value="${w}">${w}</option>`).join('');
-                    }
-
                     renderSessionPicker();
                 } catch (e) {
                     console.warn("Cloud slow, using local backups.", e);
@@ -1574,7 +1558,7 @@
             });
         </script>
         <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.6rem; font-family:'Orbitron';">
-            WHSMART SYSTEM v18.32 (FINAL FIX)<br>
+            WHSMART SYSTEM v18.33 (STABILITY FIX)<br>
             <span style="color:var(--accent)">GGMU!</span>
         </div>
 </body>
