@@ -630,10 +630,10 @@
                     <div class="field-group"><label>Gudang Pekerjaan</label>
                         <input type="text" id="setup_gudang" list="gudang_list" placeholder="Pilih / Ketik...">
                         <datalist id="gudang_list">
-                            <option value="SLOC">
-                            <option value="RW01">
-                            <option value="RM01">
-                            <option value="RW03">
+                            <option value="SLOC"></option>
+                            <option value="RW01"></option>
+                            <option value="RM01"></option>
+                            <option value="RW03"></option>
                         </datalist>
                     </div>
                     <div class="field-group"><label>Nama Krani Petugas</label><input type="text" id="setup_krani"
@@ -1007,9 +1007,13 @@
                         if (stockRes.warehouses) {
                             const dl = document.getElementById('gudang_list');
                             if (dl) {
-                                // Append API warehouses to existing hints
-                                const apiOptions = stockRes.warehouses.map(w => `<option value="${w}">`).join('');
-                                dl.insertAdjacentHTML('beforeend', apiOptions);
+                                // Append API warehouses to existing hints (Deduplicate)
+                                const currentOptions = Array.from(dl.options).map(o => o.value);
+                                const newOptions = stockRes.warehouses
+                                    .filter(w => !currentOptions.includes(w))
+                                    .map(w => `<option value="${w}"></option>`)
+                                    .join('');
+                                dl.insertAdjacentHTML('beforeend', newOptions);
                             }
                         }
                     }
