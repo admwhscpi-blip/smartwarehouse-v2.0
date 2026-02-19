@@ -1264,8 +1264,9 @@
         }
 
         const CONFIG = {
-            API_URL: "https://script.google.com/macros/s/AKfycbwVY5kz-6qDy5cJJR-i7Ih_uwjwd_lUPf3uqNrsbeAYg1uHE6v3zrlbvhAGllh8NPeM/exec",
-            SOURCE_DATA_URL: "https://script.google.com/macros/s/AKfycbwVY5kz-6qDy5cJJR-i7Ih_uwjwd_lUPf3uqNrsbeAYg1uHE6v3zrlbvhAGllh8NPeM/exec",
+            // v19.9 AUTOMATIC URL DETECTION
+            API_URL: window.location.href.split('?')[0],
+            SOURCE_DATA_URL: window.location.href.split('?')[0],
             GLOBAL_STOCK_URL: "https://script.google.com/macros/s/AKfycbwnStVw3UhKxgQDuTfufSlNMaTrf4ZpXC0FPAp6AK96t-YIJQNcJ1h0rtkbM2XlxPCr/exec"
         };
 
