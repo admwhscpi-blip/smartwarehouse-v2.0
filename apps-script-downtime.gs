@@ -9,13 +9,35 @@ const MUAT_SHEET_NAME = "DATA MUAT";
 const SESSION_SHEET = "SESSIONS";
 const RM_STOCK_SHEET = "RM STOCK";
 
+const MASTER_HEADERS = [
+  "Tanggal", "Shift", "Gudang/Intake", "SLoc", "Material", 
+  "Lokasi Simpan", "Nopol", "Jenis Truck", "Netto (Kg)", "Krani Bongkar",
+  "Sampling Man", "Koordinator Monitoring", "Jenis Kuli", "Tim Kerja",
+  "Start Panggil", "Truck Ready", "Start Bongkar", 
+  "Hold QC", "Re-start QC", "Manuver Akhir", "Finish", 
+  "Tenaga Bongkar", "Backend Timestamp",
+  "Arrival Date", "Arrival Time", "QC Sampling 1 Time", "Time Timbang Masuk",
+  "Gudang Durasi", "Jumlah Bag" 
+];
+
+// v20.0.0 DEFINITIF: Harus sinkron dengan saveMuat dan Row 1 Spreadsheet
+const MUAT_HEADERS = [
+  "Timestamp", "Tanggal", "Shift", "Kategori", "Nopol",        // A, B, C, D, E (Index 0-4)
+  "Material", "Netto (Kg)", "Jumlah Bag", "Tim Harian", "Jumlah Kuli", // F, G, H, I, J (Index 5-9)
+  "Nama Krani", "Bongkar Stapel", "Start Muat", "Finish", "OTW Pabrik", // K, L, M, N, O (Index 10-14)
+  "Status Validasi", "Validator", "SYSTEM_VERSION"              // P, Q, R (Index 15-17)
+];
+
 function doGet(e) {
-  // 0. Action: Master Data (v17.1 RM STOCK Integration)
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  forceMuatHeaders();
+
+  // 0. Action: Master Data (v19.9 Deployment Intelligence)
   if (e && e.parameter.action === 'getData') {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = ss.getSheetByName(SHEET_NAME);
     let sSheet = ss.getSheetByName(SESSION_SHEET);
     let rmStockSheet = ss.getSheetByName(RM_STOCK_SHEET);
+    let mSheet = ss.getSheetByName(MUAT_SHEET_NAME);
     
     let coords = ["ADE YANTO", "SAFII", "HADI"];
     let activeSessions = [];
@@ -29,12 +51,35 @@ function doGet(e) {
       downtimeData = sheet.getDataRange().getValues();
     }
     
-  // v18.14 Coord Container Indices (X=23, Y=24, Z=25, AA=26)
-  const idx = {
-    tanggal: 0, shift: 1, gudang: 2, sloc: 3, material: 4, nopol: 6,
-    truck: 7, netto: 8, sampling: 9, krani: 10, coord: 11,
-    arrival_date: 23, arrival_time: 24, qc_time: 25, timbang_time: 26
-  };
+    // v20.0.1 Global Dynamic Indexing for Data Bongkaran
+    const bHeaders = downtimeData.length > 0 ? downtimeData[0].map(h => String(h).toUpperCase()) : [];
+    const idx = {
+      tanggal: bHeaders.indexOf("TANGGAL"),
+      shift: bHeaders.indexOf("SHIFT"),
+      gudang: bHeaders.indexOf("GUDANG/INTAKE"),
+      sloc: bHeaders.indexOf("SLOC"),
+      material: bHeaders.indexOf("MATERIAL"),
+      nopol: bHeaders.indexOf("NOPOL"),
+      truck: bHeaders.indexOf("JENIS TRUCK"),
+      netto: bHeaders.indexOf("NETTO (KG)"),
+      sampling: bHeaders.indexOf("SAMPLING MAN"),
+      krani: bHeaders.indexOf("KRANI BONGKAR"),
+      coord: bHeaders.indexOf("KOORDINATOR MONITORING"),
+      arrival_date: bHeaders.indexOf("ARRIVAL DATE"),
+      arrival_time: bHeaders.indexOf("ARRIVAL TIME"),
+      qc_time: bHeaders.indexOf("QC SAMPLING 1 TIME"),
+      timbang_time: bHeaders.indexOf("TIME TIMBANG MASUK")
+    };
+
+    // Robust Fallbacks (based on MASTER_HEADERS v20)
+    if (idx.tanggal === -1) idx.tanggal = 0; if (idx.shift === -1) idx.shift = 1;
+    if (idx.gudang === -1) idx.gudang = 2; if (idx.sloc === -1) idx.sloc = 3;
+    if (idx.material === -1) idx.material = 4; if (idx.nopol === -1) idx.nopol = 6;
+    if (idx.truck === -1) idx.truck = 7; if (idx.netto === -1) idx.netto = 8;
+    if (idx.sampling === -1) idx.sampling = 10; if (idx.krani === -1) idx.krani = 9;
+    if (idx.coord === -1) idx.coord = 11; if (idx.arrival_date === -1) idx.arrival_date = 23;
+    if (idx.arrival_time === -1) idx.arrival_time = 24; if (idx.qc_time === -1) idx.qc_time = 25;
+    if (idx.timbang_time === -1) idx.timbang_time = 26;
 
   // Calculate pending status for sessions
   if (sSheet) {
@@ -57,8 +102,8 @@ function doGet(e) {
             
             // Rule 7: Krani pending if Netto is missing/0/-/blank
             if (rowKrani === kraniName) {
-                const nettoVal = String(downtimeData[j][idx.netto]).trim();
-                if (!nettoVal || nettoVal === "-" || nettoVal === "0" || nettoVal === "0") hasPendingKrani = true;
+                const nettoValue = String(downtimeData[j][idx.netto] || "").trim();
+                if (!nettoValue || nettoValue === "-" || nettoValue === "0" || nettoValue === "") hasPendingKrani = true;
             }
 
             // Rule 8: Coordinator pending if Arrival/QC/Timbang missing
@@ -67,7 +112,7 @@ function doGet(e) {
                 const rowTimeArr = String(downtimeData[j][idx.arrival_time] || "").trim();
                 const rowQC = String(downtimeData[j][idx.qc_time] || "").trim();
                 const rowTimbang = String(downtimeData[j][idx.timbang_time] || "").trim();
-                if (!rowArrival || !rowTimeArr || !rowQC || !rowTimbang || rowArrival === "-" || rowQC === "-") hasPendingCoord = true;
+                if (!rowArrival || !rowTimeArr || !rowQC || !rowTimbang || rowArrival === "-" || rowArrival === "" || rowQC === "-") hasPendingCoord = true;
             }
             
             if (hasPendingKrani && hasPendingCoord) break;
@@ -96,12 +141,12 @@ function doGet(e) {
         // Skip header row if detected (usually checked by date/shift validation or just manual skip)
         if (String(row[0]).toUpperCase().includes("TANGGAL")) continue;
 
-        const kName = String(row[idx.krani]).trim().toUpperCase();
-        const netto = String(row[idx.netto]).trim();
+        const kName = String(row[idx.krani] || "").trim().toUpperCase();
+        const nettoValue = String(row[idx.netto] || "").trim();
         
-        // Rule 7: Krani Pending
-        if (kName && kName.length > 2 && kName !== "KRANI") {
-            if (!netto || netto === "0" || netto === "-") pendingKranis.add(kName);
+        // Rule 7: Krani Pending (v20.0.3: Netto in I/Index 8, Krani in J/Index 9)
+        if (kName && kName.length > 2 && kName !== "KRANI" && kName !== "KRANI BONGKAR") {
+            if (!nettoValue || nettoValue === "0" || nettoValue === "-" || nettoValue === "") pendingKranis.add(kName);
         }
 
         const cName = String(row[idx.coord] || "").trim().toUpperCase();
@@ -141,15 +186,26 @@ function doGet(e) {
       }
     }
 
-    // 3. Fetch Coordinators from DOWNTIME_RM (Dynamic Sync)
-    if (sheet && downtimeData.length > 0) {
-      const data = downtimeData;
-      const headers = data[0];
-      const cIdx = headers.indexOf("Koordinator Monitoring");
-      if (cIdx !== -1) {
-        const raw = data.slice(1).map(r => String(r[cIdx]).trim()).filter(n => n && n.length > 2);
-        const dynamicList = [...new Set(raw)].sort();
-        coords = [...new Set([...coords, ...dynamicList])].sort();
+    // v19.9.6: Scan for pending data using dynamic indexing
+    const pendingMuats = new Set();
+    if (mSheet && mSheet.getLastRow() > 0) {
+      const mData = mSheet.getDataRange().getValues();
+      const mHeaders = mData[0].map(h => String(h).toUpperCase());
+      const kIdx = mHeaders.indexOf("NAMA KRANI");
+      const nIdx = mHeaders.indexOf("NETTO (KG)");
+      
+      const finalK = (kIdx !== -1) ? kIdx : 10; // v20.0.1: K=10
+      const finalN = (nIdx !== -1) ? nIdx : 6;  // G=6
+
+      for (let i = 1; i < mData.length; i++) {
+        const row = mData[i];
+        const kraniName = String(row[finalK] || "").trim().toUpperCase();
+        const nettoVal = String(row[finalN] || "").trim();
+        if (kraniName && kraniName.length > 2 && kraniName !== "NAMA KRANI") {
+          if (!nettoVal || nettoVal === "-" || nettoVal === "0" || nettoVal === "") {
+             pendingMuats.add(kraniName);
+          }
+        }
       }
     }
     
@@ -158,9 +214,10 @@ function doGet(e) {
       warehouses: warehouses,
       coordinators: coords,
       activeSessions: activeSessions,
-      materials: materials,
       pendingKranis: Array.from(pendingKranis).sort(),
-      pendingCoords: Array.from(pendingCoords).sort()
+      pendingMuats: Array.from(pendingMuats).sort(),
+      pendingCoords: Array.from(pendingCoords).sort(),
+      materials: materials
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -175,14 +232,21 @@ function doGet(e) {
       const headers = data[0].map(h => String(h).toUpperCase());
       
       const idx = {
-        kategori: headers.indexOf("KATEGORI RISIP"),
+        kategori: headers.indexOf("KATEGORI"),
         nopol: headers.indexOf("NOPOL"),
         status: headers.indexOf("STATUS VALIDASI"),
         tanggal: headers.indexOf("TANGGAL"),
         material: headers.indexOf("MATERIAL")
       };
 
-      // Fallback Robust if headers missing/incorrect
+      // v20.0.2 Fallback Robust (Loose Lookup)
+      if (idx.kategori === -1) idx.kategori = headers.findIndex(h => h.includes("KATEGORI"));
+      if (idx.nopol === -1) idx.nopol = headers.findIndex(h => h.includes("NOPOL"));
+      if (idx.material === -1) idx.material = headers.findIndex(h => h.includes("MATERIAL"));
+      if (idx.status === -1) idx.status = headers.findIndex(h => h.includes("STATUS"));
+      if (idx.tanggal === -1) idx.tanggal = headers.findIndex(h => h.includes("TANGGAL"));
+
+      // Secondary Fallbacks (Hardcoded v20)
       if (idx.kategori === -1) idx.kategori = 3; 
       if (idx.nopol === -1) idx.nopol = 4;
       if (idx.material === -1) idx.material = 5;
@@ -195,13 +259,16 @@ function doGet(e) {
         const row = data[i];
         const kat = String(row[idx.kategori] || "").trim().toUpperCase();
         const status = String(row[idx.status] || "").trim().toUpperCase();
+        const nopolVal = String(row[idx.nopol] || "").trim();
+        const validator = (idx.validator !== -1) ? String(row[idx.validator] || "").trim() : "";
         
-        if (kat === "MANUAL" && status !== "DONE RISIP") {
+        // REVISI 1: MANUAL, Status (P) Kosong, Validator (Q) Kosong
+        if (kat === "MANUAL" && (!status || status === "-" || status === "") && (!validator || validator === "-" || validator === "") && nopolVal && nopolVal !== "-") {
             results.push({
                 row_id: i+1,
                 tanggal: formatDate(row[idx.tanggal]),
-                nopol: row[idx.nopol] || "-",
-                material: row[idx.material]
+                nopol: nopolVal,
+                material: row[idx.material] || "-"
             });
         }
       }
@@ -219,15 +286,78 @@ function doGet(e) {
       
       const data = sheet.getDataRange().getValues();
       const role = e.parameter.role;
-      const name = String(e.parameter.name || "").trim().toLowerCase();
+      const name = String(e.parameter.name || "").toUpperCase().trim();
       const shiftFilter = String(e.parameter.shift || "").trim();
       
+      const results = [];
+
+      if (role === 'muat') {
+        const mSheet = ss.getSheetByName(MUAT_SHEET_NAME);
+        if (!mSheet) return ContentService.createTextOutput("[]").setMimeType(ContentService.MimeType.JSON);
+        const muatData = mSheet.getDataRange().getValues();
+        if (muatData.length <= 1) return ContentService.createTextOutput("[]").setMimeType(ContentService.MimeType.JSON);
+
+        // v19.9.4 Dynamic Indexing (Immune to column shift)
+        const mHeaders = muatData[0].map(h => String(h).toUpperCase());
+        const dIdx = {
+           krani: mHeaders.indexOf("NAMA KRANI"),
+           netto: mHeaders.indexOf("NETTO (KG)"),
+           nopol: mHeaders.indexOf("NOPOL"),
+           mat: mHeaders.indexOf("MATERIAL"),
+           tgl: mHeaders.indexOf("TANGGAL"),
+           shift: mHeaders.indexOf("SHIFT")
+        };
+
+        // Fallback robustness
+        if (dIdx.krani === -1) dIdx.krani = 10;
+        if (dIdx.netto === -1) dIdx.netto = 6;
+        if (dIdx.nopol === -1) dIdx.nopol = 4;
+        if (dIdx.mat === -1) dIdx.mat = 5;
+        if (dIdx.tgl === -1) dIdx.tgl = 1;
+        if (dIdx.shift === -1) dIdx.shift = 2;
+
+        for (let j = 1; j < muatData.length; j++) {
+            const muatRow = muatData[j];
+            const kraniRow = String(muatRow[dIdx.krani] || "").toUpperCase().trim();
+            const nettoVal = String(muatRow[dIdx.netto] || "").trim();
+            const noNetto = !nettoVal || nettoVal === "-" || nettoVal === "0" || nettoVal === "";
+
+            // REVISI 3: Netto (G) Kosong, munculkan Nopol (E) milik Krani (K)
+            if (kraniRow === name && noNetto) {
+                results.push({
+                    row_id: j + 1, nopol: muatRow[dIdx.nopol] || "NO NOPOL", material: muatRow[dIdx.mat] || "-",
+                    status: "NETTO MUAT KOSONG", gudang: "-", tanggal: formatDate(muatRow[dIdx.tgl]),
+                    jenis_truck: "-", netto: muatRow[dIdx.netto] || "-"
+                });
+            }
+        }
+        return ContentService.createTextOutput(JSON.stringify(results.reverse())).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // v20.0.2 Universal Dynamic Indexing (Bongkar/Coord)
+      const bHeaders = data.length > 0 ? data[0].map(h => String(h).toUpperCase()) : [];
       const idx = {
-        nopol: 6, mat: 4, gudang: 2, tgl: 0, shift: 1, netto: 8, krani: 10, coord: 11,
-        truck: 7, arrival_date: 23, arrival_time: 24, qc_time: 25, timang_time: 26
+        nopol: bHeaders.findIndex(h => h.includes("NOPOL")),
+        mat: bHeaders.findIndex(h => h.includes("MATERIAL")),
+        gudang: bHeaders.findIndex(h => h.includes("GUDANG") || h.includes("INTAKE")),
+        tgl: bHeaders.findIndex(h => h.includes("TANGGAL")),
+        shift: bHeaders.findIndex(h => h.includes("SHIFT")),
+        netto: bHeaders.findIndex(h => h.includes("NETTO")),
+        krani: bHeaders.findIndex(h => h.includes("KRANI")),
+        coord: bHeaders.findIndex(h => h.includes("COORD") || h.includes("MONITOR")),
+        truck: bHeaders.findIndex(h => h.includes("TRUCK")),
+        arrival_date: bHeaders.findIndex(h => h.includes("ARRIVAL DATE")),
+        arrival_time: bHeaders.findIndex(h => h.includes("ARRIVAL TIME")),
+        qc_time: bHeaders.findIndex(h => h.includes("QC")),
+        timbang_time: bHeaders.findIndex(h => h.includes("TIMBANG"))
       };
 
-      const results = [];
+      // Fallbacks (Hardcoded v20)
+      if (idx.nopol === -1) idx.nopol = 6; if (idx.mat === -1) idx.mat = 4;
+      if (idx.gudang === -1) idx.gudang = 2; if (idx.tgl === -1) idx.tgl = 0;
+      if (idx.shift === -1) idx.shift = 1; if (idx.netto === -1) idx.netto = 8;
+      if (idx.krani === -1) idx.krani = 9; if (idx.coord === -1) idx.coord = 11;
+      if (idx.truck === -1) idx.truck = 7; if (idx.arrival_date === -1) idx.arrival_date = 23;
       // v18.11 Start from 0 since Header is deleted/optional
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
@@ -238,34 +368,34 @@ function doGet(e) {
         if (shiftFilter && rowShift != shiftFilter && shiftFilter !== "null" && shiftFilter !== "") continue;
 
         if (role === 'krani') {
-          const isOwner = String(row[idx.krani] || "").trim().toLowerCase() === name;
-          const nettoVal = String(row[idx.netto]).trim();
-          const noNetto = !nettoVal || nettoVal === "-" || nettoVal === "0";
+          const kraniRow = String(row[idx.krani] || "").toUpperCase().trim();
+          const nettoVal = String(row[idx.netto] || "").trim();
+          const noNetto = !nettoVal || nettoVal === "-" || nettoVal === "0" || nettoVal === "";
           
-          if (isOwner && noNetto) {
+          // REVISI 2: Netto (I) Kosong, munculkan Nopol (G) milik Krani (J)
+          if (kraniRow === name && noNetto) {
             results.push({ 
-                row_id: i+1, nopol: row[idx.nopol], material: row[idx.mat], 
-                status: "TONASE KOSONG", gudang: row[idx.gudang], tanggal: row[idx.tgl],
-                jenis_truck: row[idx.truck], netto: row[idx.netto]
+                row_id: i+1, nopol: row[idx.nopol] || "NO NOPOL", material: row[idx.mat] || "-", 
+                status: "TONASE KOSONG", gudang: row[idx.gudang] || "-", tanggal: formatDate(row[idx.tgl]),
+                jenis_truck: row[idx.truck] || "-", netto: row[idx.netto] || "-"
             });
           }
         } else if (role === 'coordinator') {
-          const isOwner = String(row[idx.coord] || "").trim().toLowerCase() === name;
+          const coordRow = String(row[idx.coord] || "").toUpperCase().trim();
           const truckType = String(row[idx.truck] || "").toUpperCase();
-          // v18.15 Safety: Handle undefined logic for results
-          const rowArrival = (row[idx.arrival_date] === undefined) ? "" : String(row[idx.arrival_date]).trim();
-          const rowTimeArr = (row[idx.arrival_time] === undefined) ? "" : String(row[idx.arrival_time]).trim();
-          const rowQC = (row[idx.qc_time] === undefined) ? "" : String(row[idx.qc_time]).trim();
-          const rowTimbang = (row[idx.timang_time] === undefined) ? "" : String(row[idx.timang_time]).trim();
+          const rowArrival = String(row[idx.arrival_date] || "").trim();
+          const rowTimeArr = String(row[idx.arrival_time] || "").trim();
+          const rowQC = String(row[idx.qc_time] || "").trim();
+          const rowTimbang = String(row[idx.timbang_time] || "").trim();
           
-          const noData = !rowArrival || !rowTimeArr || !rowQC || !rowTimbang || rowArrival === "-" || rowQC === "-";
+          // REVISI 4: Container (H), X:AA Kosong, munculkan Nopol (G) milik Coordinator (L)
+          const noData = !rowArrival || rowArrival === "-" || rowArrival === "" || !rowTimeArr || rowTimeArr === "-" || !rowQC || rowQC === "-" || !rowTimbang || rowTimbang === "-";
           
-          // v18.14: Only push if Container & Pending
-          if (isOwner && truckType.includes("CONTAINER") && noData) {
+          if (coordRow === name && truckType.includes("CONTAINER") && noData) {
             results.push({ 
-                row_id: i+1, nopol: row[idx.nopol], material: row[idx.mat], 
-                status: "DATA CONTAINER BELUM LENGKAP", gudang: row[idx.gudang], tanggal: row[idx.tgl],
-                jenis_truck: row[idx.truck],
+                row_id: i+1, nopol: row[idx.nopol] || "NO NOPOL", material: row[idx.mat] || "-", 
+                status: "DATA CONTAINER BELUM LENGKAP", gudang: row[idx.gudang] || "-", tanggal: formatDate(row[idx.tgl]),
+                jenis_truck: row[idx.truck] || "-",
                 arrival_date: rowArrival, arrival_time: rowTimeArr, qc_time: rowQC, timbang_time: rowTimbang
             });
           }
@@ -282,6 +412,25 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+// function forceMuatHeaders definitif v19.9.9
+function forceMuatHeaders() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let mSheet = ss.getSheetByName(MUAT_SHEET_NAME);
+    if (!mSheet) {
+      mSheet = ss.insertSheet(MUAT_SHEET_NAME);
+    }
+    mSheet.getRange(1, 1, 1, MUAT_HEADERS.length)
+          .setValues([MUAT_HEADERS])
+          .setFontWeight("bold")
+          .setBackground("#d9ead3")
+          .setVerticalAlignment("middle")
+          .setHorizontalAlignment("center");
+    mSheet.getRange("R1").setValue("v20.0.3 ABSOLUTE-SYNC").setFontColor("red").setFontWeight("bold");
+    SpreadsheetApp.flush();
+  } catch(e) {}
+}
+
 // v19.4 Helper
 function formatDate(date) {
     if (!date) return "-";
@@ -291,23 +440,7 @@ function formatDate(date) {
     return `${d.getDate()}-${months[d.getMonth()]}-${d.getFullYear()}`;
 }
 
-const MASTER_HEADERS = [
-  "Tanggal", "Shift", "Gudang/Intake", "SLoc", "Material", 
-  "Lokasi Simpan", "Nopol", "Jenis Truck", "Netto (Kg)", "Krani Bongkar",
-  "Sampling Man", "Koordinator Monitoring", "Jenis Kuli", "Tim Kerja",
-  "Start Panggil", "Truck Ready", "Start Bongkar", 
-  "Hold QC", "Re-start QC", "Manuver Akhir", "Finish", 
-  "Tenaga Bongkar", "Backend Timestamp",
-  "Arrival Date", "Arrival Time", "QC Sampling 1 Time", "Time Timbang Masuk",
-  "Gudang Durasi", "Jumlah Bag" // v19.2: Added Jumlah Bag
-];
-
-const MUAT_HEADERS = [
-  "Timestamp", "Tanggal", "Shift", "Kategori Risip", "Nopol", // v19.4: New Columns
-  "Material", "Netto (Kg)", "Jumlah Bag", "Tim Harian", "Jumlah Kuli", "Nama Krani", 
-  "Bongkar Stapel", "Start Muat", "Finish", "OTW Pabrik",
-  "Status Validasi", "Validator" // v19.4: For Crosscheck
-];
+// Header definitions moved to top for safety v19.9.6
 
 function doPost(e) {
   try {
@@ -375,71 +508,114 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({success:true}));
     }
 
-    // ACTION: SAVE KRANI MUATAN (v19.2 + v19.3 + v19.4)
+    // ACTION: SAVE KRANI MUATAN (v20.0.0 Absolute Alignment)
     if (raw.action === "saveMuat") {
+      forceMuatHeaders(); // Ensure headers are correct before appending
+      mSheet = ss.getSheetByName(MUAT_SHEET_NAME);
       mSheet.appendRow([
-        new Date(),
-        raw.tanggal || '-',
-        raw.shift || '-',
-        raw.kategori_risip || 'AUTO', // v19.4
-        raw.nopol || '-',             // v19.4
-        raw.material || '-',
-        raw.netto || '-',      
-        raw.jumlah_bag || '-', 
-        raw.tim_harian || '-',
-        raw.jumlah_kuli || '-',
-        raw.krani || '-',      
-        raw.bongkar_stapel || '-',
-        raw.start_muat || '-', 
-        raw.finish || '-',
-        raw.otw_pabrik || '-',
-        "", // Status Validasi
-        ""  // Validator
+        new Date(),                 // A=0: Timestamp
+        raw.tanggal || '-',         // B=1: Tanggal
+        raw.shift || '-',           // C=2: Shift
+        raw.kategori_risip || '-',  // D=3: Kategori
+        raw.nopol || '-',           // E=4: Nopol
+        raw.material || '-',        // F=5: Material
+        raw.netto || '-',           // G=6: Netto (Kg)
+        raw.jumlah_bag || '-',      // H=7: Jumlah Bag
+        raw.tim_harian || '-',      // I=8: Tim Harian
+        raw.jumlah_kuli || '-',     // J=9: Jumlah Kuli
+        raw.krani || '-',           // K=10: Nama Krani
+        raw.bongkar_stapel || '-',  // L=11: Bongkar Stapel
+        raw.start_muat || '-',      // M=12: Start Muat
+        raw.finish || '-',          // N=13: Finish
+        raw.otw_pabrik || '-',      // O=14: OTW Pabrik
+        "",                         // P=15: Status Validasi
+        ""                          // Q=16: Validator
       ]);
       return ContentService.createTextOutput(JSON.stringify({success:true}));
     }
 
-    // ACTION: SAVE CROSSCHECK (v19.6 Revision)
+    // ACTION: SAVE CROSSCHECK (v19.9.4 Dynamic Indexing Support)
     if (raw.action === "saveCrosscheck") {
-      const updates = raw.updates; // List of objects {row_id, netto}
+      forceMuatHeaders(); // v19.9.9 Safety
+      mSheet = ss.getSheetByName(MUAT_SHEET_NAME);
+      const updates = raw.updates; 
       const validator = raw.validator;
       
-      const headers = mSheet.getRange(1, 1, 1, mSheet.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
-      const statusIdx = headers.indexOf("STATUS VALIDASI");
-      const validIdx = headers.indexOf("VALIDATOR");
-      const nettoIdx = headers.indexOf("NETTO (KG)");
+      const mHeaders = mSheet.getRange(1, 1, 1, mSheet.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
+      const nettoCol = mHeaders.indexOf("NETTO (KG)") + 1;
+      const statusCol = mHeaders.indexOf("STATUS VALIDASI") + 1;
+      const validCol = mHeaders.indexOf("VALIDATOR") + 1;
       
-      let finalStatusIdx = statusIdx !== -1 ? statusIdx : 15;
-      let finalValidIdx = validIdx !== -1 ? validIdx : 16;
-      let finalNettoIdx = nettoIdx !== -1 ? nettoIdx : 6;
-
-      updates.forEach(item => {
-        const rowId = item.row_id;
-        const nettoVal = item.netto;
-        
-        mSheet.getRange(rowId, finalStatusIdx + 1).setValue("DONE RISIP");
-        mSheet.getRange(rowId, finalValidIdx + 1).setValue(validator);
-        
-        // Update Netto if provided
-        if (nettoVal) {
-             mSheet.getRange(rowId, finalNettoIdx + 1).setValue(nettoVal);
-        }
+      // Safety Fallbacks
+      const finalN = (nettoCol > 0) ? nettoCol : 7;
+      const finalS = (statusCol > 0) ? statusCol : 16;
+      const finalV = (validCol > 0) ? validCol : 17;
+      
+      updates.forEach(upd => {
+        mSheet.getRange(upd.row_id, finalN).setValue(upd.netto);
+        if (finalS > 0) mSheet.getRange(upd.row_id, finalS).setValue("DONE RISIP");
+        if (finalV > 0) mSheet.getRange(upd.row_id, finalV).setValue(validator);
       });
-      
       return ContentService.createTextOutput(JSON.stringify({success:true}));
     }
 
-    // ACTION: UPDATE ARRIVAL (v15.7)
+    // ACTION: UPDATE ARRIVAL (v15.7 + v20.0.1 Dynamic)
     if (raw.action === "updateCoordinator") {
+      const bHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
+      let startCol = bHeaders.indexOf("ARRIVAL DATE") + 1;
+      if (startCol === 0) startCol = 24; // Fallback
+      
       const updateArr = [[raw.arrival_date, raw.arrival_time, raw.qc_time, raw.timbang_time]];
-      sheet.getRange(raw.row_id, 24, 1, 4).setValues(updateArr);
+      sheet.getRange(raw.row_id, startCol, 1, 4).setValues(updateArr);
       return ContentService.createTextOutput(JSON.stringify({success:true}));
     }
 
-    // ACTION: UPDATE NETTO (v15.7)
+    // ACTION: UPDATE NETTO (v19.9.5 + v20.0.1 Dynamic)
     if (raw.action === "updateNetto") {
-      sheet.getRange(raw.row_id, 9).setValue(raw.netto);
+      const targetSheet = (raw.role === 'muat') ? mSheet : sheet;
+      let nettoCol = (raw.role === 'muat') ? 7 : 9; // Fallbacks
+      
+      const hRes = targetSheet.getRange(1, 1, 1, targetSheet.getLastColumn()).getValues()[0].map(h => String(h).toUpperCase());
+      const nIdx = hRes.indexOf("NETTO (KG)");
+      if (nIdx !== -1) nettoCol = nIdx + 1;
+      
+      targetSheet.getRange(raw.row_id, nettoCol).setValue(raw.netto);
       return ContentService.createTextOutput(JSON.stringify({success:true}));
+    }
+
+    // ACTION: SAVE ABSENSI KULI (v20.1.0)
+    if (raw.action === "saveAbsensi") {
+      const ABSENSI_SHEET = "ABSENSI KULI";
+      const ABSENSI_HEADERS = ["Timestamp", "Tanggal", "Shift", "Tim", "Kategori", "Nama", "Status", "Keterangan", "Krani Pencatat"];
+      
+      let absSheet = ss.getSheetByName(ABSENSI_SHEET);
+      if (!absSheet) {
+        absSheet = ss.insertSheet(ABSENSI_SHEET);
+        absSheet.getRange(1, 1, 1, ABSENSI_HEADERS.length)
+          .setValues([ABSENSI_HEADERS])
+          .setFontWeight("bold")
+          .setBackground("#d9ead3")
+          .setHorizontalAlignment("center");
+        absSheet.setFrozenRows(1);
+      }
+      
+      const rows = raw.rows.map(r => [
+        new Date(),        // A: Timestamp
+        r.tanggal || '-',  // B: Tanggal
+        r.shift || '-',    // C: Shift
+        r.tim || '-',      // D: Tim
+        r.kategori || '-', // E: Kategori (BORONG/HARIAN)
+        r.nama || '-',     // F: Nama
+        r.status || 'H',   // G: Status (H/I/A)
+        r.keterangan || '-', // H: Keterangan
+        r.krani_pencatat || '-' // I: Krani Pencatat
+      ]);
+      
+      if (rows.length > 0) {
+        absSheet.getRange(absSheet.getLastRow() + 1, 1, rows.length, ABSENSI_HEADERS.length).setValues(rows);
+      }
+      
+      return ContentService.createTextOutput(JSON.stringify({success: true, count: rows.length}));
     }
 
   } catch(err) {

@@ -188,6 +188,7 @@
             font-family: 'Inter';
             box-sizing: border-box;
             -webkit-appearance: none;
+            appearance: none;
             /* Mobile reset */
         }
 
@@ -634,6 +635,141 @@
                 background: rgba(0, 255, 136, 0.05) !important;
                 box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
             }
+        }
+
+        /* ===== ABSENSI KULI STYLES ===== */
+        .absensi-section {
+            margin-top: 15px;
+        }
+
+        .absensi-tim-header {
+            font-family: 'Orbitron';
+            font-size: 0.6rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin: 15px 0 8px;
+            padding: 8px 12px;
+            background: rgba(0, 243, 255, 0.08);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .absensi-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .absensi-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            flex: 1 1 calc(50% - 6px);
+            min-width: 140px;
+        }
+
+        .absensi-item:active {
+            transform: scale(0.97);
+        }
+
+        .absensi-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            font-weight: 900;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .absensi-badge.status-H {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.4);
+        }
+
+        .absensi-badge.status-I {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            border: 1px solid rgba(255, 170, 0, 0.4);
+        }
+
+        .absensi-badge.status-A {
+            background: rgba(255, 77, 77, 0.2);
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.4);
+        }
+
+        .absensi-item.st-H {
+            border-color: rgba(0, 255, 136, 0.15);
+        }
+
+        .absensi-item.st-I {
+            border-color: rgba(255, 170, 0, 0.3);
+            background: rgba(255, 170, 0, 0.05);
+        }
+
+        .absensi-item.st-A {
+            border-color: rgba(255, 77, 77, 0.3);
+            background: rgba(255, 77, 77, 0.05);
+        }
+
+        .absensi-name {
+            font-size: 0.6rem;
+            color: #fff;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .absensi-izin-input {
+            width: 100%;
+            margin-top: 6px;
+            padding: 6px 10px;
+            font-size: 0.6rem;
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 8px;
+            color: #ffaa00;
+            outline: none;
+        }
+
+        .absensi-izin-input::placeholder {
+            color: rgba(255, 170, 0, 0.5);
+        }
+
+        .absensi-summary {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .absensi-summary .stat-val {
+            font-family: 'Orbitron';
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .absensi-summary .stat-lbl {
+            font-size: 0.5rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
     </style>
 </head>
 
@@ -643,7 +779,7 @@
     <div class="success-overlay" id="success-overlay">
         <div style="font-size: 4rem; margin-bottom: 10px;">🛡️</div>
         <h2 style="font-family: 'Orbitron'; color: var(--success);">SYNC SUCCESS</h2>
-        <p id="success-msg" style="color: var(--muted);">v18.3 Ultimate Synchronization Success.</p>
+        <p id="success-msg" style="color: var(--muted);">v19.9 Deployment Intelligence Success.</p>
         <button class="btn-submit" style="width: auto; padding: 15px 40px;" onclick="location.reload()">SIAAP
             GGMU!</button>
     </div>
@@ -689,7 +825,7 @@
     <!-- APP BAR (v18.25 MOBILE OPTIMIZED) -->
     <div class="app-bar">
         <div class="brand-logo" onclick="handleLogoClick()">SMART <span>WAREHOUSE</span></div>
-        <div class="app-sub">v18.25 MOBILE OPTIMIZED - SAT SET GGMU!</div>
+        <div class="app-sub">v19.9 Deployment Intelligence - SAT SET GGMU!</div>
     </div>
 
     <div class="container">
@@ -837,20 +973,47 @@
                         placeholder="Nama Sampling Man"></div>
                 <div class="input-grid">
                     <div class="field-group"><label>Tim Kerja BORONG</label>
-                        <select id="setup_tim_borong">
+                        <select id="setup_tim_borong" onchange="renderAbsensi()">
                             <option value="BADRUN">BADRUN</option>
                             <option value="KARTONO">KARTONO</option>
                         </select>
                     </div>
                     <div class="field-group"><label>Tim Kerja HARIAN</label>
-                        <select id="setup_tim_harian">
+                        <select id="setup_tim_harian" onchange="renderAbsensi()">
                             <option value="WAWAN">WAWAN</option>
                             <option value="SURYANA">SURYANA</option>
                             <option value="SAHLAN">SAHLAN</option>
                         </select>
                     </div>
                 </div>
-                <button class="btn-submit" onclick="saveSession()">SIMPAN SETUP 🛡️</button>
+
+                <!-- ABSENSI KULI SECTION -->
+                <div class="absensi-section">
+                    <div class="section-header" style="font-size:0.65rem; margin-top:20px;">📋 ABSENSI KULI SHIFT INI
+                    </div>
+                    <p style="font-size:0.5rem; color:var(--muted); margin:5px 0 10px; line-height:1.4;">
+                        Default = <span style="color:#00ff88;font-weight:bold;">HADIR</span>. Tap nama untuk ganti ke
+                        <span style="color:#ffaa00;font-weight:bold;">IZIN</span> atau
+                        <span style="color:#ff4d4d;font-weight:bold;">ALFA</span>.
+                    </p>
+                    <div id="absensi-container"></div>
+                    <div id="absensi-summary-box" class="absensi-summary" style="display:none;">
+                        <div>
+                            <div class="stat-val" style="color:#00ff88;" id="abs-count-h">0</div>
+                            <div class="stat-lbl">HADIR</div>
+                        </div>
+                        <div>
+                            <div class="stat-val" style="color:#ffaa00;" id="abs-count-i">0</div>
+                            <div class="stat-lbl">IZIN</div>
+                        </div>
+                        <div>
+                            <div class="stat-val" style="color:#ff4d4d;" id="abs-count-a">0</div>
+                            <div class="stat-lbl">ALFA</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-submit" onclick="saveSession()">SIMPAN SETUP & ABSENSI 🛡️</button>
             </div>
         </div>
 
@@ -864,8 +1027,16 @@
                 <div class="selection-card" onclick="openSessionPicker('task-krani')">
                     <div class="selection-icon">🚚</div>
                     <div class="selection-content">
-                        <div class="selection-title">REDAKSI KRANI</div>
-                        <div class="selection-desc">Lengkapi Tonase Netto.</div>
+                        <div class="selection-title">LENGKAPI NETTO BONGKAR</div>
+                        <div class="selection-desc">Lengkapi Tonase Netto Bongkaran.</div>
+                    </div>
+                </div>
+                <!-- v19.9.1: New Resume Menu for Muat -->
+                <div class="selection-card" onclick="openSessionPicker('task-muat')">
+                    <div class="selection-icon">📦</div>
+                    <div class="selection-content">
+                        <div class="selection-title">LENGKAPI NETTO MUAT</div>
+                        <div class="selection-desc">Lengkapi Tonase Netto Muatan.</div>
                     </div>
                 </div>
                 <div class="selection-card" onclick="openSessionPicker('task-coord')">
@@ -967,7 +1138,7 @@
                     <div class="selection-icon">✅</div>
                     <div class="selection-content">
                         <div class="selection-title">ADMIN CROSSCHECK</div>
-                        <div class="selection-desc">Verifikasi data muatan yang sudah masuk.</div>
+                        <div class="selection-desc">Lengkapi data tonase netto muatan.</div>
                     </div>
                 </div>
             </div>
@@ -1054,7 +1225,7 @@
         <div id="screen-muat-crosscheck" class="screen">
             <button class="btn-back" onclick="switchScreen('muat-choice')">← KEMBALI</button>
             <div class="form-section">
-                <div class="form-section-header">✅ ADMIN CROSSCHECK <span class="section-badge">MANUAL RISIP</span>
+                <div class="form-section-header">✅ LENGKAPI NETTO MUAT <span class="section-badge">MANUAL RISIP</span>
                 </div>
 
                 <div id="crosscheck-loading"
@@ -1264,18 +1435,105 @@
         }
 
         const CONFIG = {
-            // v19.9 FIXED URL FOR GITHUB PAGES
-            API_URL: "https://script.google.com/macros/s/AKfycbyV0F4IPuIA_MavIoDQshNy-ZSqSyTL5sgq5UUAusd0r60kqK1xLjUDKxlcAnPp_4_u/exec",
-            SOURCE_DATA_URL: "https://script.google.com/macros/s/AKfycbyV0F4IPuIA_MavIoDQshNy-ZSqSyTL5sgq5UUAusd0r60kqK1xLjUDKxlcAnPp_4_u/exec",
+            // v20.1.0 DEPLOYMENT (ABSENSI KULI)
+            API_URL: "https://script.google.com/macros/s/AKfycbxCXgq5YKDa2ArcUsCuaAqIdg4Pfjp7rR9vUxW89Z9-1VrXAbB0D55e-kJ7dgEHBMCY/exec",
+            SOURCE_DATA_URL: "https://script.google.com/macros/s/AKfycbxCXgq5YKDa2ArcUsCuaAqIdg4Pfjp7rR9vUxW89Z9-1VrXAbB0D55e-kJ7dgEHBMCY/exec",
             GLOBAL_STOCK_URL: "https://script.google.com/macros/s/AKfycbwnStVw3UhKxgQDuTfufSlNMaTrf4ZpXC0FPAp6AK96t-YIJQNcJ1h0rtkbM2XlxPCr/exec"
         };
 
         let materialData = [], activeSessions = [], currentRole = '', currentInputMode = 'batch';
 
+        // ===== DATA TIM KULI (HARDCODED) =====
+        const TIM_KULI = {
+            'BADRUN': ['BADRUN', 'QODIR', 'TEDI', 'JUMARI', 'ROSID', 'SARIP', 'SITA', 'NANTO', 'JUANDI', 'USMAN'],
+            'KARTONO': ['KARTONO', 'AREDI', 'TALIB', 'SELAMET', 'WARYONO', 'YANI', 'YITNO', 'WASTA', 'KASNA', 'IBROHIM'],
+            'SAHLAN': ['AKROM', 'DARDA', 'MUKROMIN', 'MULYADI', 'REYNALDI', 'RIQI', 'SAHLAN', "SYAFI'I", 'SYARIPUDIN'],
+            'WAWAN': ['ABDUROHIM', 'AM MAARIF', 'CALIYA', 'HASAN BISRI', 'MASEDI', 'MUHAMMAD ALAN MAULANA', 'MUKSIN', 'SUHERMAN', 'WAWAN GUNAWAN'],
+            'SURYANA': ['ABDUL WAHAB', 'GILANG RAMADHAN', 'HARUN RASYID', 'MAMAN SURAHMAN', 'MIDRO', 'MISTO', 'SALEH SUDIANA', 'SUMADI', 'SURYANA']
+        };
+        const TIM_KATEGORI = {
+            'BADRUN': 'BORONG', 'KARTONO': 'BORONG',
+            'SAHLAN': 'HARIAN', 'WAWAN': 'HARIAN', 'SURYANA': 'HARIAN'
+        };
+        let absensiState = {}; // { 'NAMA': { status: 'H'|'I'|'A', keterangan: '' } }
+
+        function renderAbsensi() {
+            const timBorong = document.getElementById('setup_tim_borong').value;
+            const timHarian = document.getElementById('setup_tim_harian').value;
+            const container = document.getElementById('absensi-container');
+            absensiState = {};
+
+            let html = '';
+            const teams = [];
+            if (timBorong && TIM_KULI[timBorong]) teams.push({ nama: timBorong, kategori: 'BORONG', anggota: TIM_KULI[timBorong] });
+            if (timHarian && TIM_KULI[timHarian]) teams.push({ nama: timHarian, kategori: 'HARIAN', anggota: TIM_KULI[timHarian] });
+
+            teams.forEach(tim => {
+                html += `<div class="absensi-tim-header">TIM ${tim.kategori} — ${tim.nama} (${tim.anggota.length} ORANG)</div>`;
+                html += '<div class="absensi-grid">';
+                tim.anggota.forEach(nama => {
+                    const key = nama.replace(/'/g, "\\'");
+                    absensiState[nama] = { status: 'H', keterangan: '', tim: tim.nama, kategori: tim.kategori };
+                    html += `
+                    <div class="absensi-item st-H" id="abs-${nama.replace(/[^A-Z0-9]/gi, '_')}" onclick="toggleAbsensi('${key}')">
+                        <div class="absensi-badge status-H" id="badge-${nama.replace(/[^A-Z0-9]/gi, '_')}">H</div>
+                        <div>
+                            <div class="absensi-name">${nama}</div>
+                            <div class="absensi-izin-wrap" id="izin-${nama.replace(/[^A-Z0-9]/gi, '_')}" style="display:none;">
+                                <input class="absensi-izin-input" placeholder="Alasan izin..." onclick="event.stopPropagation()" 
+                                    oninput="updateIzinKet('${key}', this.value)">
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+            updateAbsensiSummary();
+        }
+
+        function toggleAbsensi(nama) {
+            const state = absensiState[nama];
+            if (!state) return;
+            const cycle = { 'H': 'I', 'I': 'A', 'A': 'H' };
+            state.status = cycle[state.status];
+            if (state.status !== 'I') state.keterangan = '';
+
+            const safeId = nama.replace(/[^A-Z0-9]/gi, '_');
+            const item = document.getElementById('abs-' + safeId);
+            const badge = document.getElementById('badge-' + safeId);
+            const izinWrap = document.getElementById('izin-' + safeId);
+
+            item.className = 'absensi-item st-' + state.status;
+            badge.className = 'absensi-badge status-' + state.status;
+            badge.textContent = state.status;
+            izinWrap.style.display = state.status === 'I' ? 'block' : 'none';
+            if (state.status !== 'I') {
+                const inp = izinWrap.querySelector('input');
+                if (inp) inp.value = '';
+            }
+            updateAbsensiSummary();
+        }
+
+        function updateIzinKet(nama, val) {
+            if (absensiState[nama]) absensiState[nama].keterangan = val;
+        }
+
+        function updateAbsensiSummary() {
+            const vals = Object.values(absensiState);
+            if (vals.length === 0) { document.getElementById('absensi-summary-box').style.display = 'none'; return; }
+            document.getElementById('absensi-summary-box').style.display = 'flex';
+            document.getElementById('abs-count-h').textContent = vals.filter(v => v.status === 'H').length;
+            document.getElementById('abs-count-i').textContent = vals.filter(v => v.status === 'I').length;
+            document.getElementById('abs-count-a').textContent = vals.filter(v => v.status === 'A').length;
+        }
+
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('screen-' + screenId).classList.add('active');
             if (screenId === 'tasks') loadTaskQueue();
+            if (screenId === 'setup') renderAbsensi();
             if (screenId === 'form') {
                 const s = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
                 document.getElementById('display_shift').value = s.shift || '1';
@@ -1396,6 +1654,7 @@
                     }
                     // v18.12 Store mined data globally
                     window.pendingKranis = res.pendingKranis || [];
+                    window.pendingMuats = res.pendingMuats || [];
                     window.pendingCoords = res.pendingCoords || [];
                 }
 
@@ -1408,7 +1667,7 @@
 
         function renderSessionPicker() {
             const container = document.getElementById('session-list');
-            const isResume = (currentPickerMode === 'task-krani' || currentPickerMode === 'task-coord');
+            const isResume = (currentPickerMode === 'task-krani' || currentPickerMode === 'task-coord' || currentPickerMode === 'task-muat');
             const mainHeader = document.querySelector('#screen-session-picker .section-header');
             const title = document.querySelector('#screen-session-picker h3') || { innerText: '' };
 
@@ -1418,13 +1677,16 @@
             }
 
             if (currentPickerMode === 'input') title.innerText = "SIAPA NAMA ANDA?";
-            else if (currentPickerMode === 'task-krani') title.innerText = "KLIK NAMAMU (LENGKAPI NETTO)";
+            else if (currentPickerMode === 'task-krani') title.innerText = "KLIK NAMAMU (NETTO BONGKAR)";
+            else if (currentPickerMode === 'task-muat') title.innerText = "KLIK NAMAMU (NETTO MUAT)";
             else title.innerText = "MODUL KORDINATOR (RESUME)";
 
             // v18.12 Data Mining Source
             let listData = [];
             if (currentPickerMode === 'task-krani') {
                 listData = window.pendingKranis || [];
+            } else if (currentPickerMode === 'task-muat') {
+                listData = window.pendingMuats || [];
             } else if (currentPickerMode === 'task-coord') {
                 listData = window.pendingCoords || [];
             } else {
@@ -1494,7 +1756,7 @@
                 // If this is a mined name, we allow it.
                 // We default to '?' for shift/gudang because we just want to load tasks.
                 session = {
-                    krani: (currentPickerMode === 'task-krani' || currentPickerMode === 'input') ? searchName : '',
+                    krani: (currentPickerMode === 'task-krani' || currentPickerMode === 'task-muat' || currentPickerMode === 'input') ? searchName : '',
                     coordinator: (currentPickerMode === 'task-coord') ? searchName : '',
                     shift: '?',
                     gudang: '?',
@@ -1505,7 +1767,9 @@
 
             if (session) {
                 localStorage.setItem('WHSMART_SESSION', JSON.stringify(session));
-                currentRole = (currentPickerMode === 'task-coord') ? 'coordinator' : 'krani';
+                if (currentPickerMode === 'task-coord') currentRole = 'coordinator';
+                else if (currentPickerMode === 'task-muat') currentRole = 'muat';
+                else currentRole = 'krani';
 
                 // If it's ad-hoc, skip loadSession full fill, just partial
                 if (session.shift !== '?') loadSession();
@@ -1559,8 +1823,8 @@
                     });
 
                     if (formValues) {
-                        // Validate emptiness
-                        if (!formValues.arrival_date || !formValues.arrival_time || !formValues.qc_time || !formValues.timbang_time) {
+                        // Validate emptiness (REVISI 4: All 4 must be filled)
+                        if (!formValues.arrival_date || formValues.arrival_date === "-" || !formValues.arrival_time || formValues.arrival_time === "-" || !formValues.qc_time || formValues.qc_time === "-" || !formValues.timbang_time || formValues.timbang_time === "-") {
                             Swal.fire('Error', 'Semua 4 data wajib diisi!', 'warning');
                             return;
                         }
@@ -1597,16 +1861,16 @@
             });
 
             if (netto) {
-                submitTaskUpdate(t.row_id, netto);
+                submitTaskUpdate(t.row_id, netto, currentRole);
             }
         }
 
-        async function submitTaskUpdate(rowId, netto) {
+        async function submitTaskUpdate(rowId, netto, role) {
             Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 await fetch(CONFIG.API_URL, {
                     method: 'POST', mode: 'no-cors',
-                    body: JSON.stringify({ action: 'updateNetto', row_id: rowId, netto: netto })
+                    body: JSON.stringify({ action: 'updateNetto', row_id: rowId, netto: netto, role: role })
                 });
                 Swal.fire('Success', 'Netto updated!', 'success').then(() => loadTaskQueue());
             } catch (e) {
@@ -1687,16 +1951,42 @@
 
             const btn = document.querySelector('#screen-setup .btn-submit');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner-inline"></span> SAVING IDENTITY...';
+            btn.innerHTML = '<span class="loading-spinner-inline"></span> MENYIMPAN...';
             btn.style.opacity = '0.7';
 
             localStorage.setItem('WHSMART_SESSION', JSON.stringify(s));
 
             try {
+                // 1. Simpan Session
                 await fetch(CONFIG.API_URL, {
                     method: 'POST', mode: 'no-cors',
                     body: JSON.stringify({ action: 'saveSession', ...s })
                 });
+
+                // 2. Simpan Absensi Kuli (jika ada data)
+                const absensiRows = [];
+                const today = new Date();
+                const tanggal = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                Object.entries(absensiState).forEach(([nama, data]) => {
+                    absensiRows.push({
+                        tanggal: tanggal,
+                        shift: s.shift,
+                        tim: data.tim,
+                        kategori: data.kategori,
+                        nama: nama,
+                        status: data.status,
+                        keterangan: data.keterangan || '-',
+                        krani_pencatat: s.krani || s.coordinator || '-'
+                    });
+                });
+
+                if (absensiRows.length > 0) {
+                    await fetch(CONFIG.API_URL, {
+                        method: 'POST', mode: 'no-cors',
+                        body: JSON.stringify({ action: 'saveAbsensi', rows: absensiRows })
+                    });
+                }
 
                 // v17.9: Optimistically update activeSessions locally for instant feedback
                 const idx = activeSessions.findIndex(as => as.krani === s.krani);
@@ -1704,12 +1994,15 @@
                 if (idx !== -1) activeSessions[idx] = sessionData;
                 else activeSessions.push(sessionData);
 
-                Swal.fire('Identity Locked', 'Setup berhasil disimpan. GGMU!', 'success').then(() => { currentRole = 'krani'; loadSession(); switchScreen('mode'); });
+                const absSummary = absensiRows.length > 0
+                    ? `\nAbsensi: ${absensiRows.filter(r => r.status === 'H').length} Hadir, ${absensiRows.filter(r => r.status === 'I').length} Izin, ${absensiRows.filter(r => r.status === 'A').length} Alfa`
+                    : '';
+                Swal.fire('Setup & Absensi Tersimpan!', 'Data berhasil disimpan ke Cloud.' + absSummary, 'success').then(() => { currentRole = 'krani'; loadSession(); switchScreen('mode'); });
             } catch (e) {
-                Swal.fire('Identity Locked', 'Setup tersimpan lokal (Cloud slow).', 'success').then(() => { currentRole = 'krani'; loadSession(); switchScreen('mode'); });
+                Swal.fire('Tersimpan Lokal', 'Setup tersimpan lokal (Cloud slow). Absensi belum terkirim.', 'warning').then(() => { currentRole = 'krani'; loadSession(); switchScreen('mode'); });
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'SIMPAN SETUP 🛡️';
+                btn.innerHTML = 'SIMPAN SETUP & ABSENSI 🛡️';
                 btn.style.opacity = '1';
             }
         }
@@ -1719,12 +2012,15 @@
         async function loadTaskQueue() {
             const container = document.getElementById('task-list-container');
             const session = JSON.parse(localStorage.getItem('WHSMART_SESSION') || '{}');
-            const name = (currentRole === 'krani') ? session.krani : session.coordinator;
+            const name = (currentRole === 'coordinator') ? session.coordinator : session.krani;
 
             // v18.0: Header UI & Rule Awareness
-            const actionTitle = (currentRole === 'krani') ? "REDAKSI: " : "ANTRIAN MONITORING: ";
+            let actionTitle = "REDAKSI BONGKAR: ";
+            if (currentRole === 'muat') actionTitle = "REDAKSI MUAT: ";
+            else if (currentRole === 'coordinator') actionTitle = "ANTRIAN MONITORING: ";
+
             document.getElementById('task-title').innerText = actionTitle + (name || "?").toUpperCase();
-            document.getElementById('krani-actions').style.display = (currentRole === 'krani') ? 'block' : 'none';
+            document.getElementById('krani-actions').style.display = (currentRole === 'krani' || currentRole === 'muat') ? 'block' : 'none';
             container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted);">MENCARI TUGAS...</div>';
 
             try {
@@ -1733,17 +2029,8 @@
                 const r = await fetch(url);
                 const data = await r.json();
 
-                // Rule 7 & 8 Strict Logic
-                const pending = data.filter(t => {
-                    if (currentRole === 'krani') {
-                        // Rule 7: Only show if Netto is missing
-                        return !t.netto || t.netto === '-' || t.netto === '0';
-                    } else {
-                        // Rule 8: Coordinator - miss Arrival or QC or Timbang
-                        // Backend helps, but secondary check here
-                        return true;
-                    }
-                });
+                // Rule 7 & 8 Strict Logic (Simplified as Backend now filters correctly)
+                const pending = data;
 
                 if (pending.length === 0) {
                     container.innerHTML = `<div style="text-align:center; padding:30px; font-size:0.75rem; color:var(--success); font-weight:bold;">🎉 SEMUA DATA LENGKAP (GGMU!)</div>`;
@@ -1771,48 +2058,7 @@
             }
         }
 
-        function openUpdateForm(t) {
-            document.getElementById('edit-row-id').value = t.row_id;
-            document.getElementById('edit-nopol').innerText = t.nopol;
-            document.getElementById('edit-mat').innerText = t.material;
-            document.getElementById('edit-gudang').innerText = "UNIT GUDANG: " + t.gudang;
-
-            // v14.3: Strict Field Enforcement
-            const isCoord = (currentRole === 'coordinator');
-            document.getElementById('krani-edit-fields').style.display = isCoord ? 'none' : 'block';
-            document.getElementById('coord-edit-fields').style.display = isCoord ? 'block' : 'none';
-
-            document.getElementById('edit-header').innerText = isCoord ? 'LENGKAPI ARRIVAL & QC' : 'LENGKAPI TONASE NETTO';
-
-            document.getElementById('edit-screen').style.display = 'flex';
-        }
-
         function closeEdit() { document.getElementById('edit-screen').style.display = 'none'; }
-
-        async function submitTaskUpdate() {
-            const btn = document.getElementById('btn-update-task');
-            let payload = { action: (currentRole === 'krani') ? 'updateNetto' : 'updateCoordinator', row_id: document.getElementById('edit-row-id').value };
-
-            if (currentRole === 'krani') {
-                payload.netto = document.getElementById('edit_netto').value;
-                if (!payload.netto) { Swal.fire('Error', 'Netto harus diisi.', 'warning'); return; }
-            } else {
-                payload.arrival_date = document.getElementById('coord_arrival_date').value;
-                payload.arrival_time = document.getElementById('coord_arrival_time').value;
-                payload.qc_time = document.getElementById('coord_qc_time').value;
-                payload.timbang_time = document.getElementById('coord_timbang_time').value;
-                if (!payload.arrival_date || !payload.arrival_time) { Swal.fire('Inkomplet', 'Arrival wajib.', 'warning'); return; }
-            }
-
-            btn.disabled = true; btn.innerText = "SINKRONISASI CLOUD...";
-            try {
-                await fetch(CONFIG.API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                document.getElementById('success-overlay').style.display = 'flex';
-            } catch (e) {
-                btn.disabled = false; btn.innerText = "COBA LAGI";
-                Swal.fire('Error', 'Gagal update.', 'error');
-            }
-        }
 
         // ================= KRANI INPUT FLOW =================
 
@@ -2233,7 +2479,7 @@
         };
     </script>
     <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.6rem; font-family:'Orbitron';">
-        WHSMART SYSTEM v18.35 (STATIC HTML)<br>
+        WHSMART SYSTEM v19.9 Deployment Intelligence (Cyber Edition)<br>
         <span style="color:var(--accent)">GGMU!</span>
     </div>
 </body>
